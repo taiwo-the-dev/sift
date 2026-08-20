@@ -27,7 +27,11 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
-      <body data-runtime-environment={env.NODE_ENV} className="min-h-full">
+      <body
+        suppressHydrationWarning
+        data-runtime-environment={env.NODE_ENV}
+        className="min-h-full"
+      >
         <AppShell>{children}</AppShell>
       </body>
     </html>

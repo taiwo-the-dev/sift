@@ -4,6 +4,22 @@
 
 Ready for Development
 
+## Milestone Tracking
+
+- M0 — Complete
+- M1 — Complete
+- M2 — Complete
+- M3 — Ready
+- M4 — Not Started
+- M5 — Not Started
+- M6 — Not Started
+- M7 — Not Started
+- M8 — Not Started
+- M9 — Not Started
+- M10 — Not Started
+- M11 — Not Started
+- M12 — Not Started
+
 ## Priority
 
 P0 — Hackathon Core

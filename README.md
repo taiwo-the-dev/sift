@@ -2,11 +2,13 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. This repository currently contains the M0 application foundation only.
+Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository currently includes the M0 foundation, M1 design system and landing page, and M2 database foundation.
 
 ## Current milestone
 
-M0 establishes the repository, application shell, and development tooling. Agent discovery, blockchain access, authentication, wallet connectivity, and hiring are intentionally deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
+M2 establishes a versioned Supabase PostgreSQL schema, strict database types, and server-only repositories for agent identities and indexer checkpoints. It does not connect to BNB Chain or populate the database. The M1 landing page remains intentionally independent of database configuration and continues to show an honest unavailable state until the verified marketplace is implemented.
+
+Agent results, blockchain access, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
 
 ## Stack
 
@@ -16,6 +18,7 @@ M0 establishes the repository, application shell, and development tooling. Agent
 - shadcn/ui with Server Components enabled
 - ESLint with Next.js Core Web Vitals rules
 - Geist through `next/font`
+- Supabase PostgreSQL and the official server-side JavaScript client
 
 ## Local development
 
@@ -27,15 +30,16 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The static M1 experience does not require database credentials; configuration is validated only when a server-side repository is used.
 
-M0 requires no environment variables. `.env.example` will grow only when later milestones introduce real integrations.
+For database setup, migrations, security decisions, and type generation, see [Database development](docs/database.md).
 
 ## Validation
 
 ```bash
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
@@ -44,8 +48,12 @@ npm run build
 ```text
 app/                 App Router entry points and global styles
 components/layout/   Shared application shell components
+components/landing/  M1 landing-page sections
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
+lib/db/              Server-only client, strict schema types, validation, repositories
+supabase/             Local configuration and ordered SQL migrations
+tests/db/             Focused M2 configuration, mapping, and migration tests
 lib/                 Framework-independent utilities and environment access
 ```
 

@@ -23,6 +23,9 @@
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+/supabase/.branches/
+/supabase/.temp/
+/lib/db/database.generated.ts
 
 # Logs
 npm-debug.log*
