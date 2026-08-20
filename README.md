@@ -32,7 +32,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The static M1 experience does not require database credentials; configuration is validated only when a server-side repository is used.
 
-For database setup, migrations, security decisions, and type generation, see [Database development](docs/database.md).
+The database uses the hosted Supabase project connected to GitHub; Docker and a local Supabase stack are not required. For environment setup, migration deployment, security decisions, and linked-project type generation, see [Hosted Supabase database](docs/database.md).
 
 ## Validation
 
@@ -52,7 +52,7 @@ components/landing/  M1 landing-page sections
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
 lib/db/              Server-only client, strict schema types, validation, repositories
-supabase/             Local configuration and ordered SQL migrations
+supabase/             Hosted deployment configuration and ordered SQL migrations
 tests/db/             Focused M2 configuration, mapping, and migration tests
 lib/                 Framework-independent utilities and environment access
 ```

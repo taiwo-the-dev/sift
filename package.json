@@ -10,10 +10,11 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
-    "db:start": "supabase start",
-    "db:stop": "supabase stop",
-    "db:reset": "supabase db reset --local",
-    "db:types": "supabase gen types typescript --local --schema public > lib/db/database.generated.ts"
+    "db:link": "supabase link",
+    "db:migrations": "supabase migration list --linked",
+    "db:push:dry-run": "supabase db push --linked --dry-run",
+    "db:push": "supabase db push --linked",
+    "db:types": "supabase gen types typescript --linked --schema public > lib/db/database.generated.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

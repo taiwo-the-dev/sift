@@ -1,29 +1,35 @@
-# Database development
+# Hosted Supabase database
 
-M2 uses Supabase PostgreSQL as Sift's persistence layer. The schema is migration-driven, browser access is denied by default, and no seed file exists because Sift must never present invented agent or blockchain records.
+Sift uses a hosted Supabase PostgreSQL project. The repository is migration-driven, browser access is denied by default, and no seed file exists because Sift must never present invented agent or blockchain records.
 
-## Prerequisites
+Docker and a local Supabase stack are not part of this workflow.
 
-- Node.js 20.9 or newer
-- npm
-- Docker Desktop or another Docker-compatible runtime for the local Supabase stack
+## Repository responsibilities
 
-The Supabase CLI is pinned as a development dependency, so use the repository scripts instead of a globally installed CLI.
+The repository contains:
 
-## Local setup
+- `supabase/config.toml`, which the Supabase GitHub integration reads from the repository root;
+- ordered SQL migrations under `supabase/migrations/`;
+- strict maintained database types in `lib/db/database.types.ts`;
+- a server-only Supabase client and typed repositories in `lib/db/`;
+- no database passwords, API keys, project references, or fabricated seed records.
 
-Install dependencies and start the local stack:
+The Supabase project owns the running PostgreSQL database and Data API. GitHub deploys schema changes; the Next.js server connects at runtime through environment variables.
 
-```bash
-npm install
-npm run db:start
-```
+## One-time Supabase setup
 
-`db:start` creates the local services and applies every migration under `supabase/migrations/` in filename order. To rebuild the local database exclusively from the checked-in migrations:
+In the hosted Supabase project:
 
-```bash
-npm run db:reset
-```
+1. Open **Project Settings > Integrations**.
+2. Authorize GitHub and select the Sift repository.
+3. Set the working directory to `.` because `supabase/` is at the repository root.
+4. Select the production branch, normally `main`.
+5. Enable **Deploy to production** only when merges to that branch should apply migrations automatically.
+6. Add the Supabase deployment check as a required GitHub check when branch protection is available.
+
+Automatic preview branching is optional and is not required for Sift's current free-tier workflow. Do not enable GitHub as a Supabase Auth provider; application authentication belongs to a later milestone.
+
+## Runtime environment
 
 Copy the environment template:
 
@@ -31,19 +37,34 @@ Copy the environment template:
 cp .env.example .env.local
 ```
 
-Run `npx supabase status -o env` to inspect local credentials. Set `SUPABASE_URL` to the local API URL. Set `SUPABASE_SECRET_KEY` to the local secret/server credential (the CLI may label a legacy local value `SERVICE_ROLE_KEY`). Never commit `.env.local` or place this value in a `NEXT_PUBLIC_` variable.
+From the hosted project dashboard:
 
-The landing page does not access the database and continues to work without these variables. Missing or invalid values throw a focused configuration error only when a database repository is created.
+1. Copy the HTTPS **Project URL** from the Connect dialog into `SUPABASE_URL`.
+2. Create or copy a current secret key (`sb_secret_...`) from **Settings > API Keys** into `SUPABASE_SECRET_KEY`.
 
-Stop the local services when they are not needed:
-
-```bash
-npm run db:stop
+```env
+SUPABASE_URL=<hosted-project-url>
+SUPABASE_SECRET_KEY=<server-secret-key>
 ```
 
-## Schema
+The values above are illustrative only. Never commit `.env.local`, paste a real key into documentation, prefix the secret with `NEXT_PUBLIC_`, or place it in a browser-accessible client.
 
-The initial migration creates six tables:
+Add the same two variables to the deployment provider, such as Vercel, for Production and any environment that will execute server-side database code. A GitHub-to-Supabase connection does not automatically configure Next.js or Vercel environment variables.
+
+The current landing page does not query the database and continues to build without these variables. Missing or invalid values throw a focused error only when a server-side repository is created.
+
+## Schema deployment through GitHub
+
+The preferred hosted workflow is:
+
+1. Create or review a timestamped migration under `supabase/migrations/`.
+2. Run repository tests and review the SQL.
+3. Commit the migration and push it to GitHub.
+4. Let the Supabase integration validate the change.
+5. Merge to the configured production branch.
+6. Confirm the Supabase deployment succeeded before relying on the new schema.
+
+The M2 migration creates these six empty tables:
 
 | Table | Responsibility |
 | --- | --- |
@@ -54,15 +75,60 @@ The initial migration creates six tables:
 | `agent_scores` | Versioned Sift Score output; no row exists until scoring is implemented |
 | `sync_state` | Last successfully persisted block for each chain and registry deployment |
 
+Do not manually recreate or modify these tables in the production Table Editor. Schema changes must be represented by reviewed migration files so GitHub and Supabase migration history remain synchronized.
+
+## Optional CLI verification
+
+The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.
+
+Authenticate and link this checkout once:
+
+```bash
+npx supabase login
+npm run db:link -- --project-ref <project-ref>
+```
+
+The project reference is the identifier in the hosted project URL. The link is stored in ignored Supabase CLI state and must not be committed.
+
+Inspect migration history:
+
+```bash
+npm run db:migrations
+```
+
+Preview a manual deployment without applying it:
+
+```bash
+npm run db:push:dry-run
+```
+
+If GitHub automatic deployment is enabled, use the Supabase deployment page as the normal deployment path. `npm run db:push` is a deliberate manual fallback and changes the linked hosted database; do not run it casually or concurrently with a GitHub deployment.
+
+Never run `supabase db reset --linked` against the hosted project. It is destructive and is intentionally not exposed as a package script.
+
+## Type synchronization
+
+`lib/db/database.types.ts` is the strict maintained contract for the checked-in migration. After the hosted migration has deployed, generate an independent snapshot from the linked project:
+
+```bash
+npm run db:types
+```
+
+The command writes `lib/db/database.generated.ts`, which is intentionally ignored. Review that snapshot against `lib/db/database.types.ts`, reconcile legitimate differences, and run `npm run typecheck`. Do not overwrite the maintained contract blindly because the application exports small helper types from it.
+
+## Schema and data integrity
+
 ERC-8004 agent identifiers are stored as checked decimal strings so uint256 values cannot lose precision in JavaScript. EVM addresses are canonicalized to lowercase at the repository boundary and enforced by the database. Optional upstream values remain nullable; health, reputation, and score values have no synthetic defaults.
 
 Child observations use explicit `on delete cascade` foreign keys because they have no meaning after their parent agent is removed. Agent identity is unique across `(chain_id, registry_address, agent_id)`, while sync state has exactly one row per `(chain_id, registry_address)`.
+
+No records should be inserted until a later milestone obtains them from real, verifiable sources.
 
 ## Security boundary
 
 All six `public` tables have Row Level Security enabled. The migration revokes access from `anon` and `authenticated` and defines no browser policies in M2. Only the server-side client uses `SUPABASE_SECRET_KEY`, which bypasses RLS and therefore must never enter a browser bundle. `server-only` guards the client and repository modules at build time.
 
-Do not create a browser Supabase client until a later milestone has a concrete, least-privilege need. Do not expose repository errors directly in a public response; the repository error wrapper deliberately omits provider details and credentials from its message.
+Do not create a browser Supabase client until a later milestone has a concrete, least-privilege requirement. Do not expose raw repository errors in a public response.
 
 ## Data access
 
@@ -72,32 +138,9 @@ Application and future indexer code must use the repositories in `lib/db/` rathe
 - `createSyncStateRepository()` provides typed checkpoint reads and upserts.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 
-The repository inputs require unknown upstream fields to be passed explicitly as `null`. This keeps missing information distinguishable from fabricated defaults.
+Repository inputs require unavailable upstream fields to be passed explicitly as `null`, keeping missing information distinguishable from fabricated defaults.
 
-## Type generation
-
-`lib/db/database.types.ts` is the faithfully maintained strict schema contract for the checked-in M2 migration. Once the local stack is running, generate an independent CLI snapshot:
-
-```bash
-npm run db:types
-```
-
-The command writes `lib/db/database.generated.ts`, which is intentionally ignored. Review it against `lib/db/database.types.ts` whenever a migration changes, reconcile legitimate differences, run `npm run typecheck`, and commit the maintained contract with the migration. Generating against a linked hosted project is also possible with `supabase gen types typescript --linked --schema public`, but the migration history must be current first.
-
-## Hosted project workflow
-
-Use a free-tier Supabase project unless a paid service is explicitly approved. Authenticate and link once, preview changes, then apply only checked-in migrations:
-
-```bash
-npx supabase login
-npx supabase link --project-ref <project-ref>
-npx supabase db push --dry-run
-npx supabase db push
-```
-
-Do not run a linked database reset against production. Do not make untracked schema changes in the dashboard; if drift occurs, reconcile it through a reviewed migration before continuing.
-
-## M2 validation
+## Validation
 
 ```bash
 npm run lint
@@ -106,4 +149,4 @@ npm test
 npm run build
 ```
 
-An integration reset (`npm run db:reset`) additionally verifies PostgreSQL constraints and relationships when a Docker-compatible runtime is available. M2 does not make BNB RPC calls, index ERC-8004 events, fetch metadata, calculate health or Sift Scores, or insert agent records.
+After GitHub deploys the migration, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration in deployment history. M2 does not make BNB RPC calls, index ERC-8004 events, fetch metadata, calculate health or Sift Scores, or insert agent records.

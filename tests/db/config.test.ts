@@ -33,11 +33,24 @@ describe("parseSupabaseServerConfig", () => {
       () =>
         parseSupabaseServerConfig({
           SUPABASE_SECRET_KEY: "sb_publishable_12345678901234567890",
-          SUPABASE_URL: "http://127.0.0.1:54321",
+          SUPABASE_URL: "https://example.supabase.co",
         }),
       (error: unknown) =>
         error instanceof DatabaseConfigError &&
         error.message.includes("publishable"),
+    );
+  });
+
+  it("rejects a local Supabase URL", () => {
+    assert.throws(
+      () =>
+        parseSupabaseServerConfig({
+          SUPABASE_SECRET_KEY: "sb_secret_12345678901234567890",
+          SUPABASE_URL: "http://127.0.0.1:54321",
+        }),
+      (error: unknown) =>
+        error instanceof DatabaseConfigError &&
+        error.message.includes("hosted Supabase"),
     );
   });
 });

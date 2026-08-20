@@ -38,15 +38,25 @@ function validateSupabaseUrl(value: string): string {
     );
   }
 
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
+  if (url.protocol !== "https:") {
     throw new DatabaseConfigError(
-      "SUPABASE_URL must use the HTTP or HTTPS protocol.",
+      "SUPABASE_URL must use HTTPS and point to the hosted Supabase project.",
     );
   }
 
   if (url.username || url.password) {
     throw new DatabaseConfigError(
       "SUPABASE_URL must not contain database credentials.",
+    );
+  }
+
+  if (
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "[::1]"
+  ) {
+    throw new DatabaseConfigError(
+      "SUPABASE_URL must point to the hosted Supabase project, not a local service.",
     );
   }
 
