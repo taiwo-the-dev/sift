@@ -21,7 +21,7 @@ export function CategorySection() {
             </p>
           </div>
           <Link
-            href="#agent-search"
+            href="/discover#discovery-search"
             className="group inline-flex items-center gap-2 self-start rounded-md text-sm font-semibold text-foreground outline-none transition-colors duration-200 hover:text-brand-strong focus-visible:ring-3 focus-visible:ring-ring/30 sm:mb-1 sm:self-auto"
           >
             Describe your own goal
@@ -45,12 +45,10 @@ export function CategorySection() {
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {agentCategories.map((category) => {
               const Icon = category.icon;
-              const query = new URLSearchParams({ goal: category.goal }).toString();
-
               return (
                 <Link
                   key={category.title}
-                  href={`/?${query}#agent-search`}
+                  href={`/discover?category=${category.slug}`}
                   className="group grid min-h-52 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 rounded-xl border border-border bg-background p-5 outline-none transition-[border-color,background-color] duration-200 hover:border-input hover:bg-secondary/55 focus-visible:ring-3 focus-visible:ring-ring/30 sm:p-6"
                 >
                   <Icon className="mt-0.5 size-5 text-brand" aria-hidden="true" />

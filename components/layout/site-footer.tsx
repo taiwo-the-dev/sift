@@ -6,15 +6,15 @@ const footerGroups = [
   {
     title: "Product",
     links: [
-      { label: "Discover", href: "#agent-search" },
-      { label: "Categories", href: "#categories" },
+      { label: "Discover", href: "/discover" },
+      { label: "Categories", href: "/#categories" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "How it works", href: "#how-it-works" },
-      { label: "Trust approach", href: "#trust" },
+      { label: "How it works", href: "/#how-it-works" },
+      { label: "Trust approach", href: "/#trust" },
     ],
   },
 ] as const;

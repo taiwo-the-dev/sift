@@ -24,7 +24,7 @@ export function FinalCtaSection() {
 
           <div className="relative z-10 mt-7 flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center lg:mt-0">
             <Link
-              href="#agent-search"
+              href="/discover#discovery-search"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
                 "border-brand-foreground/15 bg-background px-6 text-foreground hover:bg-card",
@@ -34,10 +34,10 @@ export function FinalCtaSection() {
               Find your agent
             </Link>
             <Link
-              href="#categories"
+              href="/discover"
               className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold text-brand-foreground outline-none transition-colors duration-200 hover:bg-brand-foreground/8 focus-visible:ring-3 focus-visible:ring-brand-foreground/30"
             >
-              Explore categories
+              Browse the catalogue
               <ArrowRight
                 className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
                 aria-hidden="true"

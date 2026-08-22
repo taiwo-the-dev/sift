@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready
+In Progress — hosted search migration awaiting deployment and browser validation
 
 ## Depends On
 

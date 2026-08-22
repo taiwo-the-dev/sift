@@ -1,15 +1,11 @@
-import { ArrowRight, CircleAlert, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
 
 import { agentCategories } from "@/components/landing/categories";
 import { HeroBackground } from "@/components/landing/hero-background";
 import { Button } from "@/components/ui/button";
 
-interface HeroSectionProps {
-  submittedGoal: string;
-}
-
-export function HeroSection({ submittedGoal }: HeroSectionProps) {
+export function HeroSection() {
   return (
     <section className="sift-hero-field relative overflow-hidden border-b border-border bg-background">
       <HeroBackground />
@@ -35,13 +31,13 @@ export function HeroSection({ submittedGoal }: HeroSectionProps) {
           className="mx-auto mt-10 min-w-0 max-w-5xl scroll-mt-24 rounded-xl border border-border bg-card/95 p-4 text-left sm:p-5"
         >
           <form
-            action="/"
+            action="/discover"
             method="get"
             className="min-w-0"
             aria-describedby="agent-search-help"
           >
             <label
-              htmlFor="goal"
+              htmlFor="landing-goal"
               className="text-sm font-semibold text-foreground"
             >
               What do you want an agent to do?
@@ -53,13 +49,12 @@ export function HeroSection({ submittedGoal }: HeroSectionProps) {
                   aria-hidden="true"
                 />
                 <input
-                  id="goal"
-                  name="goal"
+                  id="landing-goal"
+                  name="q"
                   type="search"
                   required
                   minLength={3}
                   maxLength={180}
-                  defaultValue={submittedGoal}
                   placeholder="Help me find low-risk yield for my USDT"
                   className="h-13 w-full min-w-0 rounded-lg border border-input bg-background pl-12 pr-4 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-ring focus:ring-3 focus:ring-ring/15"
                 />
@@ -86,14 +81,10 @@ export function HeroSection({ submittedGoal }: HeroSectionProps) {
             <div className="flex flex-wrap gap-x-5 gap-y-2 sm:justify-center">
               {agentCategories.map((category) => {
                 const Icon = category.icon;
-                const query = new URLSearchParams({
-                  goal: category.goal,
-                }).toString();
-
                 return (
                   <Link
                     key={category.shortcut}
-                    href={`/?${query}#agent-search`}
+                    href={`/discover?category=${category.slug}`}
                     className="group inline-flex items-center gap-2 rounded-sm text-sm font-medium text-foreground outline-none transition-colors hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     <Icon
@@ -107,21 +98,6 @@ export function HeroSection({ submittedGoal }: HeroSectionProps) {
             </div>
           </div>
 
-          {submittedGoal ? (
-            <div
-              role="status"
-              className="mt-4 flex gap-3 border-t border-border pt-4 text-sm text-brand"
-            >
-              <CircleAlert
-                className="mt-0.5 size-4 shrink-0"
-                aria-hidden="true"
-              />
-              <p className="leading-6">
-                Verified matching will be available when the live catalogue is
-                connected. No results are being simulated.
-              </p>
-            </div>
-          ) : null}
         </div>
       </div>
     </section>

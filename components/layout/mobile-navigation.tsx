@@ -74,7 +74,7 @@ export function MobileNavigation() {
               ),
             )}
             <Link
-              href="#agent-search"
+              href="/discover#discovery-search"
               onClick={() => setIsOpen(false)}
               className={cn(buttonVariants({ variant: "brand", size: "lg" }), "mt-2")}
             >

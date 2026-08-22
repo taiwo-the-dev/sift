@@ -281,7 +281,40 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      search_agents: {
+        Args: {
+          p_categories?: string[];
+          p_metadata_statuses?: string[];
+          p_page?: number;
+          p_page_size?: number;
+          p_search_terms?: string[];
+          p_sort?: string;
+        };
+        Returns: {
+          active: boolean | null;
+          agent_db_id: string;
+          agent_id: string;
+          category_source: string | null;
+          chain_id: number;
+          description: string | null;
+          image_url: string | null;
+          last_synced_at: string | null;
+          metadata_status: string;
+          name: string | null;
+          owner_address: string | null;
+          registered_at: string | null;
+          registered_block: number | null;
+          registry_address: string;
+          relevance: number;
+          resolved_categories: string[];
+          result_page: number;
+          services: Json;
+          total_count: number;
+          x402_supported: boolean | null;
+        }[];
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

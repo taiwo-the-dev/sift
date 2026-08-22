@@ -41,7 +41,7 @@ export function SiteHeader() {
 
         <div className="ml-auto hidden items-center gap-2 md:flex">
           <Link
-            href="#agent-search"
+            href="/discover#discovery-search"
             aria-label="Search for agents"
             title="Search for agents"
             className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}

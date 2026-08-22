@@ -51,7 +51,7 @@ The values above are illustrative only. Never commit `.env.local`, paste a real 
 
 Add the same two variables to the deployment provider, such as Vercel, for Production and any environment that will execute server-side database code. A GitHub-to-Supabase connection does not automatically configure Next.js or Vercel environment variables.
 
-The current landing page does not query the database and continues to build without these variables. Missing or invalid values throw a focused error only when a server-side repository is created.
+The landing page and M4 `/discover` route query the catalogue through a server-only repository. Missing or invalid values never enter a browser bundle: the landing page falls back without fake records and `/discover` shows a plain-language retry state.
 
 ## Schema deployment through GitHub
 
@@ -64,7 +64,7 @@ The preferred hosted workflow is:
 5. Merge to the configured production branch.
 6. Confirm the Supabase deployment succeeded before relying on the new schema.
 
-The M2 migration creates these six empty tables:
+The M2 migration creates these six tables:
 
 | Table | Responsibility |
 | --- | --- |
@@ -76,6 +76,28 @@ The M2 migration creates these six empty tables:
 | `sync_state` | Last successfully persisted block for each chain and registry deployment |
 
 Do not manually recreate or modify these tables in the production Table Editor. Schema changes must be represented by reviewed migration files so GitHub and Supabase migration history remain synchronized.
+
+## M4 discovery search
+
+`20260822090000_add_agent_discovery_search.sql` adds:
+
+- a GIN search index over normalized agent service fields;
+- the server-only `search_agents` PostgreSQL function;
+- bounded page sizes, validated filter/sort values, exact result counts, and deterministic identity tiebreakers;
+- PostgreSQL text matching across agent names, descriptions, categories, service types, endpoints, and service metadata;
+- transparent keyword-derived category matches for records whose source metadata has no canonical Sift category.
+
+The function is `security invoker`, is unavailable to `anon` and `authenticated`, and is callable only through the server-side service role. It never creates, updates, seeds, or ranks agent records. “Best text match” is PostgreSQL text relevance, not a Sift Score.
+
+Deploy this migration through the configured Supabase GitHub integration before deploying the M4 application change. A CLI fallback requires a linked checkout owned by an account with project privileges:
+
+```bash
+npm run db:migrations
+npm run db:push:dry-run
+npm run db:push
+```
+
+Do not run the application and database deployments out of order: `/discover` intentionally reports an unavailable catalogue until `search_agents` exists.
 
 ## Optional CLI verification
 
@@ -122,7 +144,7 @@ ERC-8004 agent identifiers are stored as checked decimal strings so uint256 valu
 
 Child observations use explicit `on delete cascade` foreign keys because they have no meaning after their parent agent is removed. Agent identity is unique across `(chain_id, registry_address, agent_id)`, while sync state has exactly one row per `(chain_id, registry_address)`.
 
-Only the M3 Sift Indexer should create catalogue records, and every inserted identity must come from a verified registry event. No seed or fabricated agent records are permitted.
+Only the M3 Sift Indexer should create catalogue records, and every inserted identity must come from a verified registry event. M4 reads those records through `createDiscoveryRepository()` and never writes catalogue data. No seed or fabricated agent records are permitted.
 
 ## Security boundary
 
@@ -137,6 +159,7 @@ Application and indexer code must use the repositories in `lib/db/` rather than 
 - `createAgentRepository()` provides typed identity reads and complete agent upserts.
 - `createAgentServiceRepository()` replaces normalized services without deleting the last-known-good set before successful writes.
 - `createSyncStateRepository()` provides typed checkpoint reads and upserts.
+- `createDiscoveryRepository()` provides bounded, parameterized catalogue search and recently registered reads.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 
 Repository inputs require unavailable upstream fields to be passed explicitly as `null`, keeping missing information distinguishable from fabricated defaults.

@@ -2,13 +2,13 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository currently includes the M0 foundation, M1 design system and landing page, M2 database foundation, and M3 ERC-8004 indexer.
+Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, and the M4 discovery marketplace implementation.
 
 ## Current milestone
 
-M3 establishes the Sift Indexer: a read-only, resumable service that reads verified ERC-8004 Identity Registry events from BNB Smart Chain, validates agent registration metadata, and persists real normalized agents through the M2 repositories. The M1 landing page remains intentionally independent of the catalogue until the M4 marketplace is explicitly implemented.
+M4 adds the server-rendered `/discover` marketplace over the real Sift Indexer catalogue. Search, deterministic four-category intent mapping, metadata provenance filters, stable sorting, bounded pagination, honest agent cards, and landing-page entry points are URL-addressable and work without client-side state.
 
-Marketplace presentation, profiles, health and scoring, comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
+The M4 PostgreSQL migration must be deployed before `/discover` can query the hosted project. Agent profiles, health and scoring, comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
 
 ## Stack
 
@@ -32,7 +32,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The static M1 experience does not require database credentials; configuration is validated only when a server-side repository or indexer command is used.
+Open [http://localhost:3000](http://localhost:3000). The landing page and `/discover` use the hosted database at request time. If the catalogue is temporarily unavailable, the landing page degrades honestly and the discovery route presents a retryable error state.
 
 The database uses the hosted Supabase project connected to GitHub; Docker and a local Supabase stack are not required. For environment setup, migration deployment, security decisions, and linked-project type generation, see [Hosted Supabase database](docs/database.md).
 
@@ -61,14 +61,17 @@ npm run build
 app/                 App Router entry points and global styles
 components/layout/   Shared application shell components
 components/landing/  M1 landing-page sections
+components/discovery/ M4 search, filters, cards, pagination, and states
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
+features/discovery/  M4 URL parsing, intent mapping, models, and display fallbacks
 lib/db/              Server-only client, strict schema types, validation, repositories
 lib/indexer/         ERC-8004 configuration, RPC, metadata, persistence, and sync logic
 scripts/             Server-only operational command entry points
 supabase/             Hosted deployment configuration and ordered SQL migrations
 tests/db/             Focused M2 configuration, mapping, and migration tests
 tests/indexer/        M3 unit and integration coverage
+tests/discovery/      M4 query, repository, formatting, and migration coverage
 lib/                 Framework-independent utilities and environment access
 ```
 
