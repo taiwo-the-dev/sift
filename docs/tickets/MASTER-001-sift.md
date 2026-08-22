@@ -13,8 +13,8 @@ Ready for Development
 - M4 — Complete
 - M5 — Complete
 - M6 — Complete
-- M7 — Ready
-- M8 — Not Started
+- M7 — Complete
+- M8 — Ready
 - M9 — Not Started
 - M10 — Not Started
 - M11 — Not Started

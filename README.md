@@ -2,13 +2,13 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, M4 discovery marketplace, M5 agent profiles, and the M6 health/Sift Score implementation.
+Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, M4 discovery marketplace, M5 agent profiles, M6 health/Sift Score implementation, and the M7 agent comparison experience.
 
 ## Current milestone
 
-M6 adds safe, selective endpoint-health observations and the deterministic `sift-evidence-v1.0.0` score. Discover cards and server-rendered `/agents/[chainId]/[agentId]` profiles present only persisted evidence, confidence, freshness, missing signals, and an accessible score explanation. Featured placement uses a documented current-score/current-health rule and remains unavailable when no agent qualifies.
+M7 adds reusable selection controls and a server-rendered `/compare` route for two to four canonical agent identities. Shareable URLs preserve the optional goal, one bounded repository operation loads real M6 evidence in bulk, and a documented deterministic rule highlights a contextual match only when the available evidence justifies one.
 
-The hosted catalogue and ordered M4–M6 PostgreSQL migrations are deployed. Real health and withheld-score persistence were validated against BSC Testnet agent `#1883` on 2026-08-22. Comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
+The hosted catalogue and ordered M4–M6 PostgreSQL migrations are deployed. Real health and withheld-score persistence were validated against BSC Testnet agent `#1883` on 2026-08-22. M7 adds no schema migration and was browser-validated against real hosted catalogue identities. Authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
 
 ## Stack
 
@@ -57,6 +57,8 @@ npm run score:agents
 
 The formula, evidence audit, endpoint safety rules, scheduler, Featured rule, and deployment sequence are documented in [Agent health and Sift Score](docs/scoring.md).
 
+Comparison URL state, bounded data loading, supported fields, Unknown handling, and the contextual match rule are documented in [Agent comparison](docs/comparison.md).
+
 ## Validation
 
 ```bash
@@ -75,12 +77,14 @@ components/landing/  M1 landing-page sections
 components/discovery/ M4 search, filters, cards, pagination, and states
 components/agents/   M5 profile sections, navigation, copy, and fallback states
 components/scoring/  M6 accessible score summary and evidence breakdown
+components/comparison/ M7 selection controls, navigation state, and comparison UI
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
 features/discovery/  M4 URL parsing, intent mapping, models, and display fallbacks
 features/agents/     M5 profile routing, presentation, links, and domain models
 features/health/     M6 endpoint eligibility, safe probing, history, and orchestration
 features/scoring/    M6 pure formula, presentation, and recalculation orchestration
+features/comparison/ M7 URL validation, domain models, and contextual matching
 lib/db/              Server-only client, strict schema types, validation, repositories
 lib/indexer/         ERC-8004 configuration, RPC, metadata, persistence, and sync logic
 scripts/             Server-only operational command entry points
@@ -91,6 +95,7 @@ tests/discovery/      M4 query, repository, formatting, and migration coverage
 tests/agents/         M5 route, link, presentation, repository, and migration coverage
 tests/health/         M6 endpoint, SSRF, repository, runner, and transition coverage
 tests/scoring/        M6 formula, persistence, Featured, and presentation coverage
+tests/comparison/     M7 selection, matching, and bounded repository coverage
 lib/                 Framework-independent utilities and environment access
 ```
 
