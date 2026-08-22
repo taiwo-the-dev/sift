@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented — Hosted Deployment Validation Pending
+Complete
 
 ## Depends On
 
@@ -98,18 +98,18 @@ Sift should help users distinguish agents without reducing trust to an unexplain
 
 ## Acceptance Criteria
 
-- [ ] Supported health checks are bounded, safe, scheduled/CLI-runnable, and persisted.
+- [x] Supported health checks are bounded, safe, scheduled/CLI-runnable, and persisted.
 - [x] Unsupported or unsafe endpoints remain Unknown and are not probed.
 - [x] The Sift Score formula, inputs, normalization, weights, and version are documented.
 - [x] Identical inputs always produce the same score, confidence, and breakdown.
 - [x] Missing evidence reduces confidence or withholds the score.
-- [ ] Scores and component breakdowns are persisted with timestamps and version.
+- [x] Scores and component breakdowns are persisted with timestamps and version.
 - [x] Recalculation is idempotent and responds to changed source inputs.
 - [x] Discover/profile UI displays only real current health and persisted scores.
 - [x] Users can inspect why a score was produced and see its limitations.
 - [x] Featured agents use a documented evidence-based rule or remain unavailable.
 - [x] No endpoint action, wallet, comparison, or hiring work is implemented.
-- [ ] Lint, typecheck, unit/integration tests, browser testing, and production build pass.
+- [x] Lint, typecheck, unit/integration tests, browser testing, and production build pass.
 
 ## Testing Requirements
 

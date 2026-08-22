@@ -109,13 +109,15 @@ The updated Sift Indexer writes `metadata_verified_at` after a successful valida
 
 `20260822130000_add_health_scoring_provenance.sql` adds the fields required to audit health and score results. Health rows record the checked service type, sanitized endpoint, endpoint fingerprint, outcome, and bounded check/success counts. Score rows may contain a null withheld score and persist an evidence snapshot plus source freshness. Reputation rows gain an explicit source and source-observation time; unprovenanced reputation is excluded from the formula.
 
-The migration also adds two bounded `security invoker` queue functions callable only by `service_role`:
+The migration also adds three bounded `security invoker` selection functions callable only by `service_role`:
 
 - `health_check_candidates` returns due valid agents with potentially eligible declarations, prioritizing scored and recently registered identities;
 - `score_recalculation_candidates` returns missing, version-stale, changed, or newly expired assessments.
 - `featured_agent_candidates` applies the exact current score, confidence, freshness, and successful-health qualification before ordering a bounded result.
 
 Deploy the M5 migration first, then M6. Do not run `check:agents` or `score:agents` until both appear in hosted migration history. The full evidence contract and post-deployment verification sequence are in [Agent health and Sift Score](scoring.md).
+
+The hosted M5 and M6 migrations were validated on 2026-08-22. A bounded check persisted an honest DNS-error/Unknown observation for BSC Testnet agent `#1883`, and the following score run persisted a withheld low-confidence assessment rather than manufacturing a score.
 
 ## Optional CLI verification
 

@@ -12,8 +12,8 @@ Ready for Development
 - M3 — Complete
 - M4 — Complete
 - M5 — Complete
-- M6 — Implemented — Hosted Deployment Validation Pending
-- M7 — Not Started
+- M6 — Complete
+- M7 — Ready
 - M8 — Not Started
 - M9 — Not Started
 - M10 — Not Started

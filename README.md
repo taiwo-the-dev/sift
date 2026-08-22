@@ -8,7 +8,7 @@ Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Ch
 
 M6 adds safe, selective endpoint-health observations and the deterministic `sift-evidence-v1.0.0` score. Discover cards and server-rendered `/agents/[chainId]/[agentId]` profiles present only persisted evidence, confidence, freshness, missing signals, and an accessible score explanation. Featured placement uses a documented current-score/current-health rule and remains unavailable when no agent qualifies.
 
-The M4 PostgreSQL migration is deployed and the hosted discovery catalogue is operational. Deploy the ordered M5 provenance migration and M6 health/scoring migration through the connected Supabase GitHub integration before running the matching indexer or assessment commands. Comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
+The hosted catalogue and ordered M4–M6 PostgreSQL migrations are deployed. Real health and withheld-score persistence were validated against BSC Testnet agent `#1883` on 2026-08-22. Comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
 
 ## Stack
 
