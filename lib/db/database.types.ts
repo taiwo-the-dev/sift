@@ -19,32 +19,50 @@ export type Database = {
       agent_health: {
         Row: {
           agent_db_id: string;
+          check_count: number;
+          checked_endpoint: string | null;
           created_at: string;
+          endpoint_hash: string | null;
           failure_count: number;
           last_checked_at: string;
           last_success_at: string | null;
+          outcome: string | null;
           response_time_ms: number | null;
+          service_type: string | null;
           status: string;
+          success_count: number;
           updated_at: string;
         };
         Insert: {
           agent_db_id: string;
+          check_count?: number;
+          checked_endpoint?: string | null;
           created_at?: string;
+          endpoint_hash?: string | null;
           failure_count: number;
           last_checked_at: string;
           last_success_at?: string | null;
+          outcome?: string | null;
           response_time_ms?: number | null;
+          service_type?: string | null;
           status: string;
+          success_count?: number;
           updated_at?: string;
         };
         Update: {
           agent_db_id?: string;
+          check_count?: number;
+          checked_endpoint?: string | null;
           created_at?: string;
+          endpoint_hash?: string | null;
           failure_count?: number;
           last_checked_at?: string;
           last_success_at?: string | null;
+          outcome?: string | null;
           response_time_ms?: number | null;
+          service_type?: string | null;
           status?: string;
+          success_count?: number;
           updated_at?: string;
         };
         Relationships: [
@@ -65,6 +83,8 @@ export type Database = {
           feedback_count: number | null;
           last_activity_at: string | null;
           reputation_score: number | null;
+          source: string | null;
+          source_observed_at: string | null;
           successful_jobs: number | null;
           updated_at: string;
         };
@@ -75,6 +95,8 @@ export type Database = {
           feedback_count?: number | null;
           last_activity_at?: string | null;
           reputation_score?: number | null;
+          source?: string | null;
+          source_observed_at?: string | null;
           successful_jobs?: number | null;
           updated_at?: string;
         };
@@ -85,6 +107,8 @@ export type Database = {
           feedback_count?: number | null;
           last_activity_at?: string | null;
           reputation_score?: number | null;
+          source?: string | null;
+          source_observed_at?: string | null;
           successful_jobs?: number | null;
           updated_at?: string;
         };
@@ -106,11 +130,13 @@ export type Database = {
           capability_component: number | null;
           confidence: number;
           created_at: string;
+          evidence_snapshot: Json;
           metadata_component: number | null;
           reliability_component: number | null;
           reputation_component: number | null;
           score_version: string;
-          sift_score: number;
+          sift_score: number | null;
+          source_freshness: Json;
           track_record_component: number | null;
           updated_at: string;
         };
@@ -121,11 +147,13 @@ export type Database = {
           capability_component?: number | null;
           confidence: number;
           created_at?: string;
+          evidence_snapshot: Json;
           metadata_component?: number | null;
           reliability_component?: number | null;
           reputation_component?: number | null;
           score_version: string;
-          sift_score: number;
+          sift_score?: number | null;
+          source_freshness: Json;
           track_record_component?: number | null;
           updated_at?: string;
         };
@@ -136,11 +164,13 @@ export type Database = {
           capability_component?: number | null;
           confidence?: number;
           created_at?: string;
+          evidence_snapshot?: Json;
           metadata_component?: number | null;
           reliability_component?: number | null;
           reputation_component?: number | null;
           score_version?: string;
-          sift_score?: number;
+          sift_score?: number | null;
+          source_freshness?: Json;
           track_record_component?: number | null;
           updated_at?: string;
         };
@@ -207,6 +237,7 @@ export type Database = {
           id: string;
           image_url: string | null;
           last_synced_at: string | null;
+          metadata_verified_at: string | null;
           metadata_status: string;
           name: string | null;
           owner_address: string | null;
@@ -227,6 +258,7 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           last_synced_at?: string | null;
+          metadata_verified_at?: string | null;
           metadata_status?: string;
           name?: string | null;
           owner_address?: string | null;
@@ -247,6 +279,7 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           last_synced_at?: string | null;
+          metadata_verified_at?: string | null;
           metadata_status?: string;
           name?: string | null;
           owner_address?: string | null;
@@ -282,6 +315,28 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      featured_agent_candidates: {
+        Args: {
+          p_fresh_after?: string;
+          p_limit?: number;
+          p_score_version?: string;
+        };
+        Returns: { agent_db_id: string }[];
+      };
+      health_check_candidates: {
+        Args: {
+          p_limit?: number;
+          p_stale_before?: string;
+        };
+        Returns: { agent_db_id: string }[];
+      };
+      score_recalculation_candidates: {
+        Args: {
+          p_limit?: number;
+          p_score_version?: string;
+        };
+        Returns: { agent_db_id: string }[];
+      };
       search_agents: {
         Args: {
           p_categories?: string[];

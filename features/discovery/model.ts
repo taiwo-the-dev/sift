@@ -1,4 +1,6 @@
 import type { MetadataStatus } from "@/lib/db/validation";
+import type { HealthSnapshot } from "@/features/health/model";
+import type { PersistedSiftScore } from "@/features/scoring/model";
 
 export const discoveryCategorySlugs = [
   "yield-optimisation",
@@ -77,6 +79,7 @@ export type DiscoveryAgent = Readonly<{
   categorySource: CategorySource;
   chainId: number;
   description: string | null;
+  health: HealthSnapshot | null;
   imageUrl: string | null;
   lastSyncedAt: string | null;
   metadataStatus: MetadataStatus;
@@ -86,6 +89,7 @@ export type DiscoveryAgent = Readonly<{
   registeredBlock: number | null;
   registryAddress: string;
   relevance: number;
+  score: PersistedSiftScore | null;
   services: readonly DiscoveryService[];
   x402Supported: boolean | null;
 }>;

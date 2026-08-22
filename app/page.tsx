@@ -8,13 +8,16 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { TrustSection } from "@/components/landing/trust-section";
 import type { DiscoveryAgent } from "@/features/discovery/model";
+import type { FeaturedScoredAgent } from "@/features/scoring/model";
 import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
+import { createFeaturedAgentRepository } from "@/lib/db/featured-agent-repository";
 
 export default async function HomePage() {
   await connection();
 
   let catalogueAvailable = true;
   let catalogueCount: number | null = null;
+  let featuredAgents: FeaturedScoredAgent[] = [];
   let recentAgents: DiscoveryAgent[] = [];
 
   try {
@@ -25,6 +28,15 @@ export default async function HomePage() {
     catalogueAvailable = false;
   }
 
+  try {
+    featuredAgents = [
+      ...(await createFeaturedAgentRepository().listFeatured(3, new Date())),
+    ];
+  } catch {
+    // Featured placement is optional and must disappear rather than fall back
+    // to unqualified or simulated agents when score evidence is unavailable.
+  }
+
   return (
     <>
       <HeroSection />
@@ -33,6 +45,7 @@ export default async function HomePage() {
       <CategorySection />
       <AgentCollectionsSection
         catalogueAvailable={catalogueAvailable}
+        featuredAgents={featuredAgents}
         recentAgents={recentAgents}
       />
       <TrustSection />

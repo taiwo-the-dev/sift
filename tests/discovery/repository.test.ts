@@ -57,6 +57,11 @@ const fixtureRows: readonly SearchAgentRow[] = [
   },
 ];
 
+const noEvidence = {
+  listHealth: async () => [],
+  listScores: async () => [],
+};
+
 describe("discovery repository integration boundary", () => {
   it("passes validated combined filters to the database function", async () => {
     const calls: unknown[] = [];
@@ -75,7 +80,7 @@ describe("discovery repository integration boundary", () => {
       sort: "recent",
     });
 
-    const result = await createDiscoveryRepository(client).search(query);
+    const result = await createDiscoveryRepository(client, noEvidence).search(query);
 
     assert.deepEqual(calls, [
       {
@@ -102,7 +107,7 @@ describe("discovery repository integration boundary", () => {
     } as unknown as SupabaseClient<Database>;
     const query = parseDiscoverySearchParams({ q: "grid" });
 
-    const result = await createDiscoveryRepository(client).search(query);
+    const result = await createDiscoveryRepository(client, noEvidence).search(query);
 
     assert.deepEqual(
       result.agents.map((agent) => agent.agentId),

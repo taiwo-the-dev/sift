@@ -2,13 +2,13 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, and the M4 discovery marketplace implementation.
+Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, M4 discovery marketplace, M5 agent profiles, and the M6 health/Sift Score implementation.
 
 ## Current milestone
 
-M4 adds the server-rendered `/discover` marketplace over the real Sift Indexer catalogue. Search, deterministic four-category intent mapping, metadata provenance filters, stable sorting, bounded pagination, honest agent cards, and landing-page entry points are URL-addressable and work without client-side state.
+M6 adds safe, selective endpoint-health observations and the deterministic `sift-evidence-v1.0.0` score. Discover cards and server-rendered `/agents/[chainId]/[agentId]` profiles present only persisted evidence, confidence, freshness, missing signals, and an accessible score explanation. Featured placement uses a documented current-score/current-health rule and remains unavailable when no agent qualifies.
 
-The M4 PostgreSQL migration must be deployed before `/discover` can query the hosted project. Agent profiles, health and scoring, comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
+The M4 PostgreSQL migration is deployed and the hosted discovery catalogue is operational. Deploy the ordered M5 provenance migration and M6 health/scoring migration through the connected Supabase GitHub integration before running the matching indexer or assessment commands. Comparison, authentication, wallet connectivity, and hiring remain deferred to their milestones in the [master ticket](docs/tickets/MASTER-001-sift.md).
 
 ## Stack
 
@@ -46,6 +46,17 @@ npm run sync:agents
 
 For verified deployments, RPC configuration, metadata safeguards, GitHub Actions setup, and recovery behavior, see [Sift Indexer operations](docs/indexer.md).
 
+After the M6 migration is deployed, verify and run bounded health/scoring batches with:
+
+```bash
+npm run check:smoke
+npm run score:smoke
+npm run check:agents
+npm run score:agents
+```
+
+The formula, evidence audit, endpoint safety rules, scheduler, Featured rule, and deployment sequence are documented in [Agent health and Sift Score](docs/scoring.md).
+
 ## Validation
 
 ```bash
@@ -62,9 +73,14 @@ app/                 App Router entry points and global styles
 components/layout/   Shared application shell components
 components/landing/  M1 landing-page sections
 components/discovery/ M4 search, filters, cards, pagination, and states
+components/agents/   M5 profile sections, navigation, copy, and fallback states
+components/scoring/  M6 accessible score summary and evidence breakdown
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
 features/discovery/  M4 URL parsing, intent mapping, models, and display fallbacks
+features/agents/     M5 profile routing, presentation, links, and domain models
+features/health/     M6 endpoint eligibility, safe probing, history, and orchestration
+features/scoring/    M6 pure formula, presentation, and recalculation orchestration
 lib/db/              Server-only client, strict schema types, validation, repositories
 lib/indexer/         ERC-8004 configuration, RPC, metadata, persistence, and sync logic
 scripts/             Server-only operational command entry points
@@ -72,6 +88,9 @@ supabase/             Hosted deployment configuration and ordered SQL migrations
 tests/db/             Focused M2 configuration, mapping, and migration tests
 tests/indexer/        M3 unit and integration coverage
 tests/discovery/      M4 query, repository, formatting, and migration coverage
+tests/agents/         M5 route, link, presentation, repository, and migration coverage
+tests/health/         M6 endpoint, SSRF, repository, runner, and transition coverage
+tests/scoring/        M6 formula, persistence, Featured, and presentation coverage
 lib/                 Framework-independent utilities and environment access
 ```
 

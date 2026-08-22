@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready
+Complete
 
 ## Depends On
 
@@ -89,18 +89,18 @@ Discovery narrows the catalogue, but users need a trustworthy place to understan
 
 ## Acceptance Criteria
 
-- [ ] `/agents/[chainId]/[agentId]` renders the correct real indexed agent.
-- [ ] Invalid identifiers and missing agents produce a polished not-found state.
-- [ ] The header and overview prioritize human-readable agent purpose.
-- [ ] Capabilities/services and technical identifiers are shown from real source data.
-- [ ] Declared capabilities are not misrepresented as verified performance.
-- [ ] Last verified/synced and stale metadata states are communicated clearly.
-- [ ] Explorer and external links are sanitized and point to the correct chain context.
-- [ ] Discover cards link to valid profile routes.
-- [ ] Missing health, reputation, activity, and performance data uses honest fallbacks.
-- [ ] No comparison, wallet, hiring, or scoring functionality is implemented early.
-- [ ] Responsive, keyboard, loading, error, and partial-data states pass review.
-- [ ] Lint, typecheck, relevant tests, browser testing, and production build pass.
+- [x] `/agents/[chainId]/[agentId]` renders the correct real indexed agent.
+- [x] Invalid identifiers and missing agents produce a polished not-found state.
+- [x] The header and overview prioritize human-readable agent purpose.
+- [x] Capabilities/services and technical identifiers are shown from real source data.
+- [x] Declared capabilities are not misrepresented as verified performance.
+- [x] Last verified/synced and stale metadata states are communicated clearly.
+- [x] Explorer and external links are sanitized and point to the correct chain context.
+- [x] Discover cards link to valid profile routes.
+- [x] Missing health, reputation, activity, and performance data uses honest fallbacks.
+- [x] No comparison, wallet, hiring, or scoring functionality is implemented early.
+- [x] Responsive, keyboard, loading, error, and partial-data states pass review.
+- [x] Lint, typecheck, relevant tests, browser testing, and production build pass.
 
 ## Testing Requirements
 

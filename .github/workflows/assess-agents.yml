@@ -1,0 +1,43 @@
+name: Assess agent health and scores
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sift-agent-assessment
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HEALTH_CHECK_CONCURRENCY: ${{ vars.HEALTH_CHECK_CONCURRENCY || '3' }}
+      HEALTH_CHECK_INTERVAL_HOURS: ${{ vars.HEALTH_CHECK_INTERVAL_HOURS || '6' }}
+      HEALTH_CHECK_LIMIT: ${{ vars.HEALTH_CHECK_LIMIT || '20' }}
+      SCORE_BATCH_LIMIT: ${{ vars.SCORE_BATCH_LIMIT || '200' }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check bounded eligible endpoints
+        run: npm run check:agents
+
+      - name: Recalculate affected Sift Scores
+        run: npm run score:agents

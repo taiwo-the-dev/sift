@@ -1,4 +1,10 @@
 import type { Json, TableInsert } from "@/lib/db/database.types";
+import {
+  healthOutcomes,
+  healthStatuses,
+  type HealthSnapshot,
+} from "@/features/health/model";
+import type { SiftScoreAssessment } from "@/features/scoring/model";
 
 export const agentCategories = [
   "yield-optimisation",
@@ -31,6 +37,7 @@ export type AgentWriteInput = AgentIdentityInput &
     description: string | null;
     imageUrl: string | null;
     lastSyncedAt: string | null;
+    metadataVerifiedAt: string | null;
     metadataStatus: MetadataStatus;
     name: string | null;
     ownerAddress: string | null;
@@ -51,6 +58,15 @@ export type AgentServiceWriteInput = Readonly<{
   metadata: Json | null;
   serviceType: string;
   version: string | null;
+}>;
+
+export type AgentHealthWriteInput = HealthSnapshot &
+  Readonly<{ agentDbId: string }>;
+
+export type AgentScoreWriteInput = Readonly<{
+  agentDbId: string;
+  assessment: SiftScoreAssessment;
+  calculatedAt: string;
 }>;
 
 const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;
@@ -136,6 +152,7 @@ export function validateAgentWrite(
   assertNullableText(input.imageUrl, "imageUrl", 2_048);
   assertNullableTimestamp(input.registeredAt, "registeredAt");
   assertNullableTimestamp(input.lastSyncedAt, "lastSyncedAt");
+  assertNullableTimestamp(input.metadataVerifiedAt, "metadataVerifiedAt");
 
   if (input.registeredBlock !== null) {
     assertNonNegativeSafeInteger(input.registeredBlock, "registeredBlock");
@@ -162,6 +179,7 @@ export function validateAgentWrite(
     description: input.description,
     image_url: input.imageUrl,
     last_synced_at: input.lastSyncedAt,
+    metadata_verified_at: input.metadataVerifiedAt,
     metadata_status: input.metadataStatus,
     name: input.name,
     owner_address:
@@ -219,4 +237,151 @@ export function validateAgentDatabaseId(value: string): string {
   }
 
   return value.toLowerCase();
+}
+
+function assertBoundedScore(
+  value: number | null,
+  fieldName: string,
+): void {
+  if (
+    value !== null &&
+    (!Number.isFinite(value) || value < 0 || value > 100)
+  ) {
+    throw new TypeError(`${fieldName} must be null or a number from 0 to 100.`);
+  }
+}
+
+function assertJsonObject(value: Json, fieldName: string): void {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError(`${fieldName} must be a JSON object.`);
+  }
+}
+
+export function validateAgentHealthWrite(
+  input: AgentHealthWriteInput,
+): TableInsert<"agent_health"> {
+  const agentDbId = validateAgentDatabaseId(input.agentDbId);
+
+  if (!healthStatuses.some((status) => status === input.status)) {
+    throw new TypeError("status is not a supported health status.");
+  }
+
+  if (
+    input.outcome !== null &&
+    !healthOutcomes.some((outcome) => outcome === input.outcome)
+  ) {
+    throw new TypeError("outcome is not a supported health outcome.");
+  }
+
+  assertNonNegativeSafeInteger(input.checkCount, "checkCount");
+  assertNonNegativeSafeInteger(input.successCount, "successCount");
+  assertNonNegativeSafeInteger(input.failureCount, "failureCount");
+  assertNullableTimestamp(input.lastSuccessAt, "lastSuccessAt");
+  assertNullableText(input.checkedEndpoint, "checkedEndpoint", 2_048);
+  assertNullableText(input.endpointHash, "endpointHash", 64);
+  assertNullableText(input.serviceType, "serviceType", 100);
+
+  if (Number.isNaN(Date.parse(input.lastCheckedAt))) {
+    throw new TypeError("lastCheckedAt must be a valid timestamp.");
+  }
+
+  if (input.checkCount > 1_000 || input.successCount > input.checkCount) {
+    throw new TypeError(
+      "health history must be bounded and successes cannot exceed checks.",
+    );
+  }
+
+  if (input.failureCount > 100) {
+    throw new TypeError("failureCount must not exceed 100.");
+  }
+
+  if (
+    input.responseTimeMs !== null &&
+    (!Number.isSafeInteger(input.responseTimeMs) || input.responseTimeMs < 0)
+  ) {
+    throw new TypeError("responseTimeMs must be null or non-negative.");
+  }
+
+  if (
+    input.checkedEndpoint !== null &&
+    !input.checkedEndpoint.startsWith("https://")
+  ) {
+    throw new TypeError("checkedEndpoint must be null or use HTTPS.");
+  }
+
+  if (
+    input.endpointHash !== null &&
+    !/^[0-9a-f]{64}$/.test(input.endpointHash)
+  ) {
+    throw new TypeError("endpointHash must be a lowercase SHA-256 digest.");
+  }
+
+  return {
+    agent_db_id: agentDbId,
+    check_count: input.checkCount,
+    checked_endpoint: input.checkedEndpoint,
+    endpoint_hash: input.endpointHash,
+    failure_count: input.failureCount,
+    last_checked_at: input.lastCheckedAt,
+    last_success_at: input.lastSuccessAt,
+    outcome: input.outcome,
+    response_time_ms: input.responseTimeMs,
+    service_type: input.serviceType,
+    status: input.status,
+    success_count: input.successCount,
+  };
+}
+
+export function validateAgentScoreWrite(
+  input: AgentScoreWriteInput,
+): TableInsert<"agent_scores"> {
+  const agentDbId = validateAgentDatabaseId(input.agentDbId);
+  const { assessment } = input;
+
+  if (Number.isNaN(Date.parse(input.calculatedAt))) {
+    throw new TypeError("calculatedAt must be a valid timestamp.");
+  }
+
+  if (
+    !Number.isFinite(assessment.confidence) ||
+    assessment.confidence < 0 ||
+    assessment.confidence > 1
+  ) {
+    throw new TypeError("confidence must be a number from 0 to 1.");
+  }
+
+  assertBoundedScore(assessment.score, "score");
+  assertBoundedScore(assessment.components.availability, "availability");
+  assertBoundedScore(assessment.components.capability, "capability");
+  assertBoundedScore(assessment.components.metadata, "metadata");
+  assertBoundedScore(assessment.components.reliability, "reliability");
+  assertBoundedScore(assessment.components.reputation, "reputation");
+  assertBoundedScore(assessment.components.trackRecord, "trackRecord");
+  assertJsonObject(assessment.evidenceSnapshot, "evidenceSnapshot");
+
+  if (!assessment.version.trim()) {
+    throw new TypeError("score version must not be empty.");
+  }
+
+  const sourceFreshness: Json = {
+    healthAt: assessment.sourceFreshness.healthAt,
+    metadataAt: assessment.sourceFreshness.metadataAt,
+    reputationAt: assessment.sourceFreshness.reputationAt,
+  };
+
+  return {
+    agent_db_id: agentDbId,
+    availability_component: assessment.components.availability,
+    calculated_at: input.calculatedAt,
+    capability_component: assessment.components.capability,
+    confidence: assessment.confidence,
+    evidence_snapshot: assessment.evidenceSnapshot,
+    metadata_component: assessment.components.metadata,
+    reliability_component: assessment.components.reliability,
+    reputation_component: assessment.components.reputation,
+    score_version: assessment.version,
+    sift_score: assessment.score,
+    source_freshness: sourceFreshness,
+    track_record_component: assessment.components.trackRecord,
+  };
 }

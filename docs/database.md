@@ -51,7 +51,7 @@ The values above are illustrative only. Never commit `.env.local`, paste a real 
 
 Add the same two variables to the deployment provider, such as Vercel, for Production and any environment that will execute server-side database code. A GitHub-to-Supabase connection does not automatically configure Next.js or Vercel environment variables.
 
-The landing page and M4 `/discover` route query the catalogue through a server-only repository. Missing or invalid values never enter a browser bundle: the landing page falls back without fake records and `/discover` shows a plain-language retry state.
+The landing page, M4 `/discover` route, and M5/M6 agent profiles query the catalogue through server-only repositories. Missing or invalid values never enter a browser bundle: public surfaces fall back without fake records and data-source failures show plain-language retry states.
 
 ## Schema deployment through GitHub
 
@@ -70,9 +70,9 @@ The M2 migration creates these six tables:
 | --- | --- |
 | `agents` | Canonical chain/registry/agent identity and last verified normalized metadata |
 | `agent_services` | Multiple service declarations associated with an agent |
-| `agent_health` | Latest real endpoint health observation, when one exists |
-| `agent_reputation` | Reputation values derived from verifiable sources, when available |
-| `agent_scores` | Versioned Sift Score output; no row exists until scoring is implemented |
+| `agent_health` | Latest bounded real endpoint observation and endpoint-specific history |
+| `agent_reputation` | Reputation values with explicit verifiable source and observation time, when available |
+| `agent_scores` | Versioned, reproducible Sift Score assessments, including honestly withheld results |
 | `sync_state` | Last successfully persisted block for each chain and registry deployment |
 
 Do not manually recreate or modify these tables in the production Table Editor. Schema changes must be represented by reviewed migration files so GitHub and Supabase migration history remain synchronized.
@@ -98,6 +98,24 @@ npm run db:push
 ```
 
 Do not run the application and database deployments out of order: `/discover` intentionally reports an unavailable catalogue until `search_agents` exists.
+
+## M5 profile provenance
+
+`20260822111500_add_metadata_verification_time.sql` adds the nullable `agents.metadata_verified_at` field. It records the most recent successful metadata validation independently from `last_synced_at`, which continues to describe the latest catalogue write. The migration backfills the existing timestamp only for records that are currently valid; it does not invent a successful verification for invalid, unavailable, or pending metadata.
+
+The updated Sift Indexer writes `metadata_verified_at` after a successful validation and preserves it after later failures. Deploy this migration through the Supabase GitHub integration before deploying or running the matching indexer update, because the updated upsert contract includes the new column.
+
+## M6 evidence provenance
+
+`20260822130000_add_health_scoring_provenance.sql` adds the fields required to audit health and score results. Health rows record the checked service type, sanitized endpoint, endpoint fingerprint, outcome, and bounded check/success counts. Score rows may contain a null withheld score and persist an evidence snapshot plus source freshness. Reputation rows gain an explicit source and source-observation time; unprovenanced reputation is excluded from the formula.
+
+The migration also adds two bounded `security invoker` queue functions callable only by `service_role`:
+
+- `health_check_candidates` returns due valid agents with potentially eligible declarations, prioritizing scored and recently registered identities;
+- `score_recalculation_candidates` returns missing, version-stale, changed, or newly expired assessments.
+- `featured_agent_candidates` applies the exact current score, confidence, freshness, and successful-health qualification before ordering a bounded result.
+
+Deploy the M5 migration first, then M6. Do not run `check:agents` or `score:agents` until both appear in hosted migration history. The full evidence contract and post-deployment verification sequence are in [Agent health and Sift Score](scoring.md).
 
 ## Optional CLI verification
 
@@ -160,6 +178,10 @@ Application and indexer code must use the repositories in `lib/db/` rather than 
 - `createAgentServiceRepository()` replaces normalized services without deleting the last-known-good set before successful writes.
 - `createSyncStateRepository()` provides typed checkpoint reads and upserts.
 - `createDiscoveryRepository()` provides bounded, parameterized catalogue search and recently registered reads.
+- `createAgentProfileRepository()` composes one indexed identity with its declared services and any persisted health/reputation evidence without N+1 queries.
+- `createHealthRepository()` reads a bounded due queue and persists validated endpoint observations.
+- `createScoreRepository()` bulk-composes affected evidence and upserts deterministic versioned assessments.
+- `createFeaturedAgentRepository()` returns only agents satisfying the documented current score/health rule.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 
 Repository inputs require unavailable upstream fields to be passed explicitly as `null`, keeping missing information distinguishable from fabricated defaults.
@@ -173,4 +195,4 @@ npm test
 npm run build
 ```
 
-After GitHub deploys the migration, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration in deployment history. M3 now writes only real ERC-8004 identities, metadata, services, and checkpoints. Health, reputation, Sift Scores, authentication, and user-generated records remain unimplemented.
+After GitHub deploys the migrations, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration history. M3 writes only real ERC-8004 identities, metadata, services, and checkpoints. M6 writes only bounded endpoint observations and reproducible assessments from those persisted inputs. It does not create reputation evidence, authentication, wallet, comparison, hiring, or user-generated records.

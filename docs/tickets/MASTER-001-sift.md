@@ -10,9 +10,9 @@ Ready for Development
 - M1 — Complete
 - M2 — Complete
 - M3 — Complete
-- M4 — In Progress
-- M5 — Not Started
-- M6 — Not Started
+- M4 — Complete
+- M5 — Complete
+- M6 — Implemented — Hosted Deployment Validation Pending
 - M7 — Not Started
 - M8 — Not Started
 - M9 — Not Started
@@ -915,6 +915,12 @@ response_time_ms
 last_checked_at
 last_success_at
 failure_count
+service_type
+checked_endpoint
+endpoint_hash
+outcome
+check_count
+success_count
 ```
 
 ## agent_reputation
@@ -926,6 +932,8 @@ reputation_score
 successful_jobs
 failed_jobs
 last_activity_at
+source
+source_observed_at
 updated_at
 ```
 
@@ -935,7 +943,7 @@ Only store fields we can genuinely derive.
 
 ```text
 agent_db_id
-Sift_score
+sift_score
 confidence
 reputation_component
 reliability_component
@@ -945,6 +953,8 @@ track_record_component
 metadata_component
 score_version
 calculated_at
+evidence_snapshot
+source_freshness
 ```
 
 ## sync_state

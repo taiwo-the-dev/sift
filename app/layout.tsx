@@ -26,7 +26,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${geist.variable} h-full antialiased`}
+    >
       <body
         suppressHydrationWarning
         data-runtime-environment={env.NODE_ENV}

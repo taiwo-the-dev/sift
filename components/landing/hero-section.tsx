@@ -18,7 +18,7 @@ export function HeroSection() {
 
         <h1 className="mx-auto mt-7 max-w-5xl text-balance text-[clamp(2.8rem,5.5vw,4.5rem)] font-semibold uppercase leading-[0.98] tracking-[-0.055em] text-foreground">
           <span>Find the right</span>
-          <span className="text-brand">AI agent</span>
+          <span className="text-brand"> AI agent</span>
           <span className="block">for the job.</span>
         </h1>
         <p className="mx-auto mt-7 max-w-3xl text-pretty text-lg leading-8 text-muted-foreground sm:text-xl">
@@ -97,7 +97,6 @@ export function HeroSection() {
               })}
             </div>
           </div>
-
         </div>
       </div>
     </section>

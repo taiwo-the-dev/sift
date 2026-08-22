@@ -1,26 +1,38 @@
-import { ArrowRight, Clock3, ScanSearch, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Clock3,
+  Gauge,
+  ScanSearch,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 
+import { AgentAvatar } from "@/components/discovery/agent-avatar";
+import { buildAgentProfileHref } from "@/features/agents/route";
 import {
   formatAgentName,
   formatChainName,
   formatRegistrationDate,
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
+import type { FeaturedScoredAgent } from "@/features/scoring/model";
+import { describeScoreConfidence } from "@/features/scoring/presentation";
 
 const featuredSignals = [
-  "Relevance to the user’s goal",
-  "Verifiable reputation and reliability inputs",
-  "Current capability and availability evidence",
+  "Current versioned Sift Score with at least 60% evidence coverage",
+  "Successful endpoint observation within the last 24 hours",
+  "Ordered by score, then confidence; never by payment",
 ] as const;
 
 interface AgentCollectionsSectionProps {
   catalogueAvailable: boolean;
+  featuredAgents: readonly FeaturedScoredAgent[];
   recentAgents: readonly DiscoveryAgent[];
 }
 
 export function AgentCollectionsSection({
   catalogueAvailable,
+  featuredAgents,
   recentAgents,
 }: AgentCollectionsSectionProps) {
   return (
@@ -53,12 +65,14 @@ export function AgentCollectionsSection({
                   Featured collection
                 </p>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
-                  Selection waits for evidence
+                  {featuredAgents.length > 0
+                    ? "Evidence-qualified agents"
+                    : "No agents meet the featured rule yet"}
                 </h3>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  The catalogue is live, but Sift will not turn metadata completeness
-                  into a fake quality ranking. Featured agents arrive with the M6
-                  scoring evidence—not before.
+                  Featured placement requires a current persisted Sift Score,
+                  at least 60% evidence coverage, and a successful health check
+                  within 24 hours. It is never paid placement.
                 </p>
               </div>
               <span className="hidden size-12 shrink-0 place-items-center rounded-xl border border-border bg-background text-brand sm:grid">
@@ -68,15 +82,56 @@ export function AgentCollectionsSection({
 
             <div className="grid grid-cols-1 border-t border-border md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <div className="flex min-h-56 flex-col justify-between p-6 sm:p-8">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    No featured ranking yet
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Search, deterministic category matching and registration recency
-                    are available without presenting any agent as “best.”
-                  </p>
-                </div>
+                {featuredAgents.length > 0 ? (
+                  <ol className="divide-y divide-border border-y border-border">
+                    {featuredAgents.map((agent) => {
+                      const name = formatAgentName(agent.name, agent.agentId);
+                      const href = buildAgentProfileHref(
+                        agent.chainId,
+                        agent.agentId,
+                      );
+
+                      return (
+                        <li key={`${agent.chainId}:${agent.agentId}`} className="py-4">
+                          <Link
+                            href={href ?? "/discover"}
+                            prefetch={false}
+                            className="group flex items-center gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                          >
+                            <AgentAvatar
+                              agentId={agent.agentId}
+                              imageUrl={agent.imageUrl}
+                              name={name}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-foreground group-hover:text-brand">
+                                {name}
+                              </p>
+                              <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Gauge className="size-3 text-brand" aria-hidden="true" />
+                                {agent.score.score}/100 ·{" "}
+                                {describeScoreConfidence(agent.score.confidence)}
+                              </p>
+                            </div>
+                            <span className="text-xs font-semibold capitalize text-foreground">
+                              {agent.health.status}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Featured placement unavailable
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Agents remain discoverable without being presented as
+                      “best” while the current evidence threshold is unmet.
+                    </p>
+                  </div>
+                )}
                 <Link
                   href="/discover"
                   className="group mt-8 inline-flex items-center gap-2 self-start rounded-sm text-sm font-semibold text-foreground outline-none transition-colors hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"

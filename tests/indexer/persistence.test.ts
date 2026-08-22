@@ -15,6 +15,7 @@ const existingAgent: AgentRecord = {
   id: "11111111-1111-4111-8111-111111111111",
   image_url: "https://old.example/image.png",
   last_synced_at: "2026-01-01T00:00:00.000Z",
+  metadata_verified_at: "2026-01-01T00:00:00.000Z",
   metadata_status: "valid",
   name: "Last verified name",
   owner_address: "0x1111111111111111111111111111111111111111",
@@ -49,6 +50,7 @@ describe("indexer persistence mapping", () => {
     assert.equal(record.name, "Last verified name");
     assert.equal(record.description, "Last verified description");
     assert.equal(record.registeredBlock, 100);
+    assert.equal(record.metadataVerifiedAt, "2026-01-01T00:00:00.000Z");
   });
 
   it("does not invent metadata for a newly unavailable agent", () => {
@@ -58,5 +60,6 @@ describe("indexer persistence mapping", () => {
     assert.equal(record.description, null);
     assert.equal(record.active, null);
     assert.equal(record.x402Supported, null);
+    assert.equal(record.metadataVerifiedAt, null);
   });
 });

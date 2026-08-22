@@ -76,6 +76,8 @@ function recordFromObservation(observation: ObservedAgent): AgentRecord {
     id: "11111111-1111-4111-8111-111111111111",
     image_url: validMetadata?.imageUrl ?? null,
     last_synced_at: observation.observedAt,
+    metadata_verified_at:
+      observation.metadata.status === "valid" ? observation.observedAt : null,
     metadata_status: observation.metadata.status,
     name: validMetadata?.name ?? null,
     owner_address: observation.ownerAddress?.toLowerCase() ?? null,

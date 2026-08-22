@@ -13,8 +13,10 @@ import {
   type DiscoveryService,
 } from "@/features/discovery/model";
 import { getSupabaseServerClient } from "@/lib/db/client";
-import type { Database, Json } from "@/lib/db/database.types";
+import type { Database, Json, TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
+import { mapHealthRecord } from "@/lib/db/health-repository";
+import { mapScoreRecord } from "@/lib/db/score-repository";
 import {
   metadataStatuses,
   type MetadataStatus,
@@ -26,6 +28,11 @@ type SearchAgentRow =
 export type DiscoveryRepository = Readonly<{
   listRecentlyRegistered(pageSize?: DiscoveryPageSize): Promise<DiscoveryResult>;
   search(query: DiscoveryQuery): Promise<DiscoveryResult>;
+}>;
+
+export type DiscoveryEvidenceSources = Readonly<{
+  listHealth(ids: readonly string[]): Promise<readonly TableRow<"agent_health">[]>;
+  listScores(ids: readonly string[]): Promise<readonly TableRow<"agent_scores">[]>;
 }>;
 
 function isRecord(value: Json): value is Readonly<Record<string, Json | undefined>> {
@@ -86,6 +93,7 @@ function mapAgent(row: SearchAgentRow): DiscoveryAgent {
     categorySource: mapCategorySource(row.category_source),
     chainId: row.chain_id,
     description: row.description,
+    health: null,
     imageUrl: row.image_url,
     lastSyncedAt: row.last_synced_at,
     metadataStatus: mapMetadataStatus(row.metadata_status),
@@ -95,6 +103,7 @@ function mapAgent(row: SearchAgentRow): DiscoveryAgent {
     registeredBlock: row.registered_block,
     registryAddress: row.registry_address,
     relevance: row.relevance,
+    score: null,
     services: mapServices(row.services),
     x402Supported: row.x402_supported,
   };
@@ -102,6 +111,32 @@ function mapAgent(row: SearchAgentRow): DiscoveryAgent {
 
 export function createDiscoveryRepository(
   client: SupabaseClient<Database> = getSupabaseServerClient(),
+  evidenceSources: DiscoveryEvidenceSources = {
+    async listHealth(ids) {
+      const { data, error } = await client
+        .from("agent_health")
+        .select("*")
+        .in("agent_db_id", [...ids]);
+
+      if (error) {
+        throw new DatabaseOperationError("list discovery health", error);
+      }
+
+      return data;
+    },
+    async listScores(ids) {
+      const { data, error } = await client
+        .from("agent_scores")
+        .select("*")
+        .in("agent_db_id", [...ids]);
+
+      if (error) {
+        throw new DatabaseOperationError("list discovery scores", error);
+      }
+
+      return data;
+    },
+  },
 ): DiscoveryRepository {
   async function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
     const { data, error } = await client.rpc("search_agents", {
@@ -120,9 +155,34 @@ export function createDiscoveryRepository(
     const firstRow = data[0];
     const totalCount = firstRow?.total_count ?? 0;
     const page = firstRow?.result_page ?? 1;
+    const agents = data.map(mapAgent);
+    const ids = agents.map((agent) => agent.agentDbId);
+    const [healthRecords, scoreRecords] =
+      ids.length > 0
+        ? await Promise.all([
+            evidenceSources.listHealth(ids),
+            evidenceSources.listScores(ids),
+          ])
+        : [[], []];
+    const healthById = new Map(
+      healthRecords.map((record) => [
+        record.agent_db_id,
+        mapHealthRecord(record),
+      ]),
+    );
+    const scoreById = new Map(
+      scoreRecords.map((record) => [
+        record.agent_db_id,
+        mapScoreRecord(record),
+      ]),
+    );
 
     return {
-      agents: data.map(mapAgent),
+      agents: agents.map((agent) => ({
+        ...agent,
+        health: healthById.get(agent.agentDbId) ?? null,
+        score: scoreById.get(agent.agentDbId) ?? null,
+      })),
       page,
       pageSize: query.pageSize,
       totalCount,

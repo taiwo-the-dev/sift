@@ -67,7 +67,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
 
             {result.agents.length > 0 ? (
               <>
-                <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-3">
                   {result.agents.map((agent) => (
                     <AgentCard key={agent.agentDbId} agent={agent} />
                   ))}

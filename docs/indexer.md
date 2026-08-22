@@ -85,6 +85,10 @@ Metadata outcomes are explicit:
 
 On a failed refresh, the agent's latest on-chain URI and owner are updated, but the last-known-good descriptive metadata and services remain in PostgreSQL. The failure code is emitted in the structured operator log. Reachable metadata is not treated as ownership or endpoint verification.
 
+The M5 provenance migration separates `metadata_verified_at` from `last_synced_at`. Successful validations advance both timestamps; failed refreshes advance only the catalogue sync time and retain the previous successful verification time. Apply `20260822111500_add_metadata_verification_time.sql` before running the matching indexer version.
+
+M6 reads this verification timestamp when deciding whether metadata-derived score components are current. Endpoint health assessment is a separate bounded process documented in [Agent health and Sift Score](scoring.md); the Sift Indexer does not probe declared services during chain synchronization.
+
 ## Scheduled operation
 
 `.github/workflows/sync-agents.yml` runs incremental synchronization every two hours and can also be dispatched manually. Configure these GitHub repository secrets:
