@@ -83,4 +83,13 @@ describe("database input validation", () => {
       },
     );
   });
+
+  it("accepts a bounded embedded ERC-8004 registration URI", () => {
+    const embeddedUri = `data:application/json;base64,${"a".repeat(3_000)}`;
+    const record = validateAgentWrite(
+      createAgentInput({ agentUri: embeddedUri }),
+    );
+
+    assert.equal(record.agent_uri, embeddedUri);
+  });
 });

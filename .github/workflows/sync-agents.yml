@@ -1,0 +1,40 @@
+name: Sync ERC-8004 agents
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */2 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sift-agent-indexer
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BNB_NETWORK: ${{ vars.BNB_NETWORK || 'bsc-testnet' }}
+      BNB_RPC_PRIMARY: ${{ secrets.BNB_RPC_PRIMARY }}
+      BNB_RPC_FALLBACK_1: ${{ secrets.BNB_RPC_FALLBACK_1 }}
+      BNB_RPC_FALLBACK_2: ${{ secrets.BNB_RPC_FALLBACK_2 }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Incrementally sync confirmed events
+        run: npm run sync:agents

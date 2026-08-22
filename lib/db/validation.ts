@@ -1,4 +1,4 @@
-import type { TableInsert } from "@/lib/db/database.types";
+import type { Json, TableInsert } from "@/lib/db/database.types";
 
 export const agentCategories = [
   "yield-optimisation",
@@ -45,8 +45,18 @@ export type SyncCheckpointInput = Readonly<{
   registryAddress: string;
 }>;
 
+export type AgentServiceWriteInput = Readonly<{
+  agentDbId: string;
+  endpoint: string | null;
+  metadata: Json | null;
+  serviceType: string;
+  version: string | null;
+}>;
+
 const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;
 const unsignedUint256Pattern = /^(0|[1-9][0-9]{0,77})$/;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function assertPositiveSafeInteger(value: number, fieldName: string): void {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -118,7 +128,9 @@ export function validateAgentWrite(
 ): TableInsert<"agents"> {
   const identity = validateAgentIdentity(input);
 
-  assertNullableText(input.agentUri, "agentUri", 2_048);
+  // ERC-8004 explicitly permits complete base64/data registration files in
+  // agentURI. Keep the exact auditable value while bounding pathological input.
+  assertNullableText(input.agentUri, "agentUri", 7_000_000);
   assertNullableText(input.name, "name", 256);
   assertNullableText(input.description, "description", 10_000);
   assertNullableText(input.imageUrl, "imageUrl", 2_048);
@@ -176,4 +188,35 @@ export function validateSyncCheckpoint(
       "registryAddress",
     ),
   };
+}
+
+export function validateAgentServiceWrite(
+  input: AgentServiceWriteInput,
+): TableInsert<"agent_services"> {
+  const agentDbId = validateAgentDatabaseId(input.agentDbId);
+
+  const serviceType = input.serviceType.trim();
+
+  if (serviceType.length === 0 || serviceType.length > 100) {
+    throw new TypeError("serviceType must contain 1-100 characters.");
+  }
+
+  assertNullableText(input.endpoint, "endpoint", 2_048);
+  assertNullableText(input.version, "version", 100);
+
+  return {
+    agent_db_id: agentDbId,
+    endpoint: input.endpoint,
+    metadata: input.metadata,
+    service_type: serviceType,
+    version: input.version,
+  };
+}
+
+export function validateAgentDatabaseId(value: string): string {
+  if (!uuidPattern.test(value)) {
+    throw new TypeError("agentDbId must be a valid UUID.");
+  }
+
+  return value.toLowerCase();
 }

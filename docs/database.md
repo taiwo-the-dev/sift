@@ -122,7 +122,7 @@ ERC-8004 agent identifiers are stored as checked decimal strings so uint256 valu
 
 Child observations use explicit `on delete cascade` foreign keys because they have no meaning after their parent agent is removed. Agent identity is unique across `(chain_id, registry_address, agent_id)`, while sync state has exactly one row per `(chain_id, registry_address)`.
 
-No records should be inserted until a later milestone obtains them from real, verifiable sources.
+Only the M3 Sift Indexer should create catalogue records, and every inserted identity must come from a verified registry event. No seed or fabricated agent records are permitted.
 
 ## Security boundary
 
@@ -132,9 +132,10 @@ Do not create a browser Supabase client until a later milestone has a concrete, 
 
 ## Data access
 
-Application and future indexer code must use the repositories in `lib/db/` rather than issuing Supabase queries from React components:
+Application and indexer code must use the repositories in `lib/db/` rather than issuing Supabase queries from React components:
 
 - `createAgentRepository()` provides typed identity reads and complete agent upserts.
+- `createAgentServiceRepository()` replaces normalized services without deleting the last-known-good set before successful writes.
 - `createSyncStateRepository()` provides typed checkpoint reads and upserts.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 
@@ -149,4 +150,4 @@ npm test
 npm run build
 ```
 
-After GitHub deploys the migration, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration in deployment history. M2 does not make BNB RPC calls, index ERC-8004 events, fetch metadata, calculate health or Sift Scores, or insert agent records.
+After GitHub deploys the migration, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration in deployment history. M3 now writes only real ERC-8004 identities, metadata, services, and checkpoints. Health, reputation, Sift Scores, authentication, and user-generated records remain unimplemented.
