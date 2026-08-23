@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready
+Complete
 
 ## Depends On
 
@@ -95,16 +95,16 @@ Discovery and profiles provide individual context, but users often need to evalu
 
 ## Acceptance Criteria
 
-- [ ] Users can add and remove agents from discovery and profile pages.
-- [ ] Selection is deduplicated and limited to two to four agents.
-- [ ] `/compare` restores a valid shareable selection and optional goal context.
-- [ ] Real supported attributes render side-by-side with honest unknown states.
-- [ ] Sift Score includes confidence, breakdown access, and freshness.
-- [ ] Contextual strongest match is deterministic, explained, and omitted when evidence is insufficient.
-- [ ] Invalid/missing agent references degrade gracefully.
-- [ ] Mobile comparison is usable with no page-level horizontal overflow.
-- [ ] No wallet, hiring, authentication, or account persistence is introduced.
-- [ ] Lint, typecheck, relevant tests, browser testing, and production build pass.
+- [x] Users can add and remove agents from discovery and profile pages.
+- [x] Selection is deduplicated and limited to two to four agents.
+- [x] `/compare` restores a valid shareable selection and optional goal context.
+- [x] Real supported attributes render side-by-side with honest unknown states.
+- [x] Sift Score includes confidence, breakdown access, and freshness.
+- [x] Contextual strongest match is deterministic, explained, and omitted when evidence is insufficient.
+- [x] Invalid/missing agent references degrade gracefully.
+- [x] Mobile comparison is usable with no page-level horizontal overflow.
+- [x] No wallet, hiring, authentication, or account persistence is introduced.
+- [x] Lint, typecheck, relevant tests, browser testing, and production build pass.
 
 ## Testing Requirements
 

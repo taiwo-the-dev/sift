@@ -69,7 +69,11 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
               <>
                 <div className="mt-6 grid grid-cols-1 gap-3">
                   {result.agents.map((agent) => (
-                    <AgentCard key={agent.agentDbId} agent={agent} />
+                    <AgentCard
+                      key={agent.agentDbId}
+                      agent={agent}
+                      comparisonGoal={query.query}
+                    />
                   ))}
                 </div>
                 <Pagination

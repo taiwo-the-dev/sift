@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 
+import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { Brand } from "@/components/layout/brand";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { navigationItems } from "@/components/layout/navigation";
@@ -18,7 +19,12 @@ export function SiteHeader() {
           aria-label="Primary navigation"
         >
           {navigationItems.map((item) =>
-            item.href ? (
+            item.label === "Compare" ? (
+              <ComparisonNavLink
+                key={item.label}
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
+              />
+            ) : item.href ? (
               <Link
                 key={item.label}
                 href={item.href}

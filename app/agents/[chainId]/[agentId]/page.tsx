@@ -10,10 +10,16 @@ import { ProfileOverview } from "@/components/agents/profile-overview";
 import { ProfileTechnical } from "@/components/agents/profile-technical";
 import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
+import { parseAgentProfileTab } from "@/features/agents/tabs";
 import { formatAgentName, formatChainName } from "@/features/discovery/format";
+import {
+  normalizeComparisonGoal,
+  type ComparisonSearchParams,
+} from "@/features/comparison/query";
 
 interface AgentProfilePageProps {
   params: Promise<Readonly<{ agentId: string; chainId: string }>>;
+  searchParams: Promise<ComparisonSearchParams>;
 }
 
 function metadataDescription(
@@ -63,8 +69,15 @@ export async function generateMetadata({
 
 export default async function AgentProfilePage({
   params,
+  searchParams,
 }: AgentProfilePageProps) {
   const { agentId, chainId } = await params;
+  const query = await searchParams;
+  const rawGoal = query.goal;
+  const comparisonGoal = normalizeComparisonGoal(
+    Array.isArray(rawGoal) ? rawGoal[0] : rawGoal,
+  );
+  const activeTab = parseAgentProfileTab(query.tab);
   const identity = parseAgentProfileIdentity(chainId, agentId);
 
   if (!identity) {
@@ -79,14 +92,20 @@ export default async function AgentProfilePage({
 
   return (
     <div className="flex-1 bg-background">
-      <ProfileHeader profile={profile} />
-      <ProfileNavigation />
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ProfileOverview profile={profile} />
-        <ProfileCapabilities profile={profile} />
-        <ProfileEvidence profile={profile} />
-        <ProfileActivity profile={profile} />
-        <ProfileTechnical profile={profile} />
+      <ProfileHeader comparisonGoal={comparisonGoal} profile={profile} />
+      <ProfileNavigation
+        activeTab={activeTab}
+        comparisonGoal={comparisonGoal}
+        profile={profile}
+      />
+      <div className="mx-auto min-h-[34rem] w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        {activeTab === "overview" ? <ProfileOverview profile={profile} /> : null}
+        {activeTab === "services" ? (
+          <ProfileCapabilities profile={profile} />
+        ) : null}
+        {activeTab === "trust" ? <ProfileEvidence profile={profile} /> : null}
+        {activeTab === "activity" ? <ProfileActivity profile={profile} /> : null}
+        {activeTab === "metadata" ? <ProfileTechnical profile={profile} /> : null}
       </div>
     </div>
   );

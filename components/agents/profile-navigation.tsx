@@ -1,26 +1,58 @@
-const profileSections = [
-  { href: "#overview", label: "Overview" },
-  { href: "#capabilities", label: "Capabilities" },
-  { href: "#evidence", label: "Evidence" },
-  { href: "#activity", label: "Activity" },
-  { href: "#technical", label: "Technical" },
-] as const;
+import Link from "next/link";
 
-export function ProfileNavigation() {
+import type { AgentProfile } from "@/features/agents/model";
+import {
+  agentProfileTabs,
+  buildAgentProfileTabHref,
+  type AgentProfileTab,
+} from "@/features/agents/tabs";
+import { cn } from "@/lib/utils";
+
+interface ProfileNavigationProps {
+  activeTab: AgentProfileTab;
+  comparisonGoal?: string;
+  profile: AgentProfile;
+}
+
+export function ProfileNavigation({
+  activeTab,
+  comparisonGoal = "",
+  profile,
+}: ProfileNavigationProps) {
   return (
     <nav
-      aria-label="Agent profile sections"
+      aria-label="Agent profile"
       className="sticky top-16 z-30 border-y border-border bg-background/95 backdrop-blur-xl"
     >
-      <div className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
-        {profileSections.map((section) => (
-          <a
-            key={section.href}
-            href={section.href}
-            className="shrink-0 rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+      <div className="mx-auto flex w-full max-w-7xl overflow-x-auto px-4 sm:px-6 lg:px-8">
+        {agentProfileTabs.map((tab) => (
+          <Link
+            key={tab.value}
+            href={buildAgentProfileTabHref(
+              profile.chainId,
+              profile.agentId,
+              tab.value,
+              comparisonGoal,
+            )}
+            aria-current={activeTab === tab.value ? "page" : undefined}
+            className={cn(
+              "relative inline-flex min-h-14 shrink-0 items-center gap-2 px-4 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30",
+              activeTab === tab.value && "text-foreground",
+            )}
           >
-            {section.label}
-          </a>
+            {tab.label}
+            {tab.value === "services" && profile.services.length > 0 ? (
+              <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] font-semibold text-muted-foreground">
+                {profile.services.length}
+              </span>
+            ) : null}
+            {activeTab === tab.value ? (
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand"
+              />
+            ) : null}
+          </Link>
         ))}
       </div>
     </nav>

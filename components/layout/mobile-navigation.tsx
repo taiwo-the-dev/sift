@@ -4,6 +4,7 @@ import { Menu, Search, WalletCards, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { navigationItems } from "@/components/layout/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,14 @@ export function MobileNavigation() {
         >
           <nav aria-label="Mobile navigation" className="grid gap-1">
             {navigationItems.map((item) =>
-              item.href ? (
+              item.label === "Compare" ? (
+                <ComparisonNavLink
+                  key={item.label}
+                  mobile
+                  onNavigate={() => setIsOpen(false)}
+                  className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
+                />
+              ) : item.href ? (
                 <Link
                   key={item.label}
                   href={item.href}

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   collectDeclaredCapabilities,
+  describeDeclaredService,
   describeProfileProvenance,
   resolveProfileCategories,
 } from "../../features/agents/presentation";
@@ -55,6 +56,27 @@ describe("agent profile presentation", () => {
     assert.equal(
       describeProfileProvenance("invalid", false, null).label,
       "Invalid metadata",
+    );
+  });
+
+  it("uses only a bounded declared service description", () => {
+    assert.equal(
+      describeDeclaredService({
+        ...services[0],
+        metadata: { description: "  Monitors   supported positions.  " },
+      }),
+      "Monitors supported positions.",
+    );
+    assert.equal(
+      describeDeclaredService({
+        ...services[0],
+        metadata: { description: "x".repeat(501) },
+      }),
+      null,
+    );
+    assert.equal(
+      describeDeclaredService({ ...services[0], metadata: { name: "MCP" } }),
+      null,
     );
   });
 });

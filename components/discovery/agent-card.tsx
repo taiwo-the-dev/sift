@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buildAgentProfileHref } from "@/features/agents/route";
 import {
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";
 
 interface AgentCardProps {
   agent: DiscoveryAgent;
+  comparisonGoal?: string;
 }
 
 const metadataStatusStyles = {
@@ -41,9 +43,15 @@ const metadataStatusStyles = {
   valid: "border-emerald-400/20 bg-emerald-400/8 text-emerald-200",
 } as const;
 
-export function AgentCard({ agent }: AgentCardProps) {
+export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
   const agentName = formatAgentName(agent.name, agent.agentId);
-  const profileHref = buildAgentProfileHref(agent.chainId, agent.agentId);
+  const baseProfileHref = buildAgentProfileHref(agent.chainId, agent.agentId);
+  const profileHref =
+    baseProfileHref && comparisonGoal
+      ? `${baseProfileHref}?${new URLSearchParams({
+          goal: comparisonGoal,
+        }).toString()}`
+      : baseProfileHref;
   const visibleServices = [
     ...new Set(
       agent.services.map((service) => formatServiceType(service.serviceType)),
@@ -111,6 +119,11 @@ export function AgentCard({ agent }: AgentCardProps) {
             </div>
 
             <div className="flex flex-wrap gap-2 md:justify-end">
+              <ComparisonToggle
+                reference={{ agentId: agent.agentId, chainId: agent.chainId }}
+                goal={comparisonGoal}
+                variant="compact"
+              />
               {agent.score ? (
                 <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-[0.7rem] font-semibold text-brand">
                   <Gauge className="size-3" aria-hidden="true" />

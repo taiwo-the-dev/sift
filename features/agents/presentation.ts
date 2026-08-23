@@ -122,6 +122,26 @@ export function collectDeclaredCapabilities(
   return [...new Set(labels)].slice(0, 24);
 }
 
+export function describeDeclaredService(
+  service: AgentProfileService,
+): string | null {
+  if (!service.metadata || !isRecord(service.metadata)) {
+    return null;
+  }
+
+  const value = service.metadata.description;
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const description = value.replace(/\s+/g, " ").trim();
+
+  return description.length > 0 && description.length <= 500
+    ? description
+    : null;
+}
+
 export type ProfileProvenance = Readonly<{
   description: string;
   isStale: boolean;

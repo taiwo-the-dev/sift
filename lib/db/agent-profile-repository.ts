@@ -167,6 +167,49 @@ function createSupabaseSources(
   };
 }
 
+export function composeAgentProfile(
+  agent: AgentRecord,
+  serviceRecords: readonly AgentServiceRecord[],
+  healthRecord: AgentHealthRecord | null,
+  reputationRecord: AgentReputationRecord | null,
+  scoreRecord: AgentScoreRecord | null,
+): AgentProfile {
+  const services = mapServices(serviceRecords);
+  const category = mapCategory(agent.category);
+  const { categories, categorySource } = resolveProfileCategories(
+    category,
+    agent.name,
+    agent.description,
+    services,
+  );
+
+  return {
+    active: agent.active,
+    agentId: agent.agent_id,
+    agentUri: agent.agent_uri,
+    categories,
+    categorySource,
+    chainId: agent.chain_id,
+    description: agent.description,
+    health: healthRecord ? mapHealthRecord(healthRecord) : null,
+    imageUrl: agent.image_url,
+    lastSyncedAt: agent.last_synced_at,
+    metadataStatus: mapMetadataStatus(agent.metadata_status),
+    metadataVerifiedAt:
+      agent.metadata_verified_at ??
+      (agent.metadata_status === "valid" ? agent.last_synced_at : null),
+    name: agent.name,
+    ownerAddress: agent.owner_address,
+    registeredAt: agent.registered_at,
+    registeredBlock: agent.registered_block,
+    registryAddress: agent.registry_address,
+    reputation: mapReputation(reputationRecord),
+    score: scoreRecord ? mapScoreRecord(scoreRecord) : null,
+    services,
+    x402Supported: agent.x402_supported,
+  };
+}
+
 export function createAgentProfileRepository(
   sources: AgentProfileSources = createSupabaseSources(
     getSupabaseServerClient(),
@@ -187,40 +230,13 @@ export function createAgentProfileRepository(
           sources.findReputation(agent.id),
           sources.findScore(agent.id),
         ]);
-      const services = mapServices(serviceRecords);
-      const category = mapCategory(agent.category);
-      const { categories, categorySource } = resolveProfileCategories(
-        category,
-        agent.name,
-        agent.description,
-        services,
+      return composeAgentProfile(
+        agent,
+        serviceRecords,
+        healthRecord,
+        reputationRecord,
+        scoreRecord,
       );
-
-      return {
-        active: agent.active,
-        agentId: agent.agent_id,
-        agentUri: agent.agent_uri,
-        categories,
-        categorySource,
-        chainId: agent.chain_id,
-        description: agent.description,
-        health: healthRecord ? mapHealthRecord(healthRecord) : null,
-        imageUrl: agent.image_url,
-        lastSyncedAt: agent.last_synced_at,
-        metadataStatus: mapMetadataStatus(agent.metadata_status),
-        metadataVerifiedAt:
-          agent.metadata_verified_at ??
-          (agent.metadata_status === "valid" ? agent.last_synced_at : null),
-        name: agent.name,
-        ownerAddress: agent.owner_address,
-        registeredAt: agent.registered_at,
-        registeredBlock: agent.registered_block,
-        registryAddress: agent.registry_address,
-        reputation: mapReputation(reputationRecord),
-        score: scoreRecord ? mapScoreRecord(scoreRecord) : null,
-        services,
-        x402Supported: agent.x402_supported,
-      };
     },
   };
 }
