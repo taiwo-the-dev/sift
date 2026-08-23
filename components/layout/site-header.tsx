@@ -6,6 +6,7 @@ import { Brand } from "@/components/layout/brand";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { navigationItems } from "@/components/layout/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { WalletControl } from "@/components/wallet/wallet-control";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
@@ -54,14 +55,7 @@ export function SiteHeader() {
           >
             <Search className="size-4" aria-hidden="true" />
           </Link>
-          <button
-            type="button"
-            disabled
-            title="Wallet connection is planned for a later milestone"
-            className={cn(buttonVariants({ variant: "outline" }))}
-          >
-            Connect Wallet
-          </button>
+          <WalletControl />
         </div>
 
         <MobileNavigation />

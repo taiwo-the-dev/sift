@@ -1,12 +1,13 @@
 "use client";
 
-import { Menu, Search, WalletCards, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { navigationItems } from "@/components/layout/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { WalletControl } from "@/components/wallet/wallet-control";
 import { cn } from "@/lib/utils";
 
 export function MobileNavigation() {
@@ -89,10 +90,7 @@ export function MobileNavigation() {
               <Search className="size-4" aria-hidden="true" />
               Search agents
             </Link>
-            <Button type="button" variant="outline" size="lg" disabled>
-              <WalletCards className="size-4" aria-hidden="true" />
-              Connect Wallet
-            </Button>
+            <WalletControl mobile />
           </nav>
         </div>
       ) : null}

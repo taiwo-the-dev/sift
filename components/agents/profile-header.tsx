@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BriefcaseBusiness,
   CircleAlert,
   Clock3,
   ExternalLink,
@@ -28,6 +29,7 @@ import {
   formatMetadataStatus,
 } from "@/features/discovery/format";
 import { isHealthStale } from "@/features/health/presentation";
+import { resolveHiringCompatibility } from "@/features/hiring/compatibility";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
 
@@ -96,6 +98,7 @@ export function ProfileHeader({
   const healthDetail = profile.health
     ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`
     : "No endpoint observation exists";
+  const hireable = resolveHiringCompatibility(profile) !== null;
 
   return (
     <header className="relative overflow-hidden border-b border-border bg-card">
@@ -184,6 +187,15 @@ export function ProfileHeader({
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+            {hireable ? (
+              <Link
+                href={`/hire/${profile.chainId}/${profile.agentId}`}
+                className={cn(buttonVariants({ variant: "brand" }), "gap-2")}
+              >
+                <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
+                Hire agent
+              </Link>
+            ) : null}
             <ComparisonToggle
               goal={comparisonGoal}
               reference={{

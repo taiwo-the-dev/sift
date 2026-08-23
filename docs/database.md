@@ -119,6 +119,12 @@ Deploy the M5 migration first, then M6. Do not run `check:agents` or `score:agen
 
 The hosted M5 and M6 migrations were validated on 2026-08-22. A bounded check persisted an honest DNS-error/Unknown observation for BSC Testnet agent `#1883`, and the following score run persisted a withheld low-confidence assessment rather than manufacturing a score.
 
+## M9 hiring persistence
+
+`20260823090000_add_hiring_jobs.sql` additively creates `jobs`, `job_transactions`, and `job_activity`. They store normalized user intent, byte-exact signed job descriptions, canonical transaction steps, replacement/receipt evidence, and a minimal auditable state history. Idempotency and unique step/hash constraints prevent duplicate persistence. Browser roles have no access; the server authorizes a resumed intent through a random browser-held capability whose SHA-256 digest is the only value stored in PostgreSQL.
+
+Deploy the migration before exposing the M9 hire route. The application fails rather than fabricating a pending or confirmed job when the schema is unavailable. Full protocol and test instructions are in [ERC-8183 testnet hiring](hiring.md).
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.
@@ -197,4 +203,4 @@ npm test
 npm run build
 ```
 
-After GitHub deploys the migrations, verify in the Supabase dashboard that all six tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration history. M3 writes only real ERC-8004 identities, metadata, services, and checkpoints. M6 writes only bounded endpoint observations and reproducible assessments from those persisted inputs. It does not create reputation evidence, authentication, wallet, comparison, hiring, or user-generated records.
+After GitHub deploys the migrations, verify in the Supabase dashboard that the six catalogue/evidence tables and three M9 hiring tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration history. M3 writes only real ERC-8004 identities, metadata, services, and checkpoints. M6 writes only bounded endpoint observations and reproducible assessments from those persisted inputs. M9 writes user-entered mission data and transaction evidence only after validation; it does not fabricate a quote, receipt, job identifier, or completion status.

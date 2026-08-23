@@ -3,8 +3,10 @@ import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { WalletProvider } from "@/components/wallet/wallet-provider";
 import { env } from "@/lib/env";
 
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 const geist = Geist({
@@ -36,7 +38,9 @@ export default function RootLayout({
         data-runtime-environment={env.NODE_ENV}
         className="min-h-full"
       >
-        <AppShell>{children}</AppShell>
+        <WalletProvider>
+          <AppShell>{children}</AppShell>
+        </WalletProvider>
       </body>
     </html>
   );

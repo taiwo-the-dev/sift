@@ -2,7 +2,14 @@
 
 ## Status
 
-Ready
+Blocked — Hosted migration pending
+
+The M9 application, migration, documentation, automated validation, live route,
+and live signed-quote smoke check are implemented. Completion remains blocked
+until the hosted project applies `20260823090000_add_hiring_jobs.sql` and a
+human explicitly approves the documented disposable-wallet happy path. The
+current Supabase CLI account cannot relink the project because it lacks the
+required project-management privilege.
 
 ## Depends On
 
@@ -100,18 +107,18 @@ Sift's marketplace becomes actionable when a user can move from selecting an age
 
 ## Acceptance Criteria
 
-- [ ] The selected BNB-supported job protocol and testnet deployment are verified and documented.
-- [ ] A real indexed compatible agent can enter the hire flow.
-- [ ] Mission and only enforceable permission fields are validated.
-- [ ] Review accurately shows the exact planned chain action.
-- [ ] Wrong-network and disconnected states are blocked safely.
-- [ ] The contract call is simulated where supported before wallet confirmation.
+- [x] The selected BNB-supported job protocol and testnet deployment are verified and documented.
+- [x] A real indexed compatible agent can enter the hire flow.
+- [x] Mission and only enforceable permission fields are validated.
+- [x] Review accurately shows the exact planned chain action.
+- [x] Wrong-network and disconnected states are blocked safely.
+- [x] The contract call is simulated where supported before wallet confirmation.
 - [ ] The user explicitly confirms the BSC Testnet transaction in their wallet.
-- [ ] Submitted, pending, confirmed, rejected, failed, and replaced states are handled.
+- [x] Submitted, pending, confirmed, rejected, failed, and replaced states are handled.
 - [ ] A confirmed job record is linked to a real receipt, transaction hash, and job identifier where the protocol provides one.
-- [ ] Duplicate submissions do not create duplicate jobs.
-- [ ] Confirmation displays accurate explorer and job details.
-- [ ] No mainnet, dashboard, or unsupported permission work is introduced.
+- [x] Duplicate submissions do not create duplicate jobs.
+- [x] Confirmation displays accurate explorer and job details.
+- [x] No mainnet, dashboard, or unsupported permission work is introduced.
 - [ ] Lint, typecheck, unit/integration tests, testnet browser testing, and production build pass.
 
 ## Testing Requirements

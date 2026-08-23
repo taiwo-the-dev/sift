@@ -1,9 +1,15 @@
 import { getAddress, type Address } from "viem";
-import { bsc, bscTestnet, type Chain } from "viem/chains";
+import type { Chain } from "viem/chains";
 import { z } from "zod";
 
-export const supportedBnbNetworks = ["bsc-testnet", "bsc-mainnet"] as const;
-export type SupportedBnbNetwork = (typeof supportedBnbNetworks)[number];
+import {
+  publicBnbChainDefinitions,
+  supportedBnbNetworks,
+  type SupportedBnbNetwork,
+} from "@/lib/blockchain/chains";
+
+export { supportedBnbNetworks } from "@/lib/blockchain/chains";
+export type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 
 type NetworkDefinition = Readonly<{
   chain: Chain;
@@ -23,26 +29,18 @@ export const bnbNetworkDefinitions: Readonly<
   Record<SupportedBnbNetwork, NetworkDefinition>
 > = {
   "bsc-testnet": {
-    chain: bscTestnet,
+    chain: publicBnbChainDefinitions["bsc-testnet"].chain,
     chainId: 97,
-    defaultRpcUrls: [
-      "https://bsc-prebsc-dataseed.bnbchain.org",
-      "https://bsc-testnet-rpc.publicnode.com",
-      "https://bsc-testnet.drpc.org",
-    ],
+    defaultRpcUrls: publicBnbChainDefinitions["bsc-testnet"].publicRpcUrls,
     deploymentBlock: 84_555_147n,
     explorerUrl:
       "https://testnet.bscscan.com/address/0x8004A818BFB912233c491871b3d84c89A494BD9e",
     registryAddress: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
   },
   "bsc-mainnet": {
-    chain: bsc,
+    chain: publicBnbChainDefinitions["bsc-mainnet"].chain,
     chainId: 56,
-    defaultRpcUrls: [
-      "https://bsc-mainnet.public.blastapi.io",
-      "https://bsc-dataseed-public.bnbchain.org",
-      "https://bsc-dataseed.bnbchain.org",
-    ],
+    defaultRpcUrls: publicBnbChainDefinitions["bsc-mainnet"].publicRpcUrls,
     deploymentBlock: 79_027_268n,
     explorerUrl:
       "https://bscscan.com/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",

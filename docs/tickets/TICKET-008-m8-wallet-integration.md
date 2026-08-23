@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready
+Complete
 
 ## Depends On
 
@@ -84,17 +84,17 @@ Wallet connection is the bridge between research and action. Sift should introdu
 
 ## Acceptance Criteria
 
-- [ ] Compatible RainbowKit, wagmi, and viem packages are configured.
-- [ ] BSC Testnet is the default documented development network.
-- [ ] Users can connect and disconnect a supported wallet from desktop and mobile.
-- [ ] Connected address and actual chain state display correctly.
-- [ ] Unsupported-network state offers an explicit switch action or manual guidance.
-- [ ] Rejected/unavailable/reconnecting states are handled without breaking the page.
-- [ ] Discovery, profiles, and comparison continue to work while disconnected.
-- [ ] Server rendering is stable and wallet hydration produces no implementation-caused mismatch.
-- [ ] No message signing, token approval, or transaction is requested.
-- [ ] No secrets or private wallet material enter source control or logs.
-- [ ] Lint, typecheck, relevant tests, browser/wallet testing, and production build pass.
+- [x] Compatible RainbowKit, wagmi, and viem packages are configured.
+- [x] BSC Testnet is the default documented development network.
+- [x] Users can connect and disconnect a supported wallet from desktop and mobile.
+- [x] Connected address and actual chain state display correctly.
+- [x] Unsupported-network state offers an explicit switch action or manual guidance.
+- [x] Rejected/unavailable/reconnecting states are handled without breaking the page.
+- [x] Discovery, profiles, and comparison continue to work while disconnected.
+- [x] Server rendering is stable and wallet hydration produces no implementation-caused mismatch.
+- [x] No message signing, token approval, or transaction is requested.
+- [x] No secrets or private wallet material enter source control or logs.
+- [x] Lint, typecheck, relevant tests, browser/wallet testing, and production build pass.
 
 ## Testing Requirements
 

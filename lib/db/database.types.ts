@@ -1,5 +1,5 @@
 /**
- * Strict schema contract for the checked-in M2 migration.
+ * Strict schema contract for the checked-in Supabase migration set.
  *
  * Regenerate this file from a migrated database with `npm run db:types` after
  * every schema change. The command and review workflow are documented in
@@ -291,6 +291,222 @@ export type Database = {
         };
         Relationships: [];
       };
+      job_activity: {
+        Row: {
+          activity_type: string;
+          created_at: string;
+          details: Json;
+          id: number;
+          job_db_id: string;
+          occurred_at: string;
+          transaction_hash: string | null;
+        };
+        Insert: {
+          activity_type: string;
+          created_at?: string;
+          details?: Json;
+          id?: number;
+          job_db_id: string;
+          occurred_at?: string;
+          transaction_hash?: string | null;
+        };
+        Update: {
+          activity_type?: string;
+          created_at?: string;
+          details?: Json;
+          id?: number;
+          job_db_id?: string;
+          occurred_at?: string;
+          transaction_hash?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "job_activity_job_db_id_fkey";
+            columns: ["job_db_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      job_transactions: {
+        Row: {
+          block_hash: string | null;
+          block_number: number | null;
+          confirmed_at: string | null;
+          created_at: string;
+          from_address: string;
+          id: string;
+          job_db_id: string;
+          replaced_transaction_hash: string | null;
+          status: string;
+          step: string;
+          submitted_at: string;
+          to_address: string;
+          transaction_hash: string;
+          updated_at: string;
+        };
+        Insert: {
+          block_hash?: string | null;
+          block_number?: number | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          from_address: string;
+          id?: string;
+          job_db_id: string;
+          replaced_transaction_hash?: string | null;
+          status: string;
+          step: string;
+          submitted_at?: string;
+          to_address: string;
+          transaction_hash: string;
+          updated_at?: string;
+        };
+        Update: {
+          block_hash?: string | null;
+          block_number?: number | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          from_address?: string;
+          id?: string;
+          job_db_id?: string;
+          replaced_transaction_hash?: string | null;
+          status?: string;
+          step?: string;
+          submitted_at?: string;
+          to_address?: string;
+          transaction_hash?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "job_transactions_job_db_id_fkey";
+            columns: ["job_db_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      jobs: {
+        Row: {
+          agent_db_id: string;
+          agent_id: string;
+          block_number: number | null;
+          budget_base_units: string;
+          chain_id: number;
+          commerce_address: string;
+          confirmed_at: string | null;
+          created_at: string;
+          current_step: string | null;
+          deliverables: string;
+          expires_at: string;
+          failure_code: string | null;
+          failure_message: string | null;
+          id: string;
+          idempotency_key: string;
+          maximum_spend_base_units: string;
+          mission: string;
+          negotiation_hash: string;
+          onchain_description: string;
+          onchain_job_id: string | null;
+          payment_token_address: string;
+          payment_token_decimals: number;
+          payment_token_symbol: string;
+          policy_address: string;
+          provider_address: string;
+          quality_standards: string;
+          quote_expires_at: string;
+          registry_address: string;
+          resume_token_hash: string;
+          router_address: string;
+          status: string;
+          transaction_hash: string | null;
+          updated_at: string;
+          wallet_address: string;
+        };
+        Insert: {
+          agent_db_id: string;
+          agent_id: string;
+          block_number?: number | null;
+          budget_base_units: string;
+          chain_id: number;
+          commerce_address: string;
+          confirmed_at?: string | null;
+          created_at?: string;
+          current_step?: string | null;
+          deliverables: string;
+          expires_at: string;
+          failure_code?: string | null;
+          failure_message?: string | null;
+          id?: string;
+          idempotency_key: string;
+          maximum_spend_base_units: string;
+          mission: string;
+          negotiation_hash: string;
+          onchain_description: string;
+          onchain_job_id?: string | null;
+          payment_token_address: string;
+          payment_token_decimals: number;
+          payment_token_symbol: string;
+          policy_address: string;
+          provider_address: string;
+          quality_standards: string;
+          quote_expires_at: string;
+          registry_address: string;
+          resume_token_hash: string;
+          router_address: string;
+          status?: string;
+          transaction_hash?: string | null;
+          updated_at?: string;
+          wallet_address: string;
+        };
+        Update: {
+          agent_db_id?: string;
+          agent_id?: string;
+          block_number?: number | null;
+          budget_base_units?: string;
+          chain_id?: number;
+          commerce_address?: string;
+          confirmed_at?: string | null;
+          created_at?: string;
+          current_step?: string | null;
+          deliverables?: string;
+          expires_at?: string;
+          failure_code?: string | null;
+          failure_message?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          maximum_spend_base_units?: string;
+          mission?: string;
+          negotiation_hash?: string;
+          onchain_description?: string;
+          onchain_job_id?: string | null;
+          payment_token_address?: string;
+          payment_token_decimals?: number;
+          payment_token_symbol?: string;
+          policy_address?: string;
+          provider_address?: string;
+          quality_standards?: string;
+          quote_expires_at?: string;
+          registry_address?: string;
+          resume_token_hash?: string;
+          router_address?: string;
+          status?: string;
+          transaction_hash?: string | null;
+          updated_at?: string;
+          wallet_address?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "jobs_agent_db_id_fkey";
+            columns: ["agent_db_id"];
+            isOneToOne: false;
+            referencedRelation: "agents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sync_state: {
         Row: {
           chain_id: number;
@@ -329,6 +545,29 @@ export type Database = {
           p_stale_before?: string;
         };
         Returns: { agent_db_id: string }[];
+      };
+      record_hiring_verification: {
+        Args: {
+          p_block_hash: string | null;
+          p_block_number: number | null;
+          p_current_step: string | null;
+          p_failure_code: string | null;
+          p_failure_message: string | null;
+          p_final_block_number: number | null;
+          p_final_transaction_hash: string | null;
+          p_from_address: string;
+          p_job_confirmed_at: string | null;
+          p_job_id: string;
+          p_job_status: string;
+          p_onchain_job_id: string | null;
+          p_replaced_transaction_hash: string | null;
+          p_step: string;
+          p_to_address: string;
+          p_transaction_confirmed_at: string | null;
+          p_transaction_hash: string;
+          p_transaction_status: string;
+        };
+        Returns: undefined;
       };
       score_recalculation_candidates: {
         Args: {
