@@ -49,6 +49,13 @@ Migration `20260823090000_add_hiring_jobs.sql` adds `jobs`, `job_transactions`, 
 
 Before the first wallet prompt, the server persists the exact normalized mission and signed quote. The browser keeps a random 256-bit resume capability in local storage; only its SHA-256 digest is stored in PostgreSQL. A reload can check or resume a pending step, but no transaction is automatically signed or sent. A different connected wallet cannot resume the job.
 
+If the connected account changes before any blockchain transaction exists,
+the wallet step can explicitly cancel the untouched database intent and return
+to the populated mission form for a fresh quote. Once a transaction has been
+submitted or an on-chain job ID exists, restart is disabled and the original
+wallet is required; this prevents silently abandoning or duplicating an
+on-chain job.
+
 ## Testnet demo prerequisites
 
 Use a disposable test wallet. Never paste or commit its private key.
@@ -69,7 +76,7 @@ For a zero-priced provider quote, no test token balance or approval is required,
 - ERC-8183 and BNB APEX are active-development testnet infrastructure. A deployment rotation intentionally makes Sift fail closed until its typed constants are reviewed and updated.
 - Only safe, exact ERC-8183 declarations are hireable; stale, local, malformed, or unreachable endpoints remain visible as declarations but cannot produce a Sift hiring flow.
 - M9 confirms job creation and escrow funding. It does not claim the provider delivered work or the evaluator accepted it.
-- Job monitoring, completion, activity timelines, refunds, disputes, pause, and revoke controls belong to M10 or a later explicitly requested milestone.
+- M10 monitors persisted jobs and verified protocol state. Refunds, disputes, pause, and revoke controls remain omitted because the current verified Sift client does not implement those writes.
 - Mainnet hiring is deliberately blocked.
 
 ## Validation

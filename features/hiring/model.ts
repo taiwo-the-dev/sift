@@ -84,13 +84,17 @@ export type HiringIntentSnapshot = Readonly<{
   chainId: number;
   confirmedAt: string | null;
   currentStep: HiringTransactionStep | null;
+  deliverables: string;
+  durationSeconds: number;
   expiresAt: string;
   failureMessage: string | null;
   id: string;
+  maxSpend: string;
   mission: string;
   onchainDescription: string;
   onchainJobId: string | null;
   providerAddress: Address;
+  qualityStandards: string;
   quoteExpiresAt: string;
   status: HiringIntentStatus;
   transactionHash: Hash | null;

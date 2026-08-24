@@ -291,6 +291,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      dashboard_sessions: {
+        Row: {
+          chain_id: number;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          last_used_at: string;
+          token_hash: string;
+          wallet_address: string;
+        };
+        Insert: {
+          chain_id: number;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          last_used_at?: string;
+          token_hash: string;
+          wallet_address: string;
+        };
+        Update: {
+          chain_id?: number;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          last_used_at?: string;
+          token_hash?: string;
+          wallet_address?: string;
+        };
+        Relationships: [];
+      };
+      dashboard_wallet_challenges: {
+        Row: {
+          chain_id: number;
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          issued_at: string;
+          request_origin: string;
+          token_hash: string;
+          wallet_address: string;
+        };
+        Insert: {
+          chain_id: number;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          issued_at: string;
+          request_origin: string;
+          token_hash: string;
+          wallet_address: string;
+        };
+        Update: {
+          chain_id?: number;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          issued_at?: string;
+          request_origin?: string;
+          token_hash?: string;
+          wallet_address?: string;
+        };
+        Relationships: [];
+      };
       job_activity: {
         Row: {
           activity_type: string;

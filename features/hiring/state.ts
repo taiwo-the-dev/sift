@@ -1,4 +1,5 @@
 import type {
+  HiringIntentSnapshot,
   HiringIntentStatus,
   HiringTransactionStatus,
 } from "@/features/hiring/model";
@@ -63,3 +64,18 @@ export function describeTransactionStep(step: HiringTransactionStep): string {
   return descriptions[step];
 }
 
+export function canRestartHiringIntent(
+  intent: Pick<
+    HiringIntentSnapshot,
+    "currentStep" | "onchainJobId" | "status" | "transactions"
+  >,
+): boolean {
+  return (
+    (intent.status === "draft" ||
+      intent.status === "awaiting_wallet" ||
+      intent.status === "cancelled") &&
+    intent.currentStep === "create_job" &&
+    intent.onchainJobId === null &&
+    intent.transactions.length === 0
+  );
+}

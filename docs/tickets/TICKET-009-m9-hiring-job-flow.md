@@ -2,14 +2,14 @@
 
 ## Status
 
-Blocked — Hosted migration pending
+Ready for Testnet Validation
 
 The M9 application, migration, documentation, automated validation, live route,
-and live signed-quote smoke check are implemented. Completion remains blocked
-until the hosted project applies `20260823090000_add_hiring_jobs.sql` and a
-human explicitly approves the documented disposable-wallet happy path. The
-current Supabase CLI account cannot relink the project because it lacks the
-required project-management privilege.
+and live signed-quote smoke check are implemented. The GitHub integration has
+applied `20260823090000_add_hiring_jobs.sql`; all three empty hiring tables and
+the service-role-only atomic receipt function were verified on 2026-08-23.
+Completion now requires the documented disposable-wallet happy path so Sift can
+verify a human-approved job and receipt without ever handling a private key.
 
 ## Depends On
 

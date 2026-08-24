@@ -25,7 +25,7 @@ export function SiteHeader() {
                 key={item.label}
                 className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
               />
-            ) : item.href ? (
+            ) : (
               <Link
                 key={item.label}
                 href={item.href}
@@ -33,15 +33,6 @@ export function SiteHeader() {
               >
                 {item.label}
               </Link>
-            ) : (
-              <span
-                key={item.label}
-                aria-disabled="true"
-                title={`${item.label} is planned for a later milestone`}
-                className="cursor-not-allowed px-3 py-2 text-sm font-medium text-muted-foreground"
-              >
-                {item.label}
-              </span>
             ),
           )}
         </nav>

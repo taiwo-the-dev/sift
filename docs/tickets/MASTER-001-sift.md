@@ -15,8 +15,8 @@ Ready for Development
 - M6 — Complete
 - M7 — Complete
 - M8 — Complete
-- M9 — Blocked (hosted migration pending)
-- M10 — Not Started
+- M9 — Ready for Testnet Validation
+- M10 — Ready for Hosted Validation
 - M11 — Not Started
 - M12 — Not Started
 

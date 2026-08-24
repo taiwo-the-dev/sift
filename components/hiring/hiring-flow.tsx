@@ -75,6 +75,13 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         if (!active) return;
         setResume(saved);
         setIntent(snapshot);
+        setMission({
+          deliverables: snapshot.deliverables,
+          durationSeconds: snapshot.durationSeconds,
+          maxSpend: snapshot.maxSpend,
+          mission: snapshot.mission,
+          qualityStandards: snapshot.qualityStandards,
+        });
         setStep(snapshot.status === "confirmed" ? "confirmation" : "wallet");
       })
       .catch(() => {
@@ -164,6 +171,15 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     if (snapshot.status === "confirmed") {
       setStep("confirmation");
     }
+  }
+
+  function restartHiringFlow(): void {
+    clearHiringResume(storageKey);
+    setIntent(null);
+    setResume(null);
+    setQuote(null);
+    setError(null);
+    setStep("mission");
   }
 
   if (restoring) {
@@ -263,6 +279,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
               agent={agent}
               intent={intent}
               onIntentChange={updateIntent}
+              onRestart={restartHiringFlow}
               resume={resume}
             />
           ) : null}

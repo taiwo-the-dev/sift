@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready
+Ready for Hosted Validation
 
 ## Depends On
 

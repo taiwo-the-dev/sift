@@ -16,6 +16,10 @@ import {
   transactionDestination,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
+import {
+  formatTokenAmount,
+  hiringDurations,
+} from "@/features/hiring/validation";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type {
   Json,
@@ -132,6 +136,22 @@ function toTransactionSnapshot(
   };
 }
 
+function inferHiringDuration(record: JobRecord): number {
+  const approximateSeconds = Math.max(
+    0,
+    Math.round(
+      (Date.parse(record.expires_at) - Date.parse(record.created_at)) / 1_000,
+    ),
+  );
+
+  return hiringDurations.reduce((closest, candidate) =>
+    Math.abs(candidate - approximateSeconds) <
+    Math.abs(closest - approximateSeconds)
+      ? candidate
+      : closest,
+  );
+}
+
 export function toHiringIntentSnapshot(
   record: JobRecord,
   transactions: readonly JobTransactionRecord[],
@@ -144,13 +164,20 @@ export function toHiringIntentSnapshot(
     currentStep: record.current_step
       ? mapTransactionStep(record.current_step)
       : null,
+    deliverables: record.deliverables,
+    durationSeconds: inferHiringDuration(record),
     expiresAt: record.expires_at,
     failureMessage: record.failure_message,
     id: record.id,
+    maxSpend: formatTokenAmount(
+      BigInt(record.maximum_spend_base_units),
+      record.payment_token_decimals,
+    ),
     mission: record.mission,
     onchainDescription: record.onchain_description,
     onchainJobId: record.onchain_job_id,
     providerAddress: getAddress(record.provider_address),
+    qualityStandards: record.quality_standards,
     quoteExpiresAt: record.quote_expires_at,
     status: mapIntentStatus(record.status),
     transactionHash: record.transaction_hash as Hash | null,

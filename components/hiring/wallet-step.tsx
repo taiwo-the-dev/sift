@@ -2,6 +2,7 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
+  ArrowLeft,
   CircleAlert,
   CircleCheck,
   Clock3,
@@ -10,6 +11,7 @@ import {
   Network,
   RotateCw,
   ShieldCheck,
+  UserRoundCog,
   WalletCards,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -42,7 +44,10 @@ import {
   buildTestnetTransactionHref,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
-import { describeTransactionStep } from "@/features/hiring/state";
+import {
+  canRestartHiringIntent,
+  describeTransactionStep,
+} from "@/features/hiring/state";
 import { shortenWalletAddress } from "@/features/wallet/presentation";
 import type { SavedHiringResume } from "@/features/hiring/client-storage";
 import { cn } from "@/lib/utils";
@@ -51,6 +56,7 @@ interface WalletStepProps {
   agent: HiringAgentSummary;
   intent: HiringIntentSnapshot;
   onIntentChange: (intent: HiringIntentSnapshot) => void;
+  onRestart: () => void;
   resume: SavedHiringResume;
 }
 
@@ -105,6 +111,7 @@ export function WalletStep({
   agent,
   intent,
   onIntentChange,
+  onRestart,
   resume,
 }: WalletStepProps) {
   const account = useAccount();
@@ -112,6 +119,7 @@ export function WalletStep({
   const walletClient = useWalletClient({ chainId: HIRING_CHAIN_ID });
   const switchChain = useSwitchChain();
   const [busy, setBusy] = useState(false);
+  const [confirmRestart, setConfirmRestart] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const currentStep = intent.currentStep;
   const currentTransaction = useMemo(
@@ -129,6 +137,7 @@ export function WalletStep({
   const walletMatches =
     account.address?.toLowerCase() === intent.walletAddress.toLowerCase();
   const correctNetwork = account.chainId === HIRING_CHAIN_ID;
+  const restartAllowed = canRestartHiringIntent(intent);
   const pendingHash =
     currentTransaction?.status === "submitted" ||
     currentTransaction?.status === "replaced"
@@ -346,6 +355,32 @@ export function WalletStep({
     }
   }
 
+  async function restartWithConnectedWallet(): Promise<void> {
+    if (!restartAllowed) return;
+
+    setBusy(true);
+    setNotice(null);
+
+    try {
+      await recordRemoteClientState(
+        intent.id,
+        resume.resumeToken,
+        "cancelled",
+        "Untouched hiring intent cancelled before changing wallets.",
+      );
+      onRestart();
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Sift could not safely cancel this untouched intent.",
+      );
+      setConfirmRestart(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="space-y-6">
       <div>
@@ -427,11 +462,100 @@ export function WalletStep({
       </div>
 
       {!walletMatches && account.address ? (
-        <p role="alert" className="flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-400/8 px-4 py-3 text-sm text-amber-100">
-          <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          Reconnect the original wallet {shortenWalletAddress(intent.walletAddress)}.
-          A different account cannot submit or resume this job.
-        </p>
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-400/25 bg-amber-400/8 px-4 py-4 text-sm text-amber-100"
+        >
+          <div className="flex items-start gap-2">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="font-semibold">
+                This intent belongs to another wallet.
+              </p>
+              <p className="mt-1 text-xs leading-5 text-amber-100/75">
+                Reconnect {shortenWalletAddress(intent.walletAddress)} to
+                continue. The connected wallet{" "}
+                {shortenWalletAddress(account.address)} cannot sign for that
+                saved job.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <ConnectButton.Custom>
+              {({ mounted, openAccountModal }) => (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!mounted || busy}
+                  onClick={openAccountModal}
+                  className="border-amber-300/25 bg-transparent text-amber-50 hover:bg-amber-300/10"
+                >
+                  <UserRoundCog className="size-4" aria-hidden="true" />
+                  Open wallet account menu
+                </Button>
+              )}
+            </ConnectButton.Custom>
+            {restartAllowed ? (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => setConfirmRestart(true)}
+                className="text-amber-50 hover:bg-amber-300/10"
+              >
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                Restart with connected wallet
+              </Button>
+            ) : null}
+          </div>
+
+          {!restartAllowed ? (
+            <p className="mt-3 text-xs leading-5 text-amber-100/70">
+              Restart is disabled because this intent already has submitted or
+              confirmed blockchain activity. Switch back to the original wallet
+              to avoid abandoning or duplicating the on-chain job.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {confirmRestart ? (
+        <div className="rounded-xl border border-border bg-background/60 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            Restart this untouched hiring flow?
+          </p>
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            No blockchain transaction exists for this intent. Sift will cancel
+            only the saved database intent, keep your mission text in the form,
+            and request a fresh signed quote for the currently connected wallet.
+          </p>
+          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => setConfirmRestart(false)}
+            >
+              Keep current intent
+            </Button>
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={restartWithConnectedWallet}
+            >
+              {busy ? (
+                <LoaderCircle
+                  className="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ArrowLeft className="size-4" aria-hidden="true" />
+              )}
+              Cancel intent and restart
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       {notice ? (
@@ -446,6 +570,18 @@ export function WalletStep({
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        {restartAllowed && walletMatches ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            disabled={busy}
+            onClick={() => setConfirmRestart(true)}
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Edit mission or change wallet
+          </Button>
+        ) : null}
         <Button type="button" variant="outline" size="lg" onClick={refreshIntent} disabled={busy}>
           <RotateCw className="size-4" aria-hidden="true" />
           Refresh saved state

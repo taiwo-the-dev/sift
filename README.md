@@ -2,13 +2,13 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, and hiring layer for AI agents on BNB Chain. The repository includes the M0 foundation, M1 design system and landing page, M2 database foundation, M3 ERC-8004 indexer, M4 discovery marketplace, M5 agent profiles, M6 health/Sift Score implementation, M7 agent comparison, M8 wallet integration, and the M9 ERC-8183 testnet hiring flow.
+Sift is a discovery, comparison, trust, hiring, and monitoring layer for AI agents on BNB Chain. The repository includes M0–M9 plus the M10 connected-wallet dashboard.
 
 ## Current milestone
 
-M9 lets compatible real indexed agents negotiate a signed quote and enter a five-step BSC Testnet checkout. Sift persists an idempotent pending intent, simulates each exact APEX/ERC-8183 call, requests explicit wallet confirmation, independently verifies receipts and protocol events, resumes pending state after reload, and confirms only a real funded on-chain job.
+M10 adds `/dashboard`, where a wallet can inspect only its own persisted hiring jobs after signing a read-only ownership challenge. The server derives honest summaries, reconciles confirmed ERC-8183 job IDs with live protocol state, distinguishes application records from on-chain evidence, and stops bounded polling when all jobs are terminal.
 
-The hosted catalogue and ordered M4–M6 PostgreSQL migrations are deployed. Real health and withheld-score persistence were validated against BSC Testnet agent `#1883` on 2026-08-22. The additive M9 migration must be deployed before creating a hiring intent. Mainnet hiring, custodial signing, unsupported permission controls, and the M10 dashboard remain intentionally unimplemented.
+The hosted catalogue and ordered M4–M9 PostgreSQL migrations are deployed. The additive M10 dashboard-session migration must be deployed through the Supabase GitHub integration before the connected dashboard can authorize a wallet. Mainnet hiring, custodial signing, and unsupported pause/revoke controls remain intentionally unimplemented.
 
 ## Stack
 
@@ -66,6 +66,8 @@ Wallet connection states, browser RPC configuration, supported chains, and safe 
 
 Verified APEX contracts, compatible-agent rules, exact transaction calls, persistence safeguards, faucets, limitations, and the manual testnet demo are documented in [ERC-8183 testnet hiring](docs/hiring.md).
 
+Wallet-scoped access, dashboard status rules, polling, provenance labels, and post-deployment validation are documented in [Wallet job dashboard](docs/dashboard.md).
+
 ## Validation
 
 ```bash
@@ -88,6 +90,7 @@ components/scoring/  M6 accessible score summary and evidence breakdown
 components/comparison/ M7 selection controls, navigation state, and comparison UI
 components/wallet/     M8 provider, responsive control, and state presentation
 components/hiring/     M9 mission, review, wallet transaction, and confirmation UI
+components/dashboard/  M10 access, summary, job detail, and audit timeline UI
 components/ui/       shadcn/ui components
 docs/tickets/        Product specifications and milestone scope
 features/discovery/  M4 URL parsing, intent mapping, models, and display fallbacks
@@ -97,6 +100,7 @@ features/scoring/    M6 pure formula, presentation, and recalculation orchestrat
 features/comparison/ M7 URL validation, domain models, and contextual matching
 features/wallet/     M8 public configuration validation and safe presentation
 features/hiring/     M9 validation, negotiation, protocol, state, and receipt rules
+features/dashboard/  M10 sessions, status derivation, presentation, and protocol reconciliation
 lib/blockchain/      Shared typed BNB chains plus browser/server hiring clients
 lib/db/              Server-only client, strict schema types, validation, repositories
 lib/indexer/         ERC-8004 configuration, RPC, metadata, persistence, and sync logic
@@ -112,6 +116,7 @@ tests/comparison/     M7 selection, matching, and bounded repository coverage
 tests/wallet/         M8 chain, environment, address, and error-mapping coverage
 tests/wallet-ui/      M8 rendered connection-state coverage
 tests/hiring/         M9 validation, protocol state, receipt, and migration coverage
+tests/dashboard/      M10 status, session, repository, and migration coverage
 lib/                 Framework-independent utilities and environment access
 ```
 

@@ -125,6 +125,14 @@ The hosted M5 and M6 migrations were validated on 2026-08-22. A bounded check pe
 
 Deploy the migration before exposing the M9 hire route. The application fails rather than fabricating a pending or confirmed job when the schema is unavailable. Full protocol and test instructions are in [ERC-8183 testnet hiring](hiring.md).
 
+The GitHub integration deployed this migration on 2026-08-23. Read-only verification confirmed that all three hiring tables exist with zero initial rows and that `record_hiring_verification` is exposed only through the server-side database boundary. No test or fabricated job was inserted during deployment verification.
+
+## M10 wallet-scoped dashboard sessions
+
+`20260824100000_add_dashboard_wallet_sessions.sql` creates two security-only tables. `dashboard_wallet_challenges` stores short-lived single-use challenge digests; `dashboard_sessions` stores opaque four-hour session digests scoped to one verified wallet and BSC Testnet. Raw challenge/session tokens remain in HttpOnly, SameSite cookies and are never persisted.
+
+Browser database roles have no access to either table. The server verifies the signed challenge with viem before creating a session, then uses the session wallet—not a client-selected database filter—to query M9 jobs. Deploy this migration through the Supabase GitHub integration before validating `/dashboard`; until it exists, wallet authorization fails closed without exposing job records.
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.
@@ -174,7 +182,7 @@ Only the M3 Sift Indexer should create catalogue records, and every inserted ide
 
 ## Security boundary
 
-All six `public` tables have Row Level Security enabled. The migration revokes access from `anon` and `authenticated` and defines no browser policies in M2. Only the server-side client uses `SUPABASE_SECRET_KEY`, which bypasses RLS and therefore must never enter a browser bundle. `server-only` guards the client and repository modules at build time.
+All public persistence tables have Row Level Security enabled. The migrations revoke browser-role access by default; M9 and M10 keep private job and session records behind the server boundary. Only the server-side client uses `SUPABASE_SECRET_KEY`, which bypasses RLS and therefore must never enter a browser bundle. `server-only` guards the client and repository modules at build time.
 
 Do not create a browser Supabase client until a later milestone has a concrete, least-privilege requirement. Do not expose raw repository errors in a public response.
 
@@ -190,6 +198,7 @@ Application and indexer code must use the repositories in `lib/db/` rather than 
 - `createHealthRepository()` reads a bounded due queue and persists validated endpoint observations.
 - `createScoreRepository()` bulk-composes affected evidence and upserts deterministic versioned assessments.
 - `createFeaturedAgentRepository()` returns only agents satisfying the documented current score/health rule.
+- `createDashboardRepository()` bulk-loads jobs, agent records, bounded health evidence, transactions, and activity for the server-verified wallet only.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 
 Repository inputs require unavailable upstream fields to be passed explicitly as `null`, keeping missing information distinguishable from fabricated defaults.
@@ -203,4 +212,4 @@ npm test
 npm run build
 ```
 
-After GitHub deploys the migrations, verify in the Supabase dashboard that the six catalogue/evidence tables and three M9 hiring tables exist, contain no fabricated records, have Row Level Security enabled, and show the expected migration history. M3 writes only real ERC-8004 identities, metadata, services, and checkpoints. M6 writes only bounded endpoint observations and reproducible assessments from those persisted inputs. M9 writes user-entered mission data and transaction evidence only after validation; it does not fabricate a quote, receipt, job identifier, or completion status.
+After GitHub deploys the migrations, verify in the Supabase dashboard that the catalogue/evidence tables, three M9 hiring tables, and two M10 session tables exist, contain no fabricated product records, have Row Level Security enabled, and show the expected migration history. M3 writes only real ERC-8004 identities, metadata, services, and checkpoints. M6 writes only bounded endpoint observations and reproducible assessments from those persisted inputs. M9 writes user-entered mission data and transaction evidence only after validation; M10 reads those records and verified ERC-8183 state without fabricating completion or activity.
