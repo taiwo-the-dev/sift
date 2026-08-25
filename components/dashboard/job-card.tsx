@@ -197,7 +197,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
                   <a
                     href={finalTransactionHref}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noreferrer noopener"
                     className="inline-flex items-center gap-1.5 font-semibold text-brand outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     View final transaction
@@ -254,7 +254,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
                         <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[0.7rem] text-muted-foreground">
                           <time dateTime={activity.occurredAt}>{formatDashboardTimestamp(activity.occurredAt)}</time>
                           {transactionHref ? (
-                            <a href={transactionHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30">
+                            <a href={transactionHref} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-semibold text-brand outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30">
                               Transaction
                               <ArrowUpRight className="size-3" aria-hidden="true" />
                             </a>

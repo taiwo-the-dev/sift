@@ -21,6 +21,8 @@ const existingAgent: AgentRecord = {
   owner_address: "0x1111111111111111111111111111111111111111",
   registered_at: "2026-01-01T00:00:00.000Z",
   registered_block: 100,
+  registration_log_index: 3,
+  registration_transaction_hash: `0x${"1".repeat(64)}`,
   registry_address: "0x8004a818bfb912233c491871b3d84c89a494bd9e",
   updated_at: "2026-01-01T00:00:00.000Z",
   x402_supported: false,
@@ -36,6 +38,8 @@ function failedObservation(): ObservedAgent {
     ownerAddress: "0x2222222222222222222222222222222222222222",
     registeredAt: null,
     registeredBlock: null,
+    registrationLogIndex: null,
+    registrationTransactionHash: null,
     registryAddress: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
   };
 }

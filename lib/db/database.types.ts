@@ -243,6 +243,8 @@ export type Database = {
           owner_address: string | null;
           registered_at: string | null;
           registered_block: number | null;
+          registration_log_index: number | null;
+          registration_transaction_hash: string | null;
           registry_address: string;
           updated_at: string;
           x402_supported: boolean | null;
@@ -264,6 +266,8 @@ export type Database = {
           owner_address?: string | null;
           registered_at?: string | null;
           registered_block?: number | null;
+          registration_log_index?: number | null;
+          registration_transaction_hash?: string | null;
           registry_address: string;
           updated_at?: string;
           x402_supported?: boolean | null;
@@ -285,6 +289,8 @@ export type Database = {
           owner_address?: string | null;
           registered_at?: string | null;
           registered_block?: number | null;
+          registration_log_index?: number | null;
+          registration_transaction_hash?: string | null;
           registry_address?: string;
           updated_at?: string;
           x402_supported?: boolean | null;
@@ -576,18 +582,21 @@ export type Database = {
       sync_state: {
         Row: {
           chain_id: number;
+          confirmed_head: number | null;
           last_synced_block: number;
           registry_address: string;
           updated_at: string;
         };
         Insert: {
           chain_id: number;
+          confirmed_head?: number | null;
           last_synced_block: number;
           registry_address: string;
           updated_at?: string;
         };
         Update: {
           chain_id?: number;
+          confirmed_head?: number | null;
           last_synced_block?: number;
           registry_address?: string;
           updated_at?: string;
@@ -599,6 +608,7 @@ export type Database = {
     Functions: {
       featured_agent_candidates: {
         Args: {
+          p_chain_ids?: number[];
           p_fresh_after?: string;
           p_limit?: number;
           p_score_version?: string;
@@ -645,6 +655,7 @@ export type Database = {
       search_agents: {
         Args: {
           p_categories?: string[];
+          p_chain_ids?: number[];
           p_metadata_statuses?: string[];
           p_page?: number;
           p_page_size?: number;

@@ -13,17 +13,30 @@ import {
   toHiringAgentSummary,
 } from "@/features/hiring/compatibility";
 import { HIRING_NETWORK_NAME } from "@/features/hiring/protocol";
+import { createPageMetadata } from "@/lib/metadata";
 import { cn } from "@/lib/utils";
 
 interface HirePageProps {
   params: Promise<Readonly<{ agentId: string; chainId: string }>>;
 }
 
-export const metadata: Metadata = {
-  title: "Hire an AI agent",
-  description: "Create a bounded ERC-8183 job with a compatible indexed agent on BSC Testnet.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: HirePageProps): Promise<Metadata> {
+  const { agentId, chainId } = await params;
+  const identity = parseAgentProfileIdentity(chainId, agentId);
+  const path = identity
+    ? (`/hire/${identity.chainId}/${identity.agentId}` as const)
+    : "/discover";
+
+  return createPageMetadata({
+    title: "Hire an AI agent",
+    description:
+      "Create a bounded ERC-8183 job with a compatible indexed agent on BSC Testnet.",
+    noIndex: true,
+    path,
+  });
+}
 
 export default async function HirePage({ params }: HirePageProps) {
   const { agentId, chainId } = await params;
@@ -38,7 +51,7 @@ export default async function HirePage({ params }: HirePageProps) {
   const compatibility = resolveHiringCompatibility(profile);
 
   return (
-    <main className="flex-1 bg-background">
+    <div className="flex-1 bg-background">
       <div className="border-b border-border bg-card/45">
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
@@ -83,6 +96,6 @@ export default async function HirePage({ params }: HirePageProps) {
           </section>
         )}
       </div>
-    </main>
+    </div>
   );
 }

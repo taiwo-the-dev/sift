@@ -25,9 +25,9 @@ export const publicBnbChainDefinitions: Readonly<
     chain: bsc,
     chainId: bsc.id,
     publicRpcUrls: [
-      "https://bsc-mainnet.public.blastapi.io",
-      "https://bsc-dataseed-public.bnbchain.org",
-      "https://bsc-dataseed.bnbchain.org",
+      "https://bsc-rpc.publicnode.com",
+      "https://bsc-mainnet.gateway.tatum.io",
+      "https://1rpc.io/bnb",
     ],
   },
 };

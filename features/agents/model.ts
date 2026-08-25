@@ -55,6 +55,8 @@ export type AgentProfile = Readonly<{
   ownerAddress: string | null;
   registeredAt: string | null;
   registeredBlock: number | null;
+  registrationLogIndex: number | null;
+  registrationTransactionHash: string | null;
   registryAddress: string;
   reputation: AgentReputationEvidence | null;
   score: PersistedSiftScore | null;

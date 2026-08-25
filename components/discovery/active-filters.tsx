@@ -16,7 +16,8 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
   const hasFilters =
     query.query.length > 0 ||
     query.categories.length > 0 ||
-    query.metadataStatuses.length > 0;
+    query.metadataStatuses.length > 0 ||
+    query.network !== "bsc-mainnet";
 
   if (!hasFilters) {
     return null;
@@ -25,6 +26,19 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
       <span className="mr-1 text-xs font-medium text-muted-foreground">Active</span>
+      {query.network !== "bsc-mainnet" ? (
+        <Link
+          href={buildDiscoveryHref(query, {
+            network: "bsc-mainnet",
+            page: 1,
+          })}
+          className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/8 px-3 py-1.5 text-xs font-medium text-brand outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
+          aria-label="Reset network catalogue to BSC Mainnet"
+        >
+          {query.network === "all" ? "All networks" : "BSC Testnet"}
+          <X className="size-3" aria-hidden="true" />
+        </Link>
+      ) : null}
       {query.query ? (
         <Link
           href={buildDiscoveryHref(query, { page: 1, query: "" })}

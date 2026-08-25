@@ -202,6 +202,8 @@ export function composeAgentProfile(
     ownerAddress: agent.owner_address,
     registeredAt: agent.registered_at,
     registeredBlock: agent.registered_block,
+    registrationLogIndex: agent.registration_log_index,
+    registrationTransactionHash: agent.registration_transaction_hash,
     registryAddress: agent.registry_address,
     reputation: mapReputation(reputationRecord),
     score: scoreRecord ? mapScoreRecord(scoreRecord) : null,

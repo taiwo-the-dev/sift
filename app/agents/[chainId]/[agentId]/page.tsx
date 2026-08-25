@@ -16,6 +16,7 @@ import {
   normalizeComparisonGoal,
   type ComparisonSearchParams,
 } from "@/features/comparison/query";
+import { createPageMetadata } from "@/lib/metadata";
 
 interface AgentProfilePageProps {
   params: Promise<Readonly<{ agentId: string; chainId: string }>>;
@@ -42,29 +43,34 @@ export async function generateMetadata({
   const identity = parseAgentProfileIdentity(chainId, agentId);
 
   if (!identity) {
-    return {
+    return createPageMetadata({
+      description: "The requested indexed ERC-8004 agent profile could not be resolved.",
+      noIndex: true,
+      path: "/agents/profile-not-found",
       title: "Agent not found",
-      robots: { index: false, follow: false },
-    };
+    });
   }
 
   const profile = await getAgentProfile(identity.chainId, identity.agentId);
 
   if (!profile) {
-    return {
+    return createPageMetadata({
+      description: "The requested indexed ERC-8004 agent profile could not be resolved.",
+      noIndex: true,
+      path: "/agents/profile-not-found",
       title: "Agent not found",
-      robots: { index: false, follow: false },
-    };
+    });
   }
 
-  return {
+  return createPageMetadata({
     title: formatAgentName(profile.name, profile.agentId),
     description: metadataDescription(
       profile.description,
       profile.chainId,
       profile.agentId,
     ),
-  };
+    path: `/agents/${profile.chainId}/${profile.agentId}`,
+  });
 }
 
 export default async function AgentProfilePage({

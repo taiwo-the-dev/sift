@@ -86,6 +86,8 @@ function recordFromObservation(observation: ObservedAgent): AgentRecord {
       observation.registeredBlock === null
         ? null
         : Number(observation.registeredBlock),
+    registration_log_index: observation.registrationLogIndex,
+    registration_transaction_hash: observation.registrationTransactionHash,
     registry_address: observation.registryAddress.toLowerCase(),
     updated_at: observation.observedAt,
     x402_supported: validMetadata?.x402Supported ?? null,
@@ -96,6 +98,7 @@ describe("indexer range integration", () => {
   it("replays a range idempotently and resumes after its checkpoint", async () => {
     const records = new Map<string, AgentRecord>();
     let checkpoint: bigint | null = null;
+    let confirmedHead: bigint | null = null;
     let writes = 0;
     const persistence: CatalogPersistence = {
       async findAgent(identity) {
@@ -110,8 +113,9 @@ describe("indexer range integration", () => {
         records.set(observation.agentId.toString(), record);
         return { created: existing === null, record };
       },
-      async saveCheckpoint(_chainId, _registryAddress, blockNumber) {
+      async saveCheckpoint(_chainId, _registryAddress, blockNumber, head) {
         checkpoint = blockNumber;
+        confirmedHead = head;
       },
     };
     const provider: RegistryRpcProvider = {
@@ -144,7 +148,13 @@ describe("indexer range integration", () => {
     const first = await runIndexer("bootstrap", config, dependencies);
     assert.equal(first.created, 1);
     assert.equal(checkpoint, 100n);
+    assert.equal(confirmedHead, 100n);
     assert.equal(records.size, 1);
+    assert.equal(
+      records.get("7")?.registration_transaction_hash,
+      transactionHash,
+    );
+    assert.equal(records.get("7")?.registration_log_index, 1);
 
     checkpoint = null;
     const replay = await runIndexer("bootstrap", config, dependencies);
@@ -156,6 +166,61 @@ describe("indexer range integration", () => {
     const resumed = await runIndexer("incremental", config, dependencies);
     assert.equal(resumed.ranges, 0);
     assert.equal(writes, 2);
+  });
+
+  it("keeps overlapping numeric identities and checkpoints isolated by network", async () => {
+    const checkpoints = new Map<number, bigint>();
+    const records = new Map<string, AgentRecord>();
+    const persistence: CatalogPersistence = {
+      async findAgent(identity) {
+        return records.get(`${identity.chainId}:${identity.agentId}`) ?? null;
+      },
+      async getCheckpoint(chainId) {
+        return checkpoints.get(chainId) ?? null;
+      },
+      async persistAgent(observation, existing) {
+        const record = recordFromObservation(observation);
+        records.set(`${observation.chainId}:${observation.agentId}`, record);
+        return { created: existing === null, record };
+      },
+      async saveCheckpoint(chainId, _registryAddress, blockNumber) {
+        checkpoints.set(chainId, blockNumber);
+      },
+    };
+    const logger = createLogger(() => undefined);
+
+    for (const network of ["bsc-mainnet", "bsc-testnet"] as const) {
+      const config = parseIndexerConfig({
+        BNB_NETWORK: network,
+        ERC8004_DEPLOYMENT_BLOCK: "100",
+        INDEXER_BATCH_SIZE: "1",
+        INDEXER_CONFIRMATIONS: "1",
+        INDEXER_MIN_BATCH_SIZE: "1",
+      });
+      const provider: RegistryRpcProvider = {
+        getBlockNumber: async () => 101n,
+        getBlockTimestamp: async () => 1_700_000_000n,
+        getBytecode: async () => "0x01",
+        getChainId: async () => config.chainId,
+        getLogs: async () => [registrationLog()],
+        name: `${network}-fixture-rpc`,
+        ownerOf: async () => owner as Address,
+        tokenUri: async () => "https://agent.example/metadata.json",
+      };
+
+      await runIndexer("bootstrap", config, {
+        logger,
+        metadata: successfulMetadata(),
+        persistence,
+        rpc: new RegistryRpcPool([provider], logger),
+      });
+    }
+
+    assert.deepEqual([...checkpoints.entries()].sort(), [
+      [56, 100n],
+      [97, 100n],
+    ]);
+    assert.deepEqual([...records.keys()].sort(), ["56:7", "97:7"]);
   });
 
   it("does not advance a checkpoint past a failed range", async () => {

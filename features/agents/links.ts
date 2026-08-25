@@ -1,4 +1,5 @@
 const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;
+const transactionHashPattern = /^0x[0-9a-fA-F]{64}$/;
 const blockedHostnameSuffixes = [".internal", ".local", ".localhost"] as const;
 const maximumExternalUrlLength = 2_048;
 
@@ -74,4 +75,21 @@ export function buildExplorerBlockHref(
   }
 
   return `${origin}/block/${blockNumber}`;
+}
+
+export function buildExplorerTransactionHref(
+  chainId: number,
+  transactionHash: string | null,
+): string | null {
+  const origin = explorerOrigins.get(chainId);
+
+  if (
+    !origin ||
+    !transactionHash ||
+    !transactionHashPattern.test(transactionHash)
+  ) {
+    return null;
+  }
+
+  return `${origin}/tx/${transactionHash.toLowerCase()}`;
 }

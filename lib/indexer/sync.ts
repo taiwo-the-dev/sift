@@ -167,6 +167,9 @@ async function observeAndPersistAgent(
     ownerAddress,
     registeredAt,
     registeredBlock: change.registration?.blockNumber ?? null,
+    registrationLogIndex: change.registration?.logIndex ?? null,
+    registrationTransactionHash:
+      change.registration?.transactionHash ?? null,
     registryAddress: config.registryAddress,
   };
   const persisted = await dependencies.persistence.persistAgent(
@@ -290,6 +293,7 @@ export async function runIndexer(
       config.chainId,
       config.registryAddress,
       range.toBlock,
+      confirmedHead,
     );
 
     summary.checkpoint = range.toBlock;

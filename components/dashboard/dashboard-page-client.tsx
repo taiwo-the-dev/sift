@@ -24,6 +24,7 @@ import {
 } from "@/features/dashboard/client-api";
 import { shouldPollDashboard } from "@/features/dashboard/derive";
 import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import { mapWalletError } from "@/features/wallet/presentation";
 import { defaultWalletChain } from "@/lib/blockchain/chains";
 
 type ActionState = Readonly<{
@@ -158,26 +159,42 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
   }
 
   if (account.chainId !== HIRING_CHAIN_ID) {
+    const networkError = switchChain.error
+      ? mapWalletError(switchChain.error)
+      : null;
+
     return (
       <DashboardStateCard
         icon={Network}
         title="Switch to BSC Testnet"
         description="Sift’s current hiring records and verified ERC-8183 deployment are on BSC Testnet. The dashboard will not mix jobs from another network."
       >
-        <Button
-          type="button"
-          variant="brand"
-          size="lg"
-          disabled={switchChain.isPending}
-          onClick={() => switchChain.switchChain({ chainId: defaultWalletChain.id })}
-        >
-          {switchChain.isPending ? (
-            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Network className="size-4" aria-hidden="true" />
-          )}
-          {switchChain.isPending ? "Switching…" : "Switch network"}
-        </Button>
+        <div className="flex w-full flex-col items-center gap-3">
+          <Button
+            type="button"
+            variant="brand"
+            size="lg"
+            disabled={switchChain.isPending}
+            aria-live="polite"
+            onClick={() => {
+              switchChain.reset();
+              switchChain.switchChain({ chainId: defaultWalletChain.id });
+            }}
+          >
+            {switchChain.isPending ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Network className="size-4" aria-hidden="true" />
+            )}
+            {switchChain.isPending ? "Switching…" : "Switch network"}
+          </Button>
+          {networkError ? (
+            <p role="alert" className="max-w-lg text-sm leading-6 text-red-300">
+              <span className="font-semibold">{networkError.title}.</span>{" "}
+              {networkError.description}
+            </p>
+          ) : null}
+        </div>
       </DashboardStateCard>
     );
   }
@@ -194,7 +211,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
         title="Verify wallet ownership"
         description="Sign one read-only message to prove this wallet is yours. The signature creates a four-hour dashboard session; it cannot move funds, approve tokens, or submit a transaction."
       >
-        <Button type="button" variant="brand" size="lg" disabled={actionState.pending} onClick={verifyWallet}>
+        <Button type="button" variant="brand" size="lg" disabled={actionState.pending} aria-live="polite" onClick={verifyWallet}>
           {actionState.pending ? (
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
           ) : (

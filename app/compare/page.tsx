@@ -25,13 +25,15 @@ import {
   type ComparisonSearchParams,
 } from "@/features/comparison/query";
 import { getAgentComparison } from "@/features/comparison/service";
+import { createPageMetadata } from "@/lib/metadata";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Compare AI agents",
   description:
     "Compare real indexed BNB Chain agent evidence side by side for your stated goal.",
-};
+  path: "/compare",
+});
 
 interface ComparePageProps {
   searchParams: Promise<ComparisonSearchParams>;

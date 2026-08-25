@@ -2,7 +2,13 @@
 
 ## Status
 
-Ready
+Ready for Manual Validation
+
+The M11 production-polish implementation, focused regression coverage, route
+smoke checks, responsive rendering audit, security review, and local quality
+gate are complete. Final completion remains coupled to the outstanding M9
+disposable-wallet happy path and M10 two-wallet hosted access validation, which
+must be exercised by a human without sharing signing material.
 
 ## Depends On
 
@@ -92,18 +98,18 @@ Judges and users experience Sift as one product, not as separate milestones. Bef
 
 ## Acceptance Criteria
 
-- [ ] Favicon, metadata, canonical/OpenGraph information, and sharing presentation are complete.
-- [ ] Global and route-level not-found, error, loading, empty, and partial states are polished.
-- [ ] All core routes pass desktop, tablet, and mobile QA.
+- [x] Favicon, metadata, canonical/OpenGraph information, and sharing presentation are complete.
+- [x] Global and route-level not-found, error, loading, empty, and partial states are polished.
+- [x] All core routes pass desktop, tablet, and mobile QA.
 - [ ] The complete primary flow is keyboard accessible with visible focus and correct semantics.
-- [ ] Contrast, reduced motion, labels, headings, dialogs, and live feedback pass review.
-- [ ] Bundle/client boundaries, data waterfalls, images/fonts, and avoidable rerenders have been reviewed and material issues corrected.
-- [ ] Browser console noise and obsolete debugging output are removed.
-- [ ] Unused code and dependencies are removed safely.
-- [ ] Buttons/forms have consistent and safe async states.
-- [ ] No fake data, broken links, dead controls, or unintended placeholder content remains.
-- [ ] Security and secret-exposure review finds no unresolved P0/P1 issue.
-- [ ] Existing unit/integration/E2E tests, lint, typecheck, and production build pass.
+- [x] Contrast, reduced motion, labels, headings, dialogs, and live feedback pass review.
+- [x] Bundle/client boundaries, data waterfalls, images/fonts, and avoidable rerenders have been reviewed and material issues corrected.
+- [x] Browser console noise and obsolete debugging output are removed.
+- [x] Unused code and dependencies are removed safely.
+- [x] Buttons/forms have consistent and safe async states.
+- [x] No fake data, broken links, dead controls, or unintended placeholder content remains.
+- [x] Security and secret-exposure review finds no unresolved P0/P1 issue.
+- [x] Existing unit/integration/E2E tests, lint, typecheck, and production build pass.
 
 ## Testing Requirements
 

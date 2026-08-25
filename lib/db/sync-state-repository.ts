@@ -14,7 +14,7 @@ export type SyncCheckpointRecord = TableRow<"sync_state">;
 
 export type SyncStateRepository = Readonly<{
   find(
-    identity: Omit<SyncCheckpointInput, "lastSyncedBlock">,
+    identity: Omit<SyncCheckpointInput, "confirmedHead" | "lastSyncedBlock">,
   ): Promise<SyncCheckpointRecord | null>;
   upsert(input: SyncCheckpointInput): Promise<SyncCheckpointRecord>;
 }>;
@@ -26,6 +26,7 @@ export function createSyncStateRepository(
     async find(identity) {
       const checkpoint = validateSyncCheckpoint({
         ...identity,
+        confirmedHead: null,
         lastSyncedBlock: 0,
       });
       const { data, error } = await client

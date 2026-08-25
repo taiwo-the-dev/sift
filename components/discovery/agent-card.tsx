@@ -75,6 +75,10 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand/8 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-brand">
+                  <Database className="size-3" aria-hidden="true" />
+                  {formatChainName(agent.chainId)} · {agent.chainId}
+                </span>
                 {agent.categories.slice(0, 2).map((category) => (
                   <span
                     key={category}

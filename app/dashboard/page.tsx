@@ -2,12 +2,15 @@ import { BriefcaseBusiness, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
 import { DashboardPageClient } from "@/components/dashboard/dashboard-page-client";
+import { createPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "My Agents dashboard",
   description:
     "Monitor real Sift hiring jobs, verified ERC-8183 state, and attributable wallet activity.",
-};
+  noIndex: true,
+  path: "/dashboard",
+});
 
 export default function DashboardPage() {
   return (
@@ -42,4 +45,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

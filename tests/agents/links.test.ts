@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   buildExplorerAddressHref,
   buildExplorerBlockHref,
+  buildExplorerTransactionHref,
   normalizeExternalHref,
 } from "../../features/agents/links";
 
@@ -19,12 +20,17 @@ describe("agent profile links", () => {
       buildExplorerBlockHref(56, 123),
       "https://bscscan.com/block/123",
     );
+    assert.equal(
+      buildExplorerTransactionHref(56, `0x${"A".repeat(64)}`),
+      `https://bscscan.com/tx/0x${"a".repeat(64)}`,
+    );
   });
 
   it("does not construct explorer links for unsupported or invalid values", () => {
     assert.equal(buildExplorerAddressHref(1, address), null);
     assert.equal(buildExplorerAddressHref(97, "not-an-address"), null);
     assert.equal(buildExplorerBlockHref(97, -1), null);
+    assert.equal(buildExplorerTransactionHref(97, "0x1234"), null);
   });
 
   it("allows public HTTPS metadata links and rejects unsafe targets", () => {

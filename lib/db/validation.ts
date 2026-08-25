@@ -43,11 +43,14 @@ export type AgentWriteInput = AgentIdentityInput &
     ownerAddress: string | null;
     registeredAt: string | null;
     registeredBlock: number | null;
+    registrationLogIndex: number | null;
+    registrationTransactionHash: string | null;
     x402Supported: boolean | null;
   }>;
 
 export type SyncCheckpointInput = Readonly<{
   chainId: number;
+  confirmedHead: number | null;
   lastSyncedBlock: number;
   registryAddress: string;
 }>;
@@ -70,6 +73,7 @@ export type AgentScoreWriteInput = Readonly<{
 }>;
 
 const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;
+const transactionHashPattern = /^0x[0-9a-fA-F]{64}$/;
 const unsignedUint256Pattern = /^(0|[1-9][0-9]{0,77})$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -158,6 +162,22 @@ export function validateAgentWrite(
     assertNonNegativeSafeInteger(input.registeredBlock, "registeredBlock");
   }
 
+  if (input.registrationLogIndex !== null) {
+    assertNonNegativeSafeInteger(
+      input.registrationLogIndex,
+      "registrationLogIndex",
+    );
+  }
+
+  if (
+    input.registrationTransactionHash !== null &&
+    !transactionHashPattern.test(input.registrationTransactionHash)
+  ) {
+    throw new TypeError(
+      "registrationTransactionHash must be a 32-byte transaction hash or null.",
+    );
+  }
+
   if (
     input.category !== null &&
     !agentCategories.some((category) => category === input.category)
@@ -188,6 +208,9 @@ export function validateAgentWrite(
         : canonicalizeEvmAddress(input.ownerAddress, "ownerAddress"),
     registered_at: input.registeredAt,
     registered_block: input.registeredBlock,
+    registration_log_index: input.registrationLogIndex,
+    registration_transaction_hash:
+      input.registrationTransactionHash?.toLowerCase() ?? null,
     x402_supported: input.x402Supported,
   };
 }
@@ -198,8 +221,17 @@ export function validateSyncCheckpoint(
   assertPositiveSafeInteger(input.chainId, "chainId");
   assertNonNegativeSafeInteger(input.lastSyncedBlock, "lastSyncedBlock");
 
+  if (input.confirmedHead !== null) {
+    assertNonNegativeSafeInteger(input.confirmedHead, "confirmedHead");
+
+    if (input.confirmedHead < input.lastSyncedBlock) {
+      throw new TypeError("confirmedHead cannot precede lastSyncedBlock.");
+    }
+  }
+
   return {
     chain_id: input.chainId,
+    confirmed_head: input.confirmedHead,
     last_synced_block: input.lastSyncedBlock,
     registry_address: canonicalizeEvmAddress(
       input.registryAddress,

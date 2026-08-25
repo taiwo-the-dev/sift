@@ -29,6 +29,8 @@ function createAgentInput(
     ownerAddress: null,
     registeredAt: null,
     registeredBlock: null,
+    registrationLogIndex: null,
+    registrationTransactionHash: null,
     registryAddress,
     x402Supported: null,
     ...overrides,
@@ -76,11 +78,13 @@ describe("database input validation", () => {
     assert.deepEqual(
       validateSyncCheckpoint({
         chainId: 56,
+        confirmedHead: 100,
         lastSyncedBlock: 0,
         registryAddress,
       }),
       {
         chain_id: 56,
+        confirmed_head: 100,
         last_synced_block: 0,
         registry_address: registryAddress,
       },

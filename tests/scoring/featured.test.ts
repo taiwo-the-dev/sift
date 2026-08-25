@@ -82,10 +82,12 @@ function sources(
 describe("featured scored-agent rule", () => {
   it("preserves current score order and requires matching online evidence", async () => {
     let freshness = "";
+    let chainIds: readonly number[] = [];
     const repository = createFeaturedAgentRepository(
       sources({
-        listCandidateIds: async (_limit, _version, freshAfter) => {
+        listCandidateIds: async (_limit, _version, freshAfter, requestedChains) => {
           freshness = freshAfter;
+          chainIds = requestedChains;
           return ids;
         },
       }),
@@ -94,6 +96,7 @@ describe("featured scored-agent rule", () => {
     const result = await repository.listFeatured(2, asOf);
 
     assert.equal(freshness, "2026-08-21T12:00:00.000Z");
+    assert.deepEqual(chainIds, [56]);
     assert.deepEqual(
       result.map((agent) => [agent.agentId, agent.score.score]),
       [

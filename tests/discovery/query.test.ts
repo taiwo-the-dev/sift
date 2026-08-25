@@ -45,6 +45,7 @@ describe("discovery query parsing", () => {
     const query = parseDiscoverySearchParams({
       category: ["grid-trading", "not-a-category", "grid-trading"],
       metadata: ["valid", "invalid", "invented"],
+      network: "bsc-testnet",
       page: "7",
       q: "  grid   trading  ",
       size: "24",
@@ -55,6 +56,8 @@ describe("discovery query parsing", () => {
     assert.deepEqual(query.categories, ["grid-trading"]);
     assert.deepEqual(query.effectiveCategories, ["grid-trading"]);
     assert.deepEqual(query.metadataStatuses, ["valid", "invalid"]);
+    assert.equal(query.network, "bsc-testnet");
+    assert.deepEqual(query.networkChainIds, [97]);
     assert.equal(query.page, 7);
     assert.equal(query.pageSize, 24);
     assert.equal(query.sort, "name-asc");
@@ -74,6 +77,7 @@ describe("discovery query parsing", () => {
   it("normalizes unsupported and unbounded URL state", () => {
     const query = parseDiscoverySearchParams({
       page: "-4",
+      network: "not-a-network",
       q: ["first query", "ignored query"],
       size: "1000",
       sort: "highest-reputation",
@@ -82,6 +86,8 @@ describe("discovery query parsing", () => {
     assert.equal(query.page, 1);
     assert.equal(query.pageSize, 12);
     assert.equal(query.query, "first query");
+    assert.equal(query.network, "bsc-mainnet");
+    assert.deepEqual(query.networkChainIds, [56]);
     assert.equal(query.sort, "relevance");
   });
 
@@ -89,6 +95,7 @@ describe("discovery query parsing", () => {
     const query = parseDiscoverySearchParams({
       category: ["yield-optimisation", "grid-trading"],
       metadata: "valid",
+      network: "all",
       q: "yield",
       size: "24",
     });
@@ -102,8 +109,17 @@ describe("discovery query parsing", () => {
       "grid-trading",
     ]);
     assert.deepEqual(url.searchParams.getAll("metadata"), ["valid"]);
+    assert.equal(url.searchParams.get("network"), "all");
     assert.equal(url.searchParams.get("sort"), "recent");
     assert.equal(url.searchParams.get("size"), "24");
     assert.equal(url.searchParams.get("page"), "3");
+  });
+
+  it("keeps BSC mainnet as the clean default judge journey", () => {
+    const query = parseDiscoverySearchParams({});
+
+    assert.equal(query.network, "bsc-mainnet");
+    assert.deepEqual(query.networkChainIds, [56]);
+    assert.equal(buildDiscoveryHref(query), "/discover");
   });
 });

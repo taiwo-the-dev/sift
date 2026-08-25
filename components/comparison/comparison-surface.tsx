@@ -21,6 +21,7 @@ import type {
 import {
   formatAgentName,
   formatCategory,
+  formatChainName,
   formatMetadataStatus,
   formatServiceType,
 } from "@/features/discovery/format";
@@ -431,8 +432,8 @@ function AgentColumnHeader({
               name
             )}
           </h2>
-          <p className="mt-1 font-mono text-[0.68rem] text-muted-foreground">
-            #{agent.agentId} · chain {agent.chainId}
+          <p className="mt-1 font-mono text-[0.68rem] font-semibold text-brand">
+            {formatChainName(agent.chainId)} · chain {agent.chainId} · agent #{agent.agentId}
           </p>
         </div>
       </div>

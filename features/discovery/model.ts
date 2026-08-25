@@ -58,6 +58,37 @@ export const discoverySortOptions = [
 export type DiscoverySort =
   (typeof discoverySortOptions)[number]["value"];
 
+export const discoveryNetworkOptions = [
+  {
+    chainIds: [56],
+    description: "Production ERC-8004 identities registered on BNB Smart Chain",
+    label: "BSC Mainnet",
+    value: "bsc-mainnet",
+  },
+  {
+    chainIds: [97],
+    description: "Development identities registered on BSC Testnet",
+    label: "BSC Testnet",
+    value: "bsc-testnet",
+  },
+  {
+    chainIds: [56, 97],
+    description: "Browse both catalogues while keeping every network explicit",
+    label: "All supported networks",
+    value: "all",
+  },
+] as const;
+
+export type DiscoveryNetworkScope =
+  (typeof discoveryNetworkOptions)[number]["value"];
+
+export function getDiscoveryChainIds(
+  scope: DiscoveryNetworkScope,
+): readonly number[] {
+  return discoveryNetworkOptions.find((option) => option.value === scope)
+    ?.chainIds ?? [56];
+}
+
 export const discoveryPageSizes = [12, 24, 36] as const;
 export type DiscoveryPageSize = (typeof discoveryPageSizes)[number];
 
@@ -99,6 +130,8 @@ export type DiscoveryQuery = Readonly<{
   effectiveCategories: readonly DiscoveryCategory[];
   inferredCategory: DiscoveryCategory | null;
   metadataStatuses: readonly MetadataStatus[];
+  network: DiscoveryNetworkScope;
+  networkChainIds: readonly number[];
   page: number;
   pageSize: DiscoveryPageSize;
   query: string;

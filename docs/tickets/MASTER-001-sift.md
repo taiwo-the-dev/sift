@@ -17,8 +17,14 @@ Ready for Development
 - M8 — Complete
 - M9 — Ready for Testnet Validation
 - M10 — Ready for Hosted Validation
-- M11 — Not Started
-- M12 — Not Started
+- M11 — Ready for Manual Validation
+- M12 — Blocked on External Release Validation
+- M13 — Blocked on Paused Supabase, Mainnet Archive RPC, and Hosted Bootstrap
+- M14 — Not Started
+- M15 — Not Started
+- M16 — Not Started
+- M17 — Not Started
+- M18 — Blocked Pending Official Phase 2 Criteria
 
 ## Priority
 
@@ -94,15 +100,22 @@ Do NOT make 8004scan a critical dependency.
 
 Sift must obtain its core agent catalogue from BNB Chain / ERC-8004 infrastructure through its own indexing layer.
 
-External explorers such as 8004scan may later be used for:
+External explorers such as 8004scan may be used for:
 
 - enrichment;
 - validation;
 - debugging;
 - comparison;
-- optional fallback data.
+- non-critical fallback data.
 
 If 8004scan becomes unavailable, core Sift discovery must continue functioning.
+
+For the Smart Money Era submission, the approved main-track tooling in
+`docs/hackathon-tooling.md` is required: BNB Agent Studio CLI/TypeScript SDK for
+real compatibility validation, 8004scan Pro API for non-critical enrichment,
+and official BSC network/explorer/faucet resources. "Required" means Sift must
+demonstrate meaningful use before release; it does not make 8004scan the core
+catalogue or permit external data to override verified onchain facts.
 
 ---
 
@@ -1491,6 +1504,100 @@ Deliver:
 - future roadmap
 
 Ensure every major demo interaction works before adding optional features.
+
+The 2026-08-24 event-specific audit found that M12's repository-side release
+package is useful but not sufficient for the published Smart Money Era main
+track. Complete M13–M17 before treating the final deployment as the hackathon
+submission candidate. See `docs/hackathon-audit.md`.
+
+---
+
+## M13 — Main-Track Eligibility & BSC Mainnet Catalogue
+
+Deliver:
+
+- a source-backed BSC mainnet agent catalogue;
+- network-explicit discovery and profile evidence;
+- safe dual-network indexing with independent checkpoints;
+- current scheduled data freshness;
+- a documented audit of the event's public-access and live-on-BSC rules.
+
+Do not add mainnet hiring or financial writes in this milestone.
+
+---
+
+## M14 — Category Parity & Decision-Grade Data
+
+Deliver:
+
+- measured coverage for all four required categories;
+- equally useful category journeys and comparison evidence;
+- source provenance, observation time, and honest missing-data states;
+- stronger coverage of supported health, reputation, service, and score data;
+- a required but non-critical 8004scan enrichment boundary using approved
+  hackathon access, caching, provenance, and graceful fallback.
+
+Never manufacture category membership, reputation, performance, price, or
+availability to make the catalogue appear deeper.
+
+---
+
+## M15 — Frictionless Agent Activation
+
+Deliver:
+
+- a verified set of genuinely activatable agents;
+- a minimal-friction find-to-activate journey with no hidden protocol steps;
+- real human-approved testnet activation evidence and correct explorer links;
+- resumable rejection, pending, reload, and confirmation behavior;
+- honest non-activatable states that do not create broken controls.
+- BNB Agent Studio CLI/TypeScript SDK compatibility evidence against at least
+  one genuine Studio agent;
+- the official BSC Testnet faucet/network/explorer path for human-approved
+  activation evidence.
+
+Do not introduce custody, autonomous signing, or mainnet financial execution.
+
+---
+
+## M16 — Judge-Path Validation
+
+Deliver:
+
+- repeatable novice usability sessions;
+- browser and mobile evidence for the complete judging journey;
+- verified category parity, accessibility, performance, and failure recovery;
+- a traceable issue-and-retest record with no core-path dead end.
+
+Testing must use the actual indexed catalogue and supported transaction path.
+
+---
+
+## M17 — Public Launch & Submission Package
+
+Deliver:
+
+- the final public production URL and production-origin smoke evidence;
+- current production indexing and assessment schedules;
+- a public, licensed, forkable repository with dependency attribution;
+- explorer-linked integration and activation evidence;
+- final architecture, user journey, business/adoption roadmap, deck, video, and
+  submission checklist;
+- a rehearsed, reproducible judge demo.
+- a tooling evidence record covering Agent Studio, 8004scan, and official BSC
+  resources without exposing credentials.
+
+Do not claim deployment, transactions, users, partnerships, or performance
+without evidence.
+
+---
+
+## M18 — Official Phase 2 Response
+
+This milestone is externally blocked until BNB Chain publishes the redacted
+Phase 2 criteria. Once published, capture the official requirements verbatim,
+audit the existing product, and create the smallest approved implementation
+plan. Do not speculate or build guessed Phase 2 features.
 
 ---
 

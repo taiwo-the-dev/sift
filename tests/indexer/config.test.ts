@@ -34,7 +34,7 @@ describe("parseIndexerConfig", () => {
     assert.deepEqual(config.rpcEndpoints, [
       "https://primary.example/rpc?key=secret",
       "https://fallback.example/rpc",
-      "https://bsc-dataseed.bnbchain.org",
+      "https://1rpc.io/bnb",
     ]);
     assert.equal(config.batchSize, 1_000n);
   });

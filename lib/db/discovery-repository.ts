@@ -141,6 +141,7 @@ export function createDiscoveryRepository(
   async function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
     const { data, error } = await client.rpc("search_agents", {
       p_categories: [...query.effectiveCategories],
+      p_chain_ids: [...query.networkChainIds],
       p_metadata_statuses: [...query.metadataStatuses],
       p_page: query.page,
       p_page_size: query.pageSize,
@@ -197,6 +198,8 @@ export function createDiscoveryRepository(
         effectiveCategories: [],
         inferredCategory: null,
         metadataStatuses: [],
+        network: "bsc-mainnet",
+        networkChainIds: [56],
         page: 1,
         pageSize,
         query: "",

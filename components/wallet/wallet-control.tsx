@@ -22,6 +22,7 @@ import { isWalletConnectConfigured } from "@/lib/blockchain/wallet-config";
 
 interface WalletControlProps {
   mobile?: boolean;
+  onBeforeWalletAction?: () => void;
 }
 
 type RainbowControl = Readonly<{
@@ -33,8 +34,13 @@ type RainbowControl = Readonly<{
 
 function WalletControlInner({
   mobile,
+  onBeforeWalletAction,
   rainbow,
-}: Readonly<{ mobile: boolean; rainbow: RainbowControl }>) {
+}: Readonly<{
+  mobile: boolean;
+  onBeforeWalletAction?: () => void;
+  rainbow: RainbowControl;
+}>) {
   const account = useAccount();
   const connectors = useConnectors();
   const switchChain = useSwitchChain();
@@ -87,11 +93,13 @@ function WalletControlInner({
       return;
     }
 
+    onBeforeWalletAction?.();
     rainbow.openConnectModal();
   }
 
   function switchToTestnet(): void {
     setNoticeState(null);
+    onBeforeWalletAction?.();
     switchChain.switchChain(
       { chainId: defaultWalletChain.id },
       {
@@ -111,14 +119,23 @@ function WalletControlInner({
       view={view}
       onConnect={connectWallet}
       onDismissNotice={() => setNoticeState(null)}
-      onOpenAccount={rainbow.openAccountModal}
-      onOpenChain={rainbow.openChainModal}
+      onOpenAccount={() => {
+        onBeforeWalletAction?.();
+        rainbow.openAccountModal();
+      }}
+      onOpenChain={() => {
+        onBeforeWalletAction?.();
+        rainbow.openChainModal();
+      }}
       onSwitchToTestnet={switchToTestnet}
     />
   );
 }
 
-export function WalletControl({ mobile = false }: WalletControlProps) {
+export function WalletControl({
+  mobile = false,
+  onBeforeWalletAction,
+}: WalletControlProps) {
   return (
     <ConnectButton.Custom>
       {({
@@ -129,6 +146,7 @@ export function WalletControl({ mobile = false }: WalletControlProps) {
       }) => (
         <WalletControlInner
           mobile={mobile}
+          onBeforeWalletAction={onBeforeWalletAction}
           rainbow={{
             mounted,
             openAccountModal,

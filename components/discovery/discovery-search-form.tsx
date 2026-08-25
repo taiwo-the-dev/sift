@@ -17,6 +17,9 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
         id="discovery-search"
         className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
       >
+        {query.network !== "bsc-mainnet" ? (
+          <input type="hidden" name="network" value={query.network} />
+        ) : null}
         {query.categories.map((category) => (
           <input key={category} type="hidden" name="category" value={category} />
         ))}

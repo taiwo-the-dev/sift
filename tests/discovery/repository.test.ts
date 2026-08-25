@@ -87,6 +87,7 @@ describe("discovery repository integration boundary", () => {
         name: "search_agents",
         parameters: {
           p_categories: ["grid-trading"],
+          p_chain_ids: [56],
           p_metadata_statuses: ["valid", "invalid"],
           p_page: 2,
           p_page_size: 12,

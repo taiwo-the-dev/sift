@@ -24,6 +24,8 @@ const agent: TableRow<"agents"> = {
   owner_address: "0x1111111111111111111111111111111111111111",
   registered_at: "2026-08-21T18:58:31.000Z",
   registered_block: 126427310,
+  registration_log_index: 0,
+  registration_transaction_hash: `0x${"1".repeat(64)}`,
   registry_address: "0x8004a818bfb912233c491871b3d84c89a494bd9e",
   updated_at: "2026-08-22T08:50:02.000Z",
   x402_supported: true,
@@ -98,6 +100,10 @@ describe("agent profile repository composition", () => {
     assert.equal(profile?.services[0].serviceType, "MCP");
     assert.equal(profile?.health?.responseTimeMs, 120);
     assert.equal(profile?.reputation?.feedbackCount, 4);
+    assert.equal(
+      profile?.registrationTransactionHash,
+      `0x${"1".repeat(64)}`,
+    );
     assert.equal("siftScore" in (profile ?? {}), false);
   });
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   discoveryCategories,
   discoveryMetadataStatuses,
+  discoveryNetworkOptions,
   type DiscoveryQuery,
 } from "@/features/discovery/model";
 
@@ -29,6 +30,42 @@ function FilterForm({ idPrefix, query }: FilterFormProps) {
       ) : null}
 
       <fieldset>
+        <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Network catalogue
+        </legend>
+        <div className="mt-4 space-y-3">
+          {discoveryNetworkOptions.map((network) => {
+            const id = `${idPrefix}-network-${network.value}`;
+
+            return (
+              <label
+                key={network.value}
+                htmlFor={id}
+                className="group flex cursor-pointer items-start gap-3"
+              >
+                <input
+                  id={id}
+                  type="radio"
+                  name="network"
+                  value={network.value}
+                  defaultChecked={query.network === network.value}
+                  className="mt-0.5 size-4 shrink-0 appearance-none rounded-full border border-input bg-background checked:border-[5px] checked:border-brand focus-visible:ring-3 focus-visible:ring-ring/30"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground group-hover:text-brand">
+                    {network.label}
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                    {network.description}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="border-t border-border pt-6">
         <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Category
         </legend>
@@ -116,7 +153,10 @@ function FilterForm({ idPrefix, query }: FilterFormProps) {
 }
 
 export function FilterPanel({ query }: FilterPanelProps) {
-  const activeCount = query.categories.length + query.metadataStatuses.length;
+  const activeCount =
+    query.categories.length +
+    query.metadataStatuses.length +
+    (query.network === "bsc-mainnet" ? 0 : 1);
 
   return (
     <>

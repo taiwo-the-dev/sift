@@ -6,18 +6,22 @@ import { DiscoverySearchForm } from "@/components/discovery/discovery-search-for
 import { EmptyState } from "@/components/discovery/empty-state";
 import { FilterPanel } from "@/components/discovery/filter-panel";
 import { Pagination } from "@/components/discovery/pagination";
+import { NetworkStatus } from "@/components/discovery/network-status";
 import { ResultToolbar } from "@/components/discovery/result-toolbar";
 import {
   parseDiscoverySearchParams,
   type DiscoverySearchParams,
 } from "@/features/discovery/query";
 import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
+import { createCatalogueStatusRepository } from "@/lib/db/catalogue-status-repository";
+import { createPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Discover AI agents",
   description:
     "Search and browse real ERC-8004 AI agents indexed from BNB Smart Chain.",
-};
+  path: "/discover",
+});
 
 interface DiscoverPageProps {
   searchParams: Promise<DiscoverySearchParams>;
@@ -25,7 +29,10 @@ interface DiscoverPageProps {
 
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
   const query = parseDiscoverySearchParams(await searchParams);
-  const result = await createDiscoveryRepository().search(query);
+  const [result, networkStatuses] = await Promise.all([
+    createDiscoveryRepository().search(query),
+    createCatalogueStatusRepository().list(),
+  ]);
 
   return (
     <div className="flex-1 bg-background">
@@ -38,7 +45,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(28rem,1.22fr)] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-                Live ERC-8004 catalogue
+                Source-backed ERC-8004 catalogue
               </p>
               <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
                 Discover agents by what they can help you do.
@@ -57,6 +64,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        <NetworkStatus query={query} statuses={networkStatuses} />
         <ActiveFilters query={query} />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">

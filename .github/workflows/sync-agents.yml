@@ -8,27 +8,32 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: sift-agent-indexer
-  cancel-in-progress: false
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        network:
+          - bsc-mainnet
+          - bsc-testnet
+    concurrency:
+      group: sift-agent-indexer-${{ matrix.network }}
+      cancel-in-progress: false
     env:
-      BNB_NETWORK: ${{ vars.BNB_NETWORK || 'bsc-testnet' }}
-      BNB_RPC_PRIMARY: ${{ secrets.BNB_RPC_PRIMARY }}
-      BNB_RPC_FALLBACK_1: ${{ secrets.BNB_RPC_FALLBACK_1 }}
-      BNB_RPC_FALLBACK_2: ${{ secrets.BNB_RPC_FALLBACK_2 }}
+      BNB_NETWORK: ${{ matrix.network }}
+      BNB_RPC_PRIMARY: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_PRIMARY || secrets.BNB_RPC_PRIMARY) || (secrets.BNB_TESTNET_RPC_PRIMARY || secrets.BNB_RPC_PRIMARY) }}
+      BNB_RPC_FALLBACK_1: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_1 || secrets.BNB_RPC_FALLBACK_1) || (secrets.BNB_TESTNET_RPC_FALLBACK_1 || secrets.BNB_RPC_FALLBACK_1) }}
+      BNB_RPC_FALLBACK_2: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_2 || secrets.BNB_RPC_FALLBACK_2) || (secrets.BNB_TESTNET_RPC_FALLBACK_2 || secrets.BNB_RPC_FALLBACK_2) }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           cache: npm
           node-version: 20
@@ -36,5 +41,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Incrementally sync confirmed events
+      - name: Incrementally sync confirmed ${{ matrix.network }} events
         run: npm run sync:agents

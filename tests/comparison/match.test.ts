@@ -48,6 +48,8 @@ function profile(
     ownerAddress: null,
     registeredAt: null,
     registeredBlock: null,
+    registrationLogIndex: null,
+    registrationTransactionHash: null,
     registryAddress: "0x8004a818bfb912233c491871b3d84c89a494bd9e",
     reputation: null,
     score: null,

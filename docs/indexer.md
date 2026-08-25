@@ -4,14 +4,14 @@ The Sift Indexer is a read-only Node.js service that builds Sift's catalogue fro
 
 ## Verified deployments
 
-The registry addresses and ABI were checked against the canonical [ERC-8004 contracts repository](https://github.com/erc-8004/erc-8004-contracts), the [ERC-8004 specification](https://eips.ethereum.org/EIPS/eip-8004), and the official [BNB Agent SDK network configuration](https://github.com/bnb-chain/bnbagent-sdk/blob/main/typescript/src/config.ts).
+The registry addresses and ABI were rechecked on 2026-08-25 against the canonical [ERC-8004 contracts repository](https://github.com/erc-8004/erc-8004-contracts), the [ERC-8004 specification](https://eips.ethereum.org/EIPS/eip-8004), the official [BNB Agent SDK repository](https://github.com/bnb-chain/bnbagent-sdk), and the official [BNB Agent SDK network guide](https://docs.bnbchain.org/developer-kit/bnbagent-sdk/networks/). BNB's [wallet configuration](https://docs.bnbchain.org/bnb-smart-chain/developers/wallet-configuration/) confirms chain IDs and BscScan origins.
 
 | Network | Chain ID | Identity Registry | Deployment block | Deployment verification |
 | --- | ---: | --- | ---: | --- |
 | BSC Testnet | 97 | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | `84,555,147` | First bytecode block, hash `0x8090bd6bbf308ad5e5674792b03196427ae3357a2df9e211dcd2f1ec4db20333`, 2026-01-15 10:03:52 UTC |
 | BSC Mainnet | 56 | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` | `79,027,268` | First bytecode block, hash `0xdb9c6a8fff62cc59b2e2d9978af06db139a41e65f30d99ea6f12dc58909d5a36`, 2026-02-03 08:35:15 UTC |
 
-The deployment boundaries were verified on 2026-08-20 by reading historical bytecode: the documented block contains registry code and its immediately preceding block does not. The minimal checked-in ABI covers `Registered`, `URIUpdated`, `Transfer`, `ownerOf`, and `tokenURI`. Runtime log requests filter to those three relevant events; an explorer is not part of the data path.
+The mainnet deployment boundary was reverified on 2026-08-25 by reading historical bytecode: block `79,027,268` contains registry code and block `79,027,267` does not. The first block also returns canonical registry logs. The minimal checked-in ABI matches the official SDK ABI for `Registered`, `URIUpdated`, `Transfer`, `ownerOf`, and `tokenURI`. Runtime log requests filter to those three relevant events; an explorer is not part of the data path.
 
 ## Configuration
 
@@ -45,7 +45,7 @@ All tuning values are optional:
 | `INDEXER_METADATA_CONCURRENCY` | `4` | Maximum agents processed concurrently |
 | `IPFS_GATEWAY_URL` | `https://ipfs.io/ipfs/` | HTTPS gateway for `ipfs://` registration files |
 
-Never commit a token-bearing RPC URL. Put it in `.env.local`, deployment secrets, or GitHub Actions secrets. Logs identify providers by order and redact URL queries and common credential patterns.
+Never commit a token-bearing RPC URL. Put it in `.env.local`, deployment secrets, or GitHub Actions secrets. Logs identify providers by order and redact URL queries and common credential patterns. A recent-block smoke test can use the checked-in free public fallbacks, but the historical mainnet bootstrap cannot be considered available until an archive-capable free-tier endpoint has been supplied and verified.
 
 ## Commands
 
@@ -67,7 +67,9 @@ Read only ranges after the stored checkpoint:
 npm run sync:agents
 ```
 
-Bootstrap and incremental commands both resume from `sync_state` when a checkpoint exists. A range checkpoint is written only after every event in that range has been persisted successfully. Interrupting the process is safe after a `block_range_processed` log: the next run starts at the following block. Interrupting during a range replays that range, and deterministic database identities prevent duplicate agents or services.
+Bootstrap and incremental commands both resume from `sync_state` when a checkpoint exists. A range checkpoint is written only after every event in that range has been persisted successfully. Each network row also records the confirmed head observed at run start, so operators and the UI can distinguish a partial bootstrap from a caught-up checkpoint. Interrupting the process is safe after a `block_range_processed` log: the next run starts at the following block. Interrupting during a range replays that range, and deterministic database identities prevent duplicate agents or services.
+
+Every newly observed registration persists its source transaction hash and log index with the existing chain, registry, block, and observation time. Older pre-M13 rows retain `null` rather than receiving guessed provenance; a controlled source-backed replay may populate them later.
 
 The indexer halves an oversized range when every configured RPC rejects it. After discovering a provider ceiling it does not repeatedly probe above that ceiling during the same run. On a free public endpoint, initial history can take multiple runs; this is expected and does not require a paid node.
 
@@ -91,14 +93,28 @@ M6 reads this verification timestamp when deciding whether metadata-derived scor
 
 ## Scheduled operation
 
-`.github/workflows/sync-agents.yml` runs incremental synchronization every two hours and can also be dispatched manually. Configure these GitHub repository secrets:
+`.github/workflows/sync-agents.yml` runs isolated mainnet and testnet incremental jobs every two hours and can also be dispatched manually. The matrix uses separate concurrency groups and `fail-fast: false`, so one provider outage neither cancels nor advances the other network. Configure these GitHub repository secrets:
 
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
-- `BNB_RPC_PRIMARY` when using a token-bearing or dedicated free endpoint
-- optional `BNB_RPC_FALLBACK_1` and `BNB_RPC_FALLBACK_2`
+- `BNB_MAINNET_RPC_PRIMARY` with an archive-capable free-tier endpoint
+- optional `BNB_MAINNET_RPC_FALLBACK_1` and `BNB_MAINNET_RPC_FALLBACK_2`
+- optional `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, and `BNB_TESTNET_RPC_FALLBACK_2`
+- legacy generic `BNB_RPC_PRIMARY` / fallback secrets only as a shared fallback
 
-Set the optional repository variable `BNB_NETWORK` to `bsc-testnet` or `bsc-mainnet`. The workflow has read-only repository permissions, serializes indexer runs, and has no blockchain signing material.
+The workflow chooses `BNB_NETWORK` from its reviewed matrix; no repository network variable is needed. It has read-only repository permissions, serializes each network independently, and has no blockchain signing material.
+
+Generate a read-only network eligibility snapshot from the hosted database:
+
+```bash
+npm run report:catalogue
+```
+
+The JSON report includes observed time, count, registry, latest agent sync, checkpoint, confirmed head, partial/stale state, and the explicit testnet-only activation policy. It does not expose agent metadata or credentials.
+
+## BNB Agent Studio identity mapping
+
+The official BNB Agent SDK registration format identifies the registry as `eip155:<chainId>:<identityRegistry>` and publishes the resulting on-chain agent ID. Sift maps that pair directly to `(chain_id, registry_address, agent_id)`; it never collapses the same numeric ID across networks. Agent Studio service declarations remain untrusted registration metadata and are normalized into `agent_services`. An `ERC-8183` service declaration is recognized by the existing compatibility parser, but M13 does not claim activation success; the controlled live Agent Studio/activation proof belongs to M15.
 
 ## Recovery
 

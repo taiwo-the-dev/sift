@@ -2,71 +2,158 @@
 
 **Find the right AI agent for the job.**
 
-Sift is a discovery, comparison, trust, hiring, and monitoring layer for AI agents on BNB Chain. The repository includes M0–M9 plus the M10 connected-wallet dashboard.
+Sift turns raw BNB Chain agent registrations into an evidence-led marketplace
+where people can discover, inspect, compare, and safely test hiring compatible
+AI agents. Agent identity, metadata, health, reputation, scores, jobs, and
+transactions are real and source-backed; unavailable evidence stays `Unknown`.
 
-## Current milestone
+## Release status
 
-M10 adds `/dashboard`, where a wallet can inspect only its own persisted hiring jobs after signing a read-only ownership challenge. The server derives honest summaries, reconciles confirmed ERC-8183 job IDs with live protocol state, distinguishes application records from on-chain evidence, and stops bounded polling when all jobs are terminal.
+M0–M8 are complete. M9 is ready for its human-approved BSC Testnet transaction,
+M10 is ready for two-wallet hosted isolation validation, and M11 is ready for a
+final keyboard pass. The M12 release package is implemented locally but remains
+blocked on those checks and a production deployment. M13's dual-network code,
+provenance migration, network UX, scheduler isolation, and operator report are
+implemented; its real BSC mainnet bootstrap remains blocked until an
+archive-capable free-tier RPC is configured and hosted chain-56 evidence exists.
+The hosted Supabase project was also paused during validation, so the M13
+migration must deploy after the project owner unpauses it.
 
-The hosted catalogue and ordered M4–M9 PostgreSQL migrations are deployed. The additive M10 dashboard-session migration must be deployed through the Supabase GitHub integration before the connected dashboard can authorize a wallet. Mainnet hiring, custodial signing, and unsupported pause/revoke controls remain intentionally unimplemented.
+**Live application:** not deployed or recorded yet. Do not replace this status
+with a URL until the exact Vercel deployment passes the
+[release checklist](docs/release-checklist.md).
 
-## Stack
+## Product preview
 
-- Next.js with the App Router
-- React and strict TypeScript
-- Tailwind CSS v4
-- shadcn/ui with Server Components enabled
-- ESLint with Next.js Core Web Vitals rules
-- Geist through `next/font`
-- Supabase PostgreSQL and the official server-side JavaScript client
-- viem for typed BNB Chain reads
+The images below were captured from the local release candidate using the
+configured hosted Supabase catalogue. They show real indexed records, not a
+claim that the app is already deployed.
+
+![Sift landing page](docs/screenshots/landing.png)
+
+| Discovery | Agent evidence |
+| --- | --- |
+| ![Sift discover marketplace](docs/screenshots/discover.png) | ![Sift indexed agent profile](docs/screenshots/agent-profile.png) |
+
+![Sift agent comparison](docs/screenshots/compare.png)
+
+## What Sift delivers
+
+- Plain-language search and transparent deterministic matching across yield
+  optimisation, trading automation, health-factor monitoring, and liquidity
+  rebalancing.
+- Real ERC-8004 identities and validated registration metadata indexed from BNB
+  Chain through resumable, idempotent block processing.
+- Professional agent profiles with ownership, service, source, freshness,
+  health, reputation, and activity evidence.
+- A versioned, reproducible Sift Score that is withheld when current evidence is
+  insufficient rather than manufactured.
+- URL-backed side-by-side comparison that keeps missing evidence distinct from
+  poor evidence.
+- User-controlled BSC Testnet wallet connection and a fail-closed ERC-8183/APEX
+  hiring path for currently compatible services.
+- A signed-challenge dashboard that exposes only the connected wallet's
+  persisted job and on-chain evidence.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  chain["BNB Chain\nERC-8004"] --> rpc["Free RPC\nfallbacks"]
+  rpc --> indexer["Sift Indexer\nGitHub Actions"]
+  metadata["Registration files\nand services"] --> indexer
+  indexer --> db[("Supabase\nPostgreSQL")]
+  assessment["Health + Sift Score\nGitHub Actions"] <--> db
+  metadata --> assessment
+  browser["Browser"] <--> app["Next.js\nVercel"]
+  app <--> db
+  browser <--> wallet["Disposable\ntestnet wallet"]
+  wallet --> apex["BSC Testnet\nERC-8183 / APEX"]
+  apex --> rpc
+  rpc --> app
+```
+
+See [the full architecture and trust boundaries](docs/architecture.md) for
+server/browser separation, evidence flow, deployment ownership, and wallet job
+verification.
+
+## Technology
+
+- Next.js App Router, React, strict TypeScript, Tailwind CSS v4, shadcn/ui, and
+  Geist
+- Hosted Supabase PostgreSQL with RLS and a server-only JavaScript client
+- viem for typed BNB Chain reads and transaction verification
 - RainbowKit, wagmi, and TanStack Query for browser wallet state
-- Zod for external metadata validation
+- GitHub Actions for free scheduled indexing, health checks, and score updates
+- Vercel free tier as the approved web deployment target
 
-## Local development
+## Local setup
 
-Use Node.js 20.9 or newer.
+Use Node.js 20.9 or newer and npm 10 or 11. The hosted Supabase workflow does
+not require Docker or a local Supabase stack.
 
 ```bash
-npm install
+git clone https://github.com/taiwo-the-dev/sift.git
+cd sift
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The landing page and `/discover` use the hosted database at request time. If the catalogue is temporarily unavailable, the landing page degrades honestly and the discovery route presents a retryable error state.
+Open [http://localhost:3000](http://localhost:3000). The public catalogue needs
+the two server-side Supabase values below. If they are unavailable, Sift shows
+an honest recovery state and never substitutes demo agents.
 
-Installed browser wallets work without additional wallet configuration. To enable WalletConnect QR/mobile connections, create a free WalletConnect Cloud project and set `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` in `.env.local` and the deployment environment. These public values are exposed to browsers by design; never place private RPC credentials in a `NEXT_PUBLIC_` variable. See [Wallet integration](docs/wallet.md) for networks, fallbacks, setup, security boundaries, and the manual test procedure.
+## Environment variables
 
-The database uses the hosted Supabase project connected to GitHub; Docker and a local Supabase stack are not required. For environment setup, migration deployment, security decisions, and linked-project type generation, see [Hosted Supabase database](docs/database.md).
+| Variable | Required | Boundary |
+| --- | --- | --- |
+| `SUPABASE_URL` | Yes for real catalogue/jobs | Server-only hosted project URL |
+| `SUPABASE_SECRET_KEY` | Yes for real catalogue/jobs | Server-only secret; never `NEXT_PUBLIC_` |
+| `SIFT_SITE_URL` | Production recommendation | Canonical HTTPS origin |
+| `BNB_NETWORK` | Single indexer run | `bsc-testnet` locally or `bsc-mainnet` for an intentional mainnet run |
+| `BNB_RPC_PRIMARY`, `BNB_RPC_FALLBACK_1`, `BNB_RPC_FALLBACK_2` | Optional | Server/indexer RPC overrides; secrets when token-bearing |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
+| `NEXT_PUBLIC_BNB_TESTNET_RPC_URL`, `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC overrides |
 
-Verify or operate the M3 chain reader with:
+Indexer limits, metadata limits, health cadence, score batches, registry
+overrides, and IPFS configuration are documented in `.env.example`. Never
+commit `.env.local`, private keys, seed phrases, populated credentials, or
+token-bearing public variables.
+
+## Database and migrations
+
+Sift uses ordered, additive SQL migrations in `supabase/migrations/`. The
+preferred production path is the hosted Supabase GitHub integration. Verify a
+privileged linked checkout without applying changes with:
+
+```bash
+npm run db:migrations
+npm run db:push:dry-run
+```
+
+Only use `npm run db:push` as a reviewed manual fallback. Never reset the linked
+hosted database and never seed fabricated catalogue data. Full setup, RLS,
+deployment order, and type-generation guidance lives in
+[docs/database.md](docs/database.md).
+
+## Indexing and evidence updates
 
 ```bash
 npm run index:smoke
-npm run index:agents
-npm run sync:agents
-```
-
-For verified deployments, RPC configuration, metadata safeguards, GitHub Actions setup, and recovery behavior, see [Sift Indexer operations](docs/indexer.md).
-
-After the M6 migration is deployed, verify and run bounded health/scoring batches with:
-
-```bash
+npm run index:agents       # bootstrap/resume historical ERC-8004 events
+npm run sync:agents        # incremental confirmed ranges
+npm run report:catalogue   # per-network hosted counts/checkpoints/freshness
 npm run check:smoke
 npm run score:smoke
-npm run check:agents
-npm run score:agents
+npm run check:agents       # bounded eligible endpoint observations
+npm run score:agents       # bounded affected score recalculation
 ```
 
-The formula, evidence audit, endpoint safety rules, scheduler, Featured rule, and deployment sequence are documented in [Agent health and Sift Score](docs/scoring.md).
-
-Comparison URL state, bounded data loading, supported fields, Unknown handling, and the contextual match rule are documented in [Agent comparison](docs/comparison.md).
-
-Wallet connection states, browser RPC configuration, supported chains, and safe testing are documented in [Wallet integration](docs/wallet.md).
-
-Verified APEX contracts, compatible-agent rules, exact transaction calls, persistence safeguards, faucets, limitations, and the manual testnet demo are documented in [ERC-8183 testnet hiring](docs/hiring.md).
-
-Wallet-scoped access, dashboard status rules, polling, provenance labels, and post-deployment validation are documented in [Wallet job dashboard](docs/dashboard.md).
+Production scheduling uses `.github/workflows/sync-agents.yml` every two hours
+and `.github/workflows/assess-agents.yml` every six hours. See
+[indexer operations](docs/indexer.md) and [scoring](docs/scoring.md) for RPC
+fallbacks, checkpoints, provenance, freshness, and recovery.
 
 ## Validation
 
@@ -76,48 +163,84 @@ npm run typecheck
 npm test
 npm run test:wallet-ui
 npm run build
+npm audit
+npm run release:data
 ```
 
-## Structure
+After deployment, run the read-only smoke verifier:
 
-```text
-app/                 App Router entry points and global styles
-components/layout/   Shared application shell components
-components/landing/  M1 landing-page sections
-components/discovery/ M4 search, filters, cards, pagination, and states
-components/agents/   M5 profile sections, navigation, copy, and fallback states
-components/scoring/  M6 accessible score summary and evidence breakdown
-components/comparison/ M7 selection controls, navigation state, and comparison UI
-components/wallet/     M8 provider, responsive control, and state presentation
-components/hiring/     M9 mission, review, wallet transaction, and confirmation UI
-components/dashboard/  M10 access, summary, job detail, and audit timeline UI
-components/ui/       shadcn/ui components
-docs/tickets/        Product specifications and milestone scope
-features/discovery/  M4 URL parsing, intent mapping, models, and display fallbacks
-features/agents/     M5 profile routing, presentation, links, and domain models
-features/health/     M6 endpoint eligibility, safe probing, history, and orchestration
-features/scoring/    M6 pure formula, presentation, and recalculation orchestration
-features/comparison/ M7 URL validation, domain models, and contextual matching
-features/wallet/     M8 public configuration validation and safe presentation
-features/hiring/     M9 validation, negotiation, protocol, state, and receipt rules
-features/dashboard/  M10 sessions, status derivation, presentation, and protocol reconciliation
-lib/blockchain/      Shared typed BNB chains plus browser/server hiring clients
-lib/db/              Server-only client, strict schema types, validation, repositories
-lib/indexer/         ERC-8004 configuration, RPC, metadata, persistence, and sync logic
-scripts/             Server-only operational command entry points
-supabase/             Hosted deployment configuration and ordered SQL migrations
-tests/db/             Focused M2 configuration, mapping, and migration tests
-tests/indexer/        M3 unit and integration coverage
-tests/discovery/      M4 query, repository, formatting, and migration coverage
-tests/agents/         M5 route, link, presentation, repository, and migration coverage
-tests/health/         M6 endpoint, SSRF, repository, runner, and transition coverage
-tests/scoring/        M6 formula, persistence, Featured, and presentation coverage
-tests/comparison/     M7 selection, matching, and bounded repository coverage
-tests/wallet/         M8 chain, environment, address, and error-mapping coverage
-tests/wallet-ui/      M8 rendered connection-state coverage
-tests/hiring/         M9 validation, protocol state, receipt, and migration coverage
-tests/dashboard/      M10 status, session, repository, and migration coverage
-lib/                 Framework-independent utilities and environment access
+```bash
+npm run release:smoke -- https://<production-origin>
 ```
 
-Add feature-specific directories only as their milestones begin. Keep secrets out of source control and never substitute invented agent or blockchain data for unavailable information.
+It checks core public routes, all four categories, a real indexed profile,
+comparison, dashboard privacy metadata, error behavior, security headers, and
+sharing assets. Human wallet approval and cross-wallet isolation remain manual
+security boundaries.
+
+## Deployment and demo
+
+Follow the [Vercel/Supabase deployment runbook](docs/deployment.md), then record
+the exact URL, deployment, commit, workflow results, and wallet evidence in the
+[release checklist](docs/release-checklist.md). The concise
+[five-minute demo guide](docs/demo.md) covers preparation, expected states,
+testnet funding, timing, and recovery under demo pressure.
+
+## Known limitations
+
+The full evidence-bound list is maintained in
+[docs/limitations.md](docs/limitations.md).
+
+- Public Vercel deployment and production-origin smoke evidence are not yet
+  recorded.
+- M9 still needs one real, human-approved, fully verified BSC Testnet job; Sift
+  does not claim that an agent delivered work merely because escrow was funded.
+- M10 still needs hosted two-wallet verification to prove job isolation across
+  real browser sessions.
+- ERC-8183/APEX support is BSC Testnet-only, bound to the reviewed deployment,
+  and intentionally fails closed when an agent service or contract relationship
+  is incompatible.
+- The BSC mainnet catalogue bootstrap is not complete until a reviewed
+  archive-capable RPC is supplied and `report:catalogue` proves non-zero
+  chain-56 identities with a caught-up checkpoint.
+- Mainnet hiring, custody, unlimited token approvals, disputes, refunds,
+  pause/revoke writes, and invented fallback transactions are not implemented.
+- Agent metadata and endpoint availability are controlled by external owners;
+  invalid, unreachable, stale, and insufficient-evidence states remain visible.
+- Public/free RPCs and free-tier schedulers can rate-limit or delay freshness;
+  stored checkpoints and evidence timestamps expose what Sift actually knows.
+
+## Roadmap to hackathon submission
+
+The [event-specific readiness audit](docs/hackathon-audit.md) found that Sift is
+a strong main-track fit but is not winner-ready yet. The controlled remediation
+sequence is M13 main-track eligibility/mainnet catalogue, M14 category parity
+and decision-grade data, M15 activation proof, M16 judge-path validation, and
+M17 public launch/submission. M18 remains blocked until the official Phase 2
+criteria are published. Do not begin a milestone without its ticket.
+
+The [hackathon tooling decision](docs/hackathon-tooling.md) makes meaningful use
+of BNB Agent Studio, 8004scan, and official BSC network resources a release
+requirement while keeping Sift's own indexer as the independent core catalogue.
+
+Post-hackathon work may include additional verified protocols, owner tools,
+supported dispute/refund flows, and broader categories. Each needs a separate
+approved ticket, evidence model, security review, and infrastructure approval.
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Release checklist](docs/release-checklist.md)
+- [Smart Money Era readiness audit](docs/hackathon-audit.md)
+- [Smart Money Era tooling decision](docs/hackathon-tooling.md)
+- [Deployment](docs/deployment.md)
+- [Demo](docs/demo.md)
+- [Hosted database](docs/database.md)
+- [Sift Indexer](docs/indexer.md)
+- [Sift Score](docs/scoring.md)
+- [Comparison](docs/comparison.md)
+- [Wallet](docs/wallet.md)
+- [Hiring](docs/hiring.md)
+- [Dashboard](docs/dashboard.md)
+- [Production conventions](docs/production.md)
+- [Master delivery specification](docs/tickets/MASTER-001-sift.md)

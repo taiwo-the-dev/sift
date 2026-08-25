@@ -29,6 +29,8 @@ export type ObservedAgent = Readonly<{
   ownerAddress: string | null;
   registeredAt: string | null;
   registeredBlock: bigint | null;
+  registrationLogIndex: number | null;
+  registrationTransactionHash: string | null;
   registryAddress: string;
 }>;
 
@@ -52,6 +54,7 @@ export type CatalogPersistence = Readonly<{
     chainId: number,
     registryAddress: string,
     blockNumber: bigint,
+    confirmedHead: bigint,
   ): Promise<void>;
 }>;
 
@@ -83,6 +86,14 @@ export function buildAgentWriteInput(
       observation.registeredBlock === null
         ? existing?.registered_block ?? null
         : safeBlockNumber(observation.registeredBlock),
+    registrationLogIndex:
+      observation.registrationLogIndex ??
+      existing?.registration_log_index ??
+      null,
+    registrationTransactionHash:
+      observation.registrationTransactionHash ??
+      existing?.registration_transaction_hash ??
+      null,
     registryAddress: observation.registryAddress,
   } as const;
 
@@ -150,9 +161,10 @@ export function createCatalogPersistence(
 
       return { created: existing === null, record };
     },
-    async saveCheckpoint(chainId, registryAddress, blockNumber) {
+    async saveCheckpoint(chainId, registryAddress, blockNumber, confirmedHead) {
       await syncState.upsert({
         chainId,
+        confirmedHead: safeBlockNumber(confirmedHead),
         lastSyncedBlock: safeBlockNumber(blockNumber),
         registryAddress,
       });

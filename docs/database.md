@@ -133,6 +133,22 @@ The GitHub integration deployed this migration on 2026-08-23. Read-only verifica
 
 Browser database roles have no access to either table. The server verifies the signed challenge with viem before creating a session, then uses the session wallet—not a client-selected database filter—to query M9 jobs. Deploy this migration through the Supabase GitHub integration before validating `/dashboard`; until it exists, wallet authorization fails closed without exposing job records.
 
+## M13 mainnet catalogue provenance
+
+`20260825090000_add_mainnet_catalogue_provenance.sql` adds nullable registration
+transaction hash/log index provenance and a nullable confirmed-head observation
+to each network checkpoint. Existing rows remain honest `null` values until a
+source-backed replay observes their registration event. It replaces the
+server-only discovery and Featured functions with chain-allowlisted variants
+that default to chain `56`; chain `97` stays available only through an explicit
+network scope. No agent row is copied, relabelled, inserted, or seeded.
+
+Deploy this migration before the M13 application build. Then run `npm run
+report:catalogue` to verify independent `(chain_id, registry_address)` counts
+and checkpoints. The mainnet bootstrap requires an archive-capable RPC URL and
+remains incomplete if chain-56 count is zero, its checkpoint is absent, or its
+checkpoint trails `confirmed_head`.
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.
@@ -198,6 +214,7 @@ Application and indexer code must use the repositories in `lib/db/` rather than 
 - `createHealthRepository()` reads a bounded due queue and persists validated endpoint observations.
 - `createScoreRepository()` bulk-composes affected evidence and upserts deterministic versioned assessments.
 - `createFeaturedAgentRepository()` returns only agents satisfying the documented current score/health rule.
+- `createCatalogueStatusRepository()` reports per-network counts and checkpoint freshness without exposing catalogue records.
 - `createDashboardRepository()` bulk-loads jobs, agent records, bounded health evidence, transactions, and activity for the server-verified wallet only.
 - `validation.ts` validates and maps camelCase boundary inputs to the snake_case schema.
 

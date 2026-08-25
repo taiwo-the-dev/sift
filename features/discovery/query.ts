@@ -1,9 +1,12 @@
 import {
   discoveryCategorySlugs,
   discoveryMetadataStatuses,
+  discoveryNetworkOptions,
   discoveryPageSizes,
   discoverySortOptions,
+  getDiscoveryChainIds,
   type DiscoveryCategory,
+  type DiscoveryNetworkScope,
   type DiscoveryPageSize,
   type DiscoveryQuery,
   type DiscoverySort,
@@ -17,6 +20,7 @@ export type DiscoverySearchParams = Readonly<
 const maximumQueryLength = 180;
 const maximumSearchTerms = 10;
 const defaultPageSize: DiscoveryPageSize = 12;
+export const defaultDiscoveryNetwork: DiscoveryNetworkScope = "bsc-mainnet";
 
 const stopWords = new Set([
   "a",
@@ -203,6 +207,13 @@ function parseSort(
   return supportedSort ?? (hasQuery ? "relevance" : "recent");
 }
 
+function parseNetwork(value: string | undefined): DiscoveryNetworkScope {
+  return (
+    discoveryNetworkOptions.find((option) => option.value === value)?.value ??
+    defaultDiscoveryNetwork
+  );
+}
+
 export function parseDiscoverySearchParams(
   params: DiscoverySearchParams,
 ): DiscoveryQuery {
@@ -216,6 +227,7 @@ export function parseDiscoverySearchParams(
     discoveryMetadataStatuses.map((status) => status.value),
   ) as readonly MetadataStatus[];
   const inferredCategory = inferDiscoveryCategory(query);
+  const network = parseNetwork(firstValue(params.network));
 
   return {
     categories,
@@ -227,6 +239,8 @@ export function parseDiscoverySearchParams(
           : [],
     inferredCategory,
     metadataStatuses,
+    network,
+    networkChainIds: getDiscoveryChainIds(network),
     page: parsePositiveInteger(firstValue(params.page)),
     pageSize: parsePageSize(firstValue(params.size)),
     query,
@@ -238,6 +252,7 @@ export function parseDiscoverySearchParams(
 export type DiscoveryQueryOverrides = Readonly<{
   categories?: readonly DiscoveryCategory[];
   metadataStatuses?: readonly MetadataStatus[];
+  network?: DiscoveryNetworkScope;
   page?: number;
   pageSize?: DiscoveryPageSize;
   query?: string;
@@ -251,6 +266,7 @@ export function buildDiscoveryHref(
   const nextQuery = overrides.query ?? query.query;
   const nextCategories = overrides.categories ?? query.categories;
   const nextStatuses = overrides.metadataStatuses ?? query.metadataStatuses;
+  const nextNetwork = overrides.network ?? query.network;
   const nextPage = overrides.page ?? query.page;
   const nextSize = overrides.pageSize ?? query.pageSize;
   const nextSort = overrides.sort ?? query.sort;
@@ -266,6 +282,10 @@ export function buildDiscoveryHref(
 
   for (const status of nextStatuses) {
     params.append("metadata", status);
+  }
+
+  if (nextNetwork !== defaultDiscoveryNetwork) {
+    params.set("network", nextNetwork);
   }
 
   if (nextSort !== (nextQuery ? "relevance" : "recent")) {

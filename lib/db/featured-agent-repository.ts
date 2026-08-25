@@ -21,6 +21,7 @@ export type FeaturedAgentSources = Readonly<{
     limit: number,
     scoreVersion: string,
     freshAfter: string,
+    chainIds: readonly number[],
   ): Promise<readonly string[]>;
   listHealth(
     ids: readonly string[],
@@ -41,8 +42,9 @@ function createSupabaseSources(
   client: SupabaseClient<Database>,
 ): FeaturedAgentSources {
   return {
-    async listCandidateIds(limit, scoreVersion, freshAfter) {
+    async listCandidateIds(limit, scoreVersion, freshAfter, chainIds) {
       const { data, error } = await client.rpc("featured_agent_candidates", {
+        p_chain_ids: [...chainIds],
         p_fresh_after: freshAfter,
         p_limit: limit,
         p_score_version: scoreVersion,
@@ -111,6 +113,7 @@ export function createFeaturedAgentRepository(
         limit,
         SIFT_SCORE_VERSION,
         freshAfter,
+        [56],
       );
 
       if (ids.length === 0) {

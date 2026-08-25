@@ -2,7 +2,19 @@
 
 ## Status
 
-Ready
+Blocked — External Release Validation
+
+The repository release package, deployment/demo runbooks, architecture,
+release-candidate screenshots, and read-only deployment verifier are
+implemented. M12 cannot be declared complete until an approved Vercel project
+is connected, the current GitHub scheduler install failure is cleared by the
+release candidate, M9/M10 manual wallet checks pass, and the exact deployed
+commit completes the production smoke test. No deployment or testnet
+transaction is claimed without that evidence.
+
+The event-specific audit in `docs/hackathon-audit.md` also identified published
+main-track gaps that are now isolated in M13–M17. The current M12 build must not
+be presented as the final hackathon candidate until those tickets pass.
 
 ## Depends On
 
@@ -100,7 +112,7 @@ A strong implementation can still fail a hackathon review if the live URL is unr
 - [ ] The live application displays real indexed BNB Chain agent data.
 - [ ] The complete primary demo path succeeds in a clean browser.
 - [ ] A real supported BSC Testnet job/transaction can be demonstrated and verified where the protocol allows.
-- [ ] A safe sample testnet wallet/funding procedure is documented without exposing secrets.
+- [x] A safe sample testnet wallet/funding procedure is documented without exposing secrets.
 - [ ] README includes live URL, screenshots, architecture, setup, migrations, indexing, tests, deployment, demo guide, limitations, and roadmap.
 - [ ] Architecture diagram matches the deployed implementation.
 - [ ] Metadata, OpenGraph, favicon, links, and error states work on the live URL.

@@ -66,6 +66,8 @@ const agent: TableRow<"agents"> = {
   owner_address: "0x4444444444444444444444444444444444444444",
   registered_at: "2026-08-22T10:00:00.000Z",
   registered_block: 100,
+  registration_log_index: 0,
+  registration_transaction_hash: `0x${"1".repeat(64)}`,
   registry_address: "0x8004a818bfb912233c491871b3d84c89a494bd9e",
   updated_at: "2026-08-24T09:00:00.000Z",
   x402_supported: null,

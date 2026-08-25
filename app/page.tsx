@@ -19,20 +19,22 @@ export default async function HomePage() {
   let catalogueCount: number | null = null;
   let featuredAgents: FeaturedScoredAgent[] = [];
   let recentAgents: DiscoveryAgent[] = [];
+  const observedAt = new Date();
+  const [recentResult, featuredResult] = await Promise.allSettled([
+    createDiscoveryRepository().listRecentlyRegistered(),
+    createFeaturedAgentRepository().listFeatured(3, observedAt),
+  ]);
 
-  try {
-    const result = await createDiscoveryRepository().listRecentlyRegistered();
-    catalogueCount = result.totalCount;
-    recentAgents = [...result.agents.slice(0, 3)];
-  } catch {
+  if (recentResult.status === "fulfilled") {
+    catalogueCount = recentResult.value.totalCount;
+    recentAgents = [...recentResult.value.agents.slice(0, 3)];
+  } else {
     catalogueAvailable = false;
   }
 
-  try {
-    featuredAgents = [
-      ...(await createFeaturedAgentRepository().listFeatured(3, new Date())),
-    ];
-  } catch {
+  if (featuredResult.status === "fulfilled") {
+    featuredAgents = [...featuredResult.value];
+  } else {
     // Featured placement is optional and must disappear rather than fall back
     // to unqualified or simulated agents when score evidence is unavailable.
   }

@@ -6,6 +6,7 @@ import { formatAddress, formatProfileTimestamp } from "@/features/agents/format"
 import {
   buildExplorerAddressHref,
   buildExplorerBlockHref,
+  buildExplorerTransactionHref,
   normalizeExternalHref,
 } from "@/features/agents/links";
 import type { AgentProfile } from "@/features/agents/model";
@@ -86,6 +87,10 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
     profile.chainId,
     profile.registeredBlock,
   );
+  const transactionHref = buildExplorerTransactionHref(
+    profile.chainId,
+    profile.registrationTransactionHash,
+  );
   const agentUriHref = normalizeExternalHref(profile.agentUri);
   const copyableAgentUri =
     profile.agentUri &&
@@ -151,6 +156,25 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
                 profile.registeredBlock === null
                   ? undefined
                   : String(profile.registeredBlock)
+              }
+            />
+            <TechnicalField
+              label="Registration transaction"
+              value={profile.registrationTransactionHash ?? "Not available"}
+              href={transactionHref}
+              copyLabel={
+                profile.registrationTransactionHash
+                  ? "registration transaction hash"
+                  : undefined
+              }
+              copyValue={profile.registrationTransactionHash ?? undefined}
+            />
+            <TechnicalField
+              label="Registration log index"
+              value={
+                profile.registrationLogIndex === null
+                  ? "Not available"
+                  : String(profile.registrationLogIndex)
               }
             />
           </dl>

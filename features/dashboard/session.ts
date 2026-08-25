@@ -19,6 +19,16 @@ export type DashboardChallenge = Readonly<{
   walletAddress: Address;
 }>;
 
+function canonicalChallengeTimestamp(value: string): string {
+  const timestamp = new Date(value);
+
+  if (Number.isNaN(timestamp.getTime())) {
+    throw new TypeError("Dashboard challenge timestamps must be valid ISO dates.");
+  }
+
+  return timestamp.toISOString();
+}
+
 export function buildDashboardChallengeMessage(input: Readonly<{
   chainId: number;
   expiresAt: string;
@@ -27,6 +37,9 @@ export function buildDashboardChallengeMessage(input: Readonly<{
   origin: string;
   walletAddress: string;
 }>): string {
+  const issuedAt = canonicalChallengeTimestamp(input.issuedAt);
+  const expiresAt = canonicalChallengeTimestamp(input.expiresAt);
+
   return [
     "Sift Dashboard",
     "",
@@ -36,10 +49,9 @@ export function buildDashboardChallengeMessage(input: Readonly<{
     `Wallet: ${getAddress(input.walletAddress)}`,
     `Chain ID: ${input.chainId}`,
     `Nonce: ${input.nonce}`,
-    `Issued At: ${input.issuedAt}`,
-    `Expiration Time: ${input.expiresAt}`,
+    `Issued At: ${issuedAt}`,
+    `Expiration Time: ${expiresAt}`,
     "",
     "This signature does not submit a transaction or grant spending permission.",
   ].join("\n");
 }
-

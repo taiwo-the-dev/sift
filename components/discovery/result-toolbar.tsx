@@ -27,6 +27,9 @@ export function ResultToolbar({ query, totalCount }: ResultToolbarProps) {
       </div>
 
       <Form action="/discover" className="flex flex-wrap items-end gap-2">
+        {query.network !== "bsc-mainnet" ? (
+          <input type="hidden" name="network" value={query.network} />
+        ) : null}
         {query.query ? <input type="hidden" name="q" value={query.query} /> : null}
         {query.categories.map((category) => (
           <input key={category} type="hidden" name="category" value={category} />

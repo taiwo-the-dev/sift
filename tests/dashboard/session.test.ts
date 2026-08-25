@@ -20,5 +20,23 @@ describe("dashboard wallet challenge", () => {
     assert.match(message, /Nonce: test-only-nonce/);
     assert.match(message, /does not submit a transaction or grant spending permission/);
   });
-});
 
+  it("keeps signed bytes stable after PostgreSQL normalizes UTC timestamps", () => {
+    const input = {
+      chainId: 97,
+      expiresAt: "2026-08-24T10:05:00.123Z",
+      issuedAt: "2026-08-24T10:00:00.123Z",
+      nonce: "test-only-nonce",
+      origin: "https://sift.test",
+      walletAddress: "0x1111111111111111111111111111111111111111",
+    };
+    const original = buildDashboardChallengeMessage(input);
+    const restored = buildDashboardChallengeMessage({
+      ...input,
+      expiresAt: "2026-08-24T10:05:00.123+00:00",
+      issuedAt: "2026-08-24T10:00:00.123+00:00",
+    });
+
+    assert.equal(restored, original);
+  });
+});
