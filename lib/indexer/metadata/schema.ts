@@ -20,15 +20,40 @@ const serviceSchema = z
   })
   .loose();
 
+const servicesSchema = z
+  .array(serviceSchema)
+  .max(100)
+  .superRefine((services, context) => {
+    const identities = new Set<string>();
+
+    services.forEach((service, index) => {
+      const identity = JSON.stringify([
+        service.name,
+        service.endpoint,
+        service.version ?? "",
+      ]);
+
+      if (identities.has(identity)) {
+        context.addIssue({
+          code: "custom",
+          message: "Agent metadata contains duplicate services.",
+          path: [index],
+        });
+      }
+
+      identities.add(identity);
+    });
+  });
+
 export const agentMetadataSchema = z
   .object({
     active: z.boolean().optional(),
     description: z.string().trim().max(10_000).optional(),
-    endpoints: z.array(serviceSchema).max(100).optional(),
+    endpoints: servicesSchema.optional(),
     image: z.string().trim().max(2_048).optional(),
     name: z.string().trim().min(1).max(256),
     registrations: z.array(registrationSchema).max(100).optional(),
-    services: z.array(serviceSchema).max(100).optional(),
+    services: servicesSchema.optional(),
     supportedTrust: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
     type: z.literal(
       "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",

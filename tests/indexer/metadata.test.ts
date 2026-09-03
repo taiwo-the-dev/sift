@@ -134,6 +134,24 @@ describe("ERC-8004 metadata", () => {
     });
   });
 
+  it("rejects duplicate services as invalid metadata", async () => {
+    const duplicateServices = {
+      ...registrationFixture,
+      services: [
+        registrationFixture.services[0],
+        registrationFixture.services[0],
+      ],
+    };
+    const result = await clientWith(fetch).fetch(
+      JSON.stringify(duplicateServices),
+    );
+
+    assert.deepEqual(result, {
+      code: "invalid-schema",
+      status: "invalid",
+    });
+  });
+
   it("enforces response limits and blocks private redirect targets", async () => {
     const oversized = await clientWith(
       async () =>

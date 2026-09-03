@@ -223,6 +223,57 @@ describe("indexer range integration", () => {
     assert.deepEqual([...records.keys()].sort(), ["56:7", "97:7"]);
   });
 
+  it("persists an agent and advances the checkpoint when its metadata is invalid", async () => {
+    let checkpoint: bigint | null = null;
+    let persistedMetadata: ObservedAgent["metadata"] | null = null;
+    const persistence: CatalogPersistence = {
+      findAgent: async () => null,
+      getCheckpoint: async () => null,
+      async persistAgent(observation) {
+        persistedMetadata = observation.metadata;
+        return { created: true, record: recordFromObservation(observation) };
+      },
+      async saveCheckpoint(_chainId, _registryAddress, blockNumber) {
+        checkpoint = blockNumber;
+      },
+    };
+    const provider: RegistryRpcProvider = {
+      getBlockNumber: async () => 101n,
+      getBlockTimestamp: async () => 1_700_000_000n,
+      getBytecode: async () => "0x01",
+      getChainId: async () => 97,
+      getLogs: async () => [registrationLog()],
+      name: "fixture-rpc",
+      ownerOf: async () => owner as Address,
+      tokenUri: async () => "https://agent.example/metadata.json",
+    };
+    const logger = createLogger(() => undefined);
+    const config = parseIndexerConfig({
+      ERC8004_DEPLOYMENT_BLOCK: "100",
+      INDEXER_BATCH_SIZE: "1",
+      INDEXER_CONFIRMATIONS: "1",
+      INDEXER_MIN_BATCH_SIZE: "1",
+    });
+
+    const summary = await runIndexer("bootstrap", config, {
+      logger,
+      metadata: {
+        fetch: async () => ({ code: "invalid-schema", status: "invalid" }),
+      },
+      persistence,
+      rpc: new RegistryRpcPool([provider], logger),
+    });
+
+    assert.deepEqual(persistedMetadata, {
+      code: "invalid-schema",
+      status: "invalid",
+    });
+    assert.equal(checkpoint, 100n);
+    assert.equal(summary.created, 1);
+    assert.equal(summary.metadataFailures, 1);
+    assert.equal(summary.ranges, 1);
+  });
+
   it("does not advance a checkpoint past a failed range", async () => {
     let checkpointWrites = 0;
     const persistence: CatalogPersistence = {
