@@ -23,6 +23,7 @@ jobs:
       SCORE_BATCH_LIMIT: ${{ vars.SCORE_BATCH_LIMIT || '200' }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SIFT_8004SCAN_API_KEY: ${{ secrets.SIFT_8004SCAN_API_KEY }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -41,3 +42,6 @@ jobs:
 
       - name: Recalculate affected Sift Scores
         run: npm run score:agents
+
+      - name: Refresh bounded 8004scan shortlist cross-checks
+        run: npm run enrich:categories
