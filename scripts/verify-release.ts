@@ -135,6 +135,10 @@ async function verify(): Promise<void> {
     requireText(category, "Live ERC-8004 catalogue", `Category route ${path}`);
   }
 
+  const categoryCoverage = await request(origin, "/api/reports/category-coverage");
+  requireStatus(categoryCoverage, 200, "Category coverage report");
+  requireText(categoryCoverage, '"status":"pass"', "Category coverage report");
+
   const profile = await request(origin, profilePath);
   requireStatus(profile, 200, `Indexed profile ${profilePath}`);
   assert(

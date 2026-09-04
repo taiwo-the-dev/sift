@@ -1,6 +1,7 @@
 import { Activity, MessageSquareText, ShieldQuestion } from "lucide-react";
 
 import { ProfileSection } from "@/components/agents/profile-section";
+import { CategoryEvidencePanel } from "@/components/categories/category-evidence";
 import { ScoreExplanation } from "@/components/scoring/score-explanation";
 import {
   formatIdentifierCount,
@@ -40,7 +41,11 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
       title="What Sift can independently show"
       description="Persisted observations appear only when a verifiable source has supplied them. Missing evidence is never replaced with estimates."
     >
+      <CategoryEvidencePanel profile={profile} />
+
+      <div className="mt-4">
       <ScoreExplanation score={profile.score} />
+      </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         {profile.health ? (

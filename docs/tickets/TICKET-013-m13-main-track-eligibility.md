@@ -2,7 +2,8 @@
 
 ## Status
 
-Blocked — implementation complete; awaiting Supabase unpause/migration, an archive-capable BSC mainnet RPC, and hosted bootstrap evidence
+Complete — the hosted BSC Mainnet catalogue reached confirmed head `119684064`
+with 331,747 real indexed identities on 2026-09-03
 
 ## Depends On
 
@@ -19,9 +20,9 @@ existing testnet safety boundary.
 
 ## Product Context
 
-Sift currently has 1,890 BSC Testnet identities and zero BSC mainnet identities
-in its hosted database. That is useful development evidence but is a high-risk
-interpretation of the hackathon's "live on BSC" rule. Judges need a catalogue
+Sift began M13 with 1,890 BSC Testnet identities and zero BSC Mainnet
+identities. The completed bootstrap now has 331,747 chain-56 identities at
+confirmed head `119684064`. Judges need a catalogue
 of agents that exist on the production chain and must always be able to see
 which network supports discovery versus activation.
 
@@ -115,17 +116,16 @@ which network supports discovery versus activation.
 
 - [x] The official chain-56 registry source and deployment boundary are cited.
 - [x] Official BSC chain, RPC, and explorer configuration is cited and verified.
-- [ ] A resumable mainnet bootstrap completes without duplicate identities.
-- [ ] Hosted data contains source-backed chain-56 agents and keeps chain-97
+- [x] A resumable mainnet bootstrap completes without duplicate identities.
+- [x] Hosted data contains source-backed chain-56 agents and keeps chain-97
       records correctly separated.
-- [ ] Mainnet and testnet incremental checkpoints advance independently.
+- [x] Mainnet and testnet incremental checkpoints advance independently.
 - [x] Discovery, comparison, and profiles identify the agent network clearly.
-- [ ] The default judge journey surfaces eligible BSC mainnet agents (the
-      mainnet-first route is implemented; source-backed data is still blocked).
+- [x] The default judge journey surfaces eligible BSC mainnet agents.
 - [x] Hiring remains restricted to the reviewed supported testnet path.
 - [x] Freshness/source evidence is visible and stale data is not described as
       real-time.
-- [ ] The operator report proves current counts and checkpoints for each network
+- [x] The operator report proves current counts and checkpoints for each network
       after the hosted migration and mainnet bootstrap.
 - [x] Index reruns are idempotent and partial failures resume safely.
 - [x] No fabricated, relabelled, or privately sourced agent data is introduced.

@@ -19,8 +19,8 @@ Ready for Development
 - M10 — Ready for Hosted Validation
 - M11 — Ready for Manual Validation
 - M12 — Blocked on External Release Validation
-- M13 — Blocked on Paused Supabase, Mainnet Archive RPC, and Hosted Bootstrap
-- M14 — Not Started
+- M13 — Complete
+- M14 — Blocked on Hosted Migration, Backfill, Pro Cross-Check, and Coverage Report
 - M15 — Not Started
 - M16 — Not Started
 - M17 — Not Started

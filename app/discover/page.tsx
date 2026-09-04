@@ -8,6 +8,7 @@ import { FilterPanel } from "@/components/discovery/filter-panel";
 import { Pagination } from "@/components/discovery/pagination";
 import { NetworkStatus } from "@/components/discovery/network-status";
 import { ResultToolbar } from "@/components/discovery/result-toolbar";
+import { CategoryContext } from "@/components/categories/category-context";
 import {
   parseDiscoverySearchParams,
   type DiscoverySearchParams,
@@ -64,6 +65,9 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        {query.effectiveCategories.length === 1 ? (
+          <CategoryContext category={query.effectiveCategories[0]} />
+        ) : null}
         <NetworkStatus query={query} statuses={networkStatuses} />
         <ActiveFilters query={query} />
 
@@ -71,7 +75,12 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <FilterPanel query={query} />
 
           <div className="min-w-0">
-            <ResultToolbar query={query} totalCount={result.totalCount} />
+            <ResultToolbar
+              hasMoreResults={result.hasNextPage}
+              query={query}
+              resultCount={result.agents.length}
+              totalCount={result.totalCount}
+            />
 
             {result.agents.length > 0 ? (
               <>
@@ -86,8 +95,8 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
                 </div>
                 <Pagination
                   currentPage={result.page}
+                  hasNextPage={result.hasNextPage}
                   query={query}
-                  totalPages={result.totalPages}
                 />
               </>
             ) : (

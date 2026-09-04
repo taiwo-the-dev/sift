@@ -191,10 +191,17 @@ function CategoriesValue({ agent }: Readonly<{ agent: AgentProfile }>) {
         </span>
       ))}
       <p className="w-full text-xs leading-5 text-muted-foreground">
-        {agent.categorySource === "deterministic-keyword"
-          ? "Deterministically mapped from indexed metadata."
-          : "Supplied by indexed metadata."}
+        {agent.categorySource === "deterministic-rule"
+          ? "Lower-confidence deterministic inference from validated indexed metadata."
+          : "Explicitly declared in validated indexed metadata."}
       </p>
+      {agent.categoryEvidence[0] ? (
+        <p className="w-full text-xs leading-5 text-muted-foreground">
+          {Math.round(agent.categoryEvidence[0].confidence * 100)}% classification
+          confidence · {agent.categoryEvidence[0].ruleVersion} · observed{" "}
+          {formatProfileTimestamp(agent.categoryEvidence[0].observedAt)}
+        </p>
+      ) : null}
     </div>
   ) : (
     <UnknownValue>No supported category was supplied or inferred.</UnknownValue>
@@ -212,6 +219,39 @@ function CapabilityValue({ agent }: Readonly<{ agent: AgentProfile }>) {
     </ul>
   ) : (
     <UnknownValue>No structured capability declarations were indexed.</UnknownValue>
+  );
+}
+
+function CategoryFactsValue({ agent }: Readonly<{ agent: AgentProfile }>) {
+  const facts = agent.categoryEvidence.flatMap((evidence) => evidence.facts);
+
+  return facts.length > 0 ? (
+    <dl className="grid gap-2 text-xs">
+      {facts.slice(0, 12).map((fact) => (
+        <div key={`${fact.key}:${fact.value}`} className="border-b border-border pb-2 last:border-0">
+          <dt className="text-muted-foreground">{fact.label}</dt>
+          <dd className="mt-0.5 font-medium text-foreground">{fact.value}</dd>
+        </div>
+      ))}
+    </dl>
+  ) : (
+    <UnknownValue>No category-specific facts were declared by a verified source.</UnknownValue>
+  );
+}
+
+function ExternalCrossCheckValue({ agent }: Readonly<{ agent: AgentProfile }>) {
+  const evidence = agent.externalEvidence;
+
+  return evidence ? (
+    <div className="text-xs leading-5">
+      <p className="font-semibold capitalize text-foreground">{evidence.availability.replaceAll("-", " ")}</p>
+      <p className="mt-1 text-muted-foreground">8004scan · observed {formatProfileTimestamp(evidence.observedAt)}</p>
+      {evidence.conflictFields.length > 0 ? (
+        <p className="mt-1 text-amber-200">Conflict: {evidence.conflictFields.join(", ")}</p>
+      ) : null}
+    </div>
+  ) : (
+    <UnknownValue>No cached 8004scan cross-check exists.</UnknownValue>
   );
 }
 
@@ -343,6 +383,16 @@ const comparisonRows: readonly ComparisonRow[] = [
     description: "Structured capability labels declared in service metadata.",
     label: "Capabilities",
     render: (agent) => <CapabilityValue agent={agent} />,
+  },
+  {
+    description: "Category-specific facts retained with their verified metadata field.",
+    label: "Category evidence",
+    render: (agent) => <CategoryFactsValue agent={agent} />,
+  },
+  {
+    description: "Independent cached identity and evidence cross-check; never the core catalogue.",
+    label: "8004scan cross-check",
+    render: (agent) => <ExternalCrossCheckValue agent={agent} />,
   },
   {
     description: "Declared service types and versions.",

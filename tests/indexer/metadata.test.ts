@@ -7,6 +7,7 @@ import { assertSafeRemoteUrl } from "../../lib/indexer/metadata/url-safety";
 
 const registrationFixture = {
   active: true,
+  categories: ["Grid Trading", "DeFi"],
   description: "Deterministic ERC-8004 metadata test fixture.",
   image: "https://agent.example/image.png",
   name: "Fixture Agent",
@@ -59,6 +60,7 @@ describe("ERC-8004 metadata", () => {
 
     if (result.status === "valid") {
       assert.equal(result.metadata.name, "Fixture Agent");
+      assert.deepEqual(result.metadata.declaredCategories, ["Grid Trading"]);
       assert.equal(result.metadata.services[0].serviceType, "A2A");
       assert.deepEqual(result.metadata.services[0].metadata, {
         skills: ["fixture-only"],

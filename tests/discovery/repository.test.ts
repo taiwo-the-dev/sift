@@ -15,9 +15,21 @@ const fixtureRows: readonly SearchAgentRow[] = [
     active: null,
     agent_db_id: "11111111-1111-4111-8111-111111111111",
     agent_id: "104",
-    category_source: "deterministic-keyword",
+    category_evidence: [
+      {
+        category: "grid-trading",
+        confidence: 0.65,
+        facts: [],
+        matchedTerms: ["grid strategy"],
+        observedAt: "2026-08-22T09:00:00.000Z",
+        ruleVersion: "sift-category-taxonomy-v1.0.0",
+        source: "deterministic-rule",
+      },
+    ],
+    category_source: "deterministic-rule",
     chain_id: 97,
     description: "Fixture grid strategy metadata",
+    has_more: true,
     image_url: null,
     last_synced_at: "2026-08-22T09:00:00.000Z",
     metadata_status: "valid",
@@ -30,7 +42,6 @@ const fixtureRows: readonly SearchAgentRow[] = [
     resolved_categories: ["grid-trading"],
     result_page: 2,
     services: [{ serviceType: "A2A", version: "1.0" }],
-    total_count: 13,
     x402_supported: null,
   },
   {
@@ -38,8 +49,10 @@ const fixtureRows: readonly SearchAgentRow[] = [
     agent_db_id: "22222222-2222-4222-8222-222222222222",
     agent_id: "103",
     category_source: null,
+    category_evidence: [],
     chain_id: 97,
     description: null,
+    has_more: true,
     image_url: null,
     last_synced_at: "2026-08-22T09:00:00.000Z",
     metadata_status: "invalid",
@@ -52,7 +65,6 @@ const fixtureRows: readonly SearchAgentRow[] = [
     resolved_categories: [],
     result_page: 2,
     services: [],
-    total_count: 13,
     x402_supported: null,
   },
 ];
@@ -96,7 +108,8 @@ describe("discovery repository integration boundary", () => {
         },
       },
     ]);
-    assert.equal(result.totalCount, 13);
+    assert.equal(result.hasNextPage, true);
+    assert.equal(result.totalCount, null);
     assert.equal(result.page, 2);
   });
 

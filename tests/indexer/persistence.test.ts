@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { AgentRecord } from "../../lib/db/agent-repository";
-import { buildAgentWriteInput, type ObservedAgent } from "../../lib/indexer/persistence";
+import {
+  buildAgentWriteInput,
+  createCatalogPersistence,
+  type ObservedAgent,
+} from "../../lib/indexer/persistence";
+import type { CategoryRepository } from "../../lib/db/category-repository";
 
 const existingAgent: AgentRecord = {
   active: true,
@@ -65,5 +70,59 @@ describe("indexer persistence mapping", () => {
     assert.equal(record.active, null);
     assert.equal(record.x402Supported, null);
     assert.equal(record.metadataVerifiedAt, null);
+  });
+
+  it("persists shared versioned category evidence after valid metadata", async () => {
+    let savedCategory = "";
+    let savedSource = "";
+    const observation: ObservedAgent = {
+      ...failedObservation(),
+      metadata: {
+        metadata: {
+          active: true,
+          declaredCategories: [],
+          description: "Monitors Venus health factor and liquidation risk.",
+          imageUrl: null,
+          name: "Health Guard",
+          services: [],
+          x402Supported: false,
+        },
+        status: "valid",
+      },
+    };
+    const persistence = createCatalogPersistence({
+      agents: {
+        findByIdentity: async () => existingAgent,
+        upsert: async () => existingAgent,
+      },
+      categories: {
+        replaceEvidence: async (
+          _agentDbId: string,
+          evidence: Parameters<CategoryRepository["replaceEvidence"]>[1],
+        ) => {
+          savedCategory = evidence[0]?.category ?? "";
+          savedSource = evidence[0]?.source ?? "";
+        },
+      } as unknown as CategoryRepository,
+      services: {
+        listByAgent: async () => [],
+        replaceForAgent: async () => undefined,
+      },
+      syncState: {
+        find: async () => null,
+        upsert: async () => ({
+          chain_id: 97,
+          confirmed_head: 1,
+          last_synced_block: 1,
+          registry_address: existingAgent.registry_address,
+          updated_at: observation.observedAt,
+        }),
+      },
+    });
+
+    await persistence.persistAgent(observation, existingAgent);
+
+    assert.equal(savedCategory, "health-factor-monitoring");
+    assert.equal(savedSource, "deterministic-rule");
   });
 });

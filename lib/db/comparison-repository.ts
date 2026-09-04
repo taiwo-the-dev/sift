@@ -22,11 +22,19 @@ type AgentHealthRecord = TableRow<"agent_health">;
 type AgentReputationRecord = TableRow<"agent_reputation">;
 type AgentServiceRecord = TableRow<"agent_services">;
 type AgentScoreRecord = TableRow<"agent_scores">;
+type CategoryEvidenceRecord = TableRow<"agent_category_evidence">;
+type ExternalEvidenceRecord = TableRow<"agent_external_evidence">;
 
 export type ComparisonSources = Readonly<{
   listAgents(
     references: readonly AgentReference[],
   ): Promise<readonly AgentRecord[]>;
+  listCategoryEvidence?(
+    agentDbIds: readonly string[],
+  ): Promise<readonly CategoryEvidenceRecord[]>;
+  listExternalEvidence?(
+    agentDbIds: readonly string[],
+  ): Promise<readonly ExternalEvidenceRecord[]>;
   listHealth(agentDbIds: readonly string[]): Promise<readonly AgentHealthRecord[]>;
   listReputation(
     agentDbIds: readonly string[],
@@ -74,6 +82,32 @@ function createSupabaseSources(
 
       if (error) {
         throw new DatabaseOperationError("list comparison health", error);
+      }
+
+      return data;
+    },
+    async listCategoryEvidence(agentDbIds) {
+      const { data, error } = await client
+        .from("agent_category_evidence")
+        .select("*")
+        .in("agent_db_id", [...agentDbIds]);
+
+      if (error) {
+        throw new DatabaseOperationError("list comparison category evidence", error);
+      }
+
+      return data;
+    },
+    async listExternalEvidence(agentDbIds) {
+      const { data, error } = await client
+        .from("agent_external_evidence")
+        .select("*")
+        .in("agent_db_id", [...agentDbIds])
+        .eq("provider", "8004scan");
+
+      if (error) {
+        // Optional enrichment must never make core comparison unavailable.
+        return [];
       }
 
       return data;
@@ -179,15 +213,24 @@ export function createComparisonRepository(
         return candidates?.length === 1 ? candidates : [];
       });
       const agentDbIds = uniqueAgents.map((agent) => agent.id);
-      const [services, health, reputation, scores] =
+      const [
+        services,
+        health,
+        reputation,
+        scores,
+        categoryEvidence,
+        externalEvidence,
+      ] =
         agentDbIds.length > 0
           ? await Promise.all([
               sources.listServices(agentDbIds),
               sources.listHealth(agentDbIds),
               sources.listReputation(agentDbIds),
               sources.listScores(agentDbIds),
+              sources.listCategoryEvidence?.(agentDbIds) ?? Promise.resolve([]),
+              sources.listExternalEvidence?.(agentDbIds) ?? Promise.resolve([]),
             ])
-          : [[], [], [], []];
+          : [[], [], [], [], [], []];
       const servicesByAgent = groupByAgentDbId(services);
       const healthByAgent = new Map(
         health.map((record) => [record.agent_db_id, record]),
@@ -197,6 +240,10 @@ export function createComparisonRepository(
       );
       const scoresByAgent = new Map(
         scores.map((record) => [record.agent_db_id, record]),
+      );
+      const categoryEvidenceByAgent = groupByAgentDbId(categoryEvidence);
+      const externalEvidenceByAgent = new Map(
+        externalEvidence.map((record) => [record.agent_db_id, record]),
       );
       const agentByKey = new Map(
         uniqueAgents.map((agent) => [
@@ -220,6 +267,8 @@ export function createComparisonRepository(
                   healthByAgent.get(agent.id) ?? null,
                   reputationByAgent.get(agent.id) ?? null,
                   scoresByAgent.get(agent.id) ?? null,
+                  categoryEvidenceByAgent.get(agent.id) ?? [],
+                  externalEvidenceByAgent.get(agent.id) ?? null,
                 ),
               ]
             : [];

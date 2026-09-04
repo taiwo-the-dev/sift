@@ -36,9 +36,11 @@ function profile(
     agentId,
     agentUri: null,
     categories: [],
+    categoryEvidence: [],
     categorySource: null,
     chainId: 97,
     description: null,
+    externalEvidence: null,
     health: null,
     imageUrl: null,
     lastSyncedAt: null,
@@ -65,7 +67,7 @@ describe("contextual comparison", () => {
       [
         profile("1", {
           categories: ["health-factor-monitoring"],
-          categorySource: "deterministic-keyword",
+          categorySource: "deterministic-rule",
           description: "Monitors loan collateral and liquidation conditions.",
         }),
         profile("2", {

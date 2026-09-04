@@ -149,6 +149,33 @@ and checkpoints. The mainnet bootstrap requires an archive-capable RPC URL and
 remains incomplete if chain-56 count is zero, its checkpoint is absent, or its
 checkpoint trails `confirmed_head`.
 
+## M14 category and external evidence
+
+`20260903090000_add_category_evidence.sql` adds three derived evidence stores:
+
+| Table | Responsibility |
+| --- | --- |
+| `agent_category_evidence` | Declared or lower-confidence deterministic category mapping with rule version, source facts, confidence, and observation time |
+| `agent_category_shortlist` | Revalidated 12-agent mainnet curation set; ordering is not performance ranking |
+| `agent_external_evidence` | Bounded raw and normalized 8004scan cross-check cache with availability/conflict provenance |
+
+All three have RLS enabled and deny `anon` and `authenticated`; only the
+server role may read or write them. The migration replaces `search_agents` so
+category filtering joins materialized evidence and aggregates services only
+for one result page. This removes the prior repeated full-catalogue regex scan.
+The replacement first filters narrow indexed identifiers and loads full agent,
+category, and service fields only for the bounded page; chain/order indexes
+keep the common recent-agent path practical at the current catalogue scale.
+It adds a bounded classification paging function and aggregate category
+coverage function, both server-only, and gives eligible shortlisted agents
+priority in the unchanged bounded health queue.
+
+Deploy this migration before the matching application. Then follow the exact
+backfill, curation, enrichment, health/score and reporting sequence in
+[M14 category evidence](categories.md). Do not deploy the application first:
+profile and comparison repositories intentionally expect the protected M14
+tables to exist.
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.

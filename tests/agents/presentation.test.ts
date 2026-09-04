@@ -31,7 +31,7 @@ describe("agent profile presentation", () => {
     );
 
     assert.deepEqual(resolved.categories, ["health-factor-monitoring"]);
-    assert.equal(resolved.categorySource, "deterministic-keyword");
+    assert.equal(resolved.categorySource, "deterministic-rule");
     assert.deepEqual(collectDeclaredCapabilities(services), [
       "Position monitoring",
       "Liquidation alerts",

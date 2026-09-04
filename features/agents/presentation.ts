@@ -6,34 +6,9 @@ import type {
   CategorySource,
   DiscoveryCategory,
 } from "@/features/discovery/model";
+import { classifyAgentCategories } from "@/features/categories/taxonomy";
 import type { Json } from "@/lib/db/database.types";
 import type { MetadataStatus } from "@/lib/db/validation";
-
-const categoryRules = [
-  {
-    category: "yield-optimisation",
-    pattern:
-      /(^|[^a-z0-9])(yield|apy|apr|staking|stake|farming|farm|vault)([^a-z0-9]|$)/,
-  },
-  {
-    category: "grid-trading",
-    pattern:
-      /(^|[^a-z0-9])(grid|trading|trader|trade|buy|sell|market[ -]?making)([^a-z0-9]|$)/,
-  },
-  {
-    category: "health-factor-monitoring",
-    pattern:
-      /(^|[^a-z0-9])(health factor|liquidation|liquidate|lending|borrowing|borrow|collateral|loan)([^a-z0-9]|$)/,
-  },
-  {
-    category: "liquidity-rebalancing",
-    pattern:
-      /(^|[^a-z0-9])(liquidity|rebalance|rebalancing|lp|pool|concentrated liquidity)([^a-z0-9]|$)/,
-  },
-] as const satisfies readonly Readonly<{
-  category: DiscoveryCategory;
-  pattern: RegExp;
-}>[];
 
 function isRecord(value: Json): value is Readonly<Record<string, Json | undefined>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -69,29 +44,18 @@ export function resolveProfileCategories(
   categories: readonly DiscoveryCategory[];
   categorySource: CategorySource;
 }> {
-  if (category) {
-    return { categories: [category], categorySource: "indexed-metadata" };
-  }
-
-  const document = [
-    name,
+  const evidence = classifyAgentCategories({
+    declaredCategories: category ? [category] : [],
     description,
-    ...services.flatMap((service) => [
-      service.serviceType,
-      JSON.stringify(service.metadata),
-    ]),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  const categories = categoryRules
-    .filter((rule) => rule.pattern.test(document))
-    .map((rule) => rule.category);
+    name,
+    observedAt: "2000-01-01T00:00:00.000Z",
+    services,
+  });
+  const categories = evidence.map((item) => item.category);
 
   return {
     categories,
-    categorySource:
-      categories.length > 0 ? "deterministic-keyword" : null,
+    categorySource: evidence[0]?.source ?? null,
   };
 }
 

@@ -2,7 +2,9 @@
 
 ## Status
 
-Not Started
+Blocked — repository implementation complete; awaiting hosted migration,
+historical backfill, 8004scan Pro credential/run, bounded health/score refresh,
+hosted browser validation, and the recorded coverage report
 
 ## Depends On
 
@@ -17,9 +19,9 @@ a user make an informed hiring decision.
 ## Product Context
 
 The official rubric penalizes a marketplace that treats one category as the
-main event. Sift currently returns all four categories, but hosted testnet
-coverage ranges from 15 Health Factor Monitoring matches to 92 Grid Trading
-matches, and evidence coverage is incomplete. Equal depth means equivalent
+main event. Sift's completed M13 catalogue contains 331,747 mainnet identities,
+but pre-M14 category matching uses broad request-time keyword scans and its
+evidence coverage has not been measured. Equal depth means equivalent
 decision quality and usability—not invented agents or artificially identical
 counts.
 
@@ -118,22 +120,22 @@ counts.
 
 ## Acceptance Criteria
 
-- [ ] The four-category taxonomy and mapping rules are documented and tested.
+- [x] The four-category taxonomy and mapping rules are documented and tested.
 - [ ] A timestamped report measures inventory and evidence coverage per category.
 - [ ] At least three source-backed mainnet candidates per category meet the
       documented shortlist bar, or the ticket is honestly BLOCKED with evidence.
-- [ ] Every category has equivalent discovery, profile, comparison, and honest
+- [x] Every category has equivalent discovery, profile, comparison, and honest
       activation-availability treatment.
-- [ ] Category-specific fields display only when supported by source evidence.
-- [ ] Declared versus inferred categories are distinguishable.
+- [x] Category-specific fields display only when supported by source evidence.
+- [x] Declared versus inferred categories are distinguishable.
 - [ ] Curated candidates have current health/score/reputation/service evidence
       where supported, with Unknown used for real gaps.
-- [ ] Score version, confidence, coverage, and observation time remain visible.
-- [ ] 8004scan enrichment is implemented, source-labelled, cached, rate-limited,
+- [x] Score version, confidence, coverage, and observation time remain visible.
+- [x] 8004scan enrichment is implemented, source-labelled, cached, rate-limited,
       and independently removable without breaking core discovery.
 - [ ] A real sample in every required category has a recorded cross-check result
       or an honest API-field-unavailable result.
-- [ ] No fabricated marketplace or performance data exists.
+- [x] No fabricated marketplace or performance data exists.
 
 ## Testing Requirements
 
@@ -154,6 +156,30 @@ decision journeys, the curated mainnet supply meets the documented evidence
 bar, 8004scan has been meaningfully integrated without becoming a core
 dependency, coverage/freshness is measurable, every claim has provenance, and
 missing data remains honest.
+
+## Implementation Note
+
+The repository-side implementation was completed and validated on 2026-09-03.
+The active hosted Supabase project is reachable through the application
+credentials, but the locally authenticated Supabase CLI account does not have
+permission to link or deploy to it. Therefore the additive M14 migration,
+historical classification, shortlist persistence, bounded health/score refresh,
+stored 8004scan Pro sample, hosted browser matrix, and timestamped hosted report
+remain external completion gates. No fabricated substitute was added.
+
+The repository was revalidated on 2026-09-04: strict TypeScript, ESLint, all
+199 unit/integration tests, the 8 wallet rendered-state tests, and the Next.js
+production build passed. A deployment retry against the project configured in
+`.env.local` was rejected by Supabase because the authenticated CLI account
+lacks project privileges. The application secret key cannot deploy database
+DDL, and no 8004scan credential is configured locally, so those account-owned
+steps cannot be bypassed safely in code.
+
+The same validation also reproduced the current hosted discovery timeout and
+confirmed that the M14 tables and RPCs are absent. The pending migration now
+keeps catalogue filtering to narrow indexed identifiers before loading full
+page data, so it replaces the legacy request-time whole-catalogue classification
+that times out at the current 331,747-agent mainnet scale.
 
 ## Codex Completion Report
 

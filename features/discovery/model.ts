@@ -1,15 +1,16 @@
 import type { MetadataStatus } from "@/lib/db/validation";
 import type { HealthSnapshot } from "@/features/health/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
+import type {
+  CategoryEvidence,
+  CategoryEvidenceSource,
+  CategorySlug,
+} from "@/features/categories/taxonomy";
+import { categorySlugs } from "@/features/categories/taxonomy";
 
-export const discoveryCategorySlugs = [
-  "yield-optimisation",
-  "grid-trading",
-  "health-factor-monitoring",
-  "liquidity-rebalancing",
-] as const;
+export const discoveryCategorySlugs = categorySlugs;
 
-export type DiscoveryCategory = (typeof discoveryCategorySlugs)[number];
+export type DiscoveryCategory = CategorySlug;
 
 export const discoveryCategories = [
   {
@@ -92,10 +93,7 @@ export function getDiscoveryChainIds(
 export const discoveryPageSizes = [12, 24, 36] as const;
 export type DiscoveryPageSize = (typeof discoveryPageSizes)[number];
 
-export type CategorySource =
-  | "indexed-metadata"
-  | "deterministic-keyword"
-  | null;
+export type CategorySource = CategoryEvidenceSource | null;
 
 export type DiscoveryService = Readonly<{
   serviceType: string;
@@ -107,6 +105,7 @@ export type DiscoveryAgent = Readonly<{
   agentDbId: string;
   agentId: string;
   categories: readonly DiscoveryCategory[];
+  categoryEvidence: readonly CategoryEvidence[];
   categorySource: CategorySource;
   chainId: number;
   description: string | null;
@@ -141,8 +140,8 @@ export type DiscoveryQuery = Readonly<{
 
 export type DiscoveryResult = Readonly<{
   agents: readonly DiscoveryAgent[];
+  hasNextPage: boolean;
   page: number;
   pageSize: DiscoveryPageSize;
-  totalCount: number;
-  totalPages: number;
+  totalCount: number | null;
 }>;

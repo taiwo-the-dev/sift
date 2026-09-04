@@ -13,10 +13,12 @@ local result is not evidence that a production wallet transaction succeeded.
 | M12 release commit | Not recorded; current M12 work is uncommitted |
 | Vercel production URL | Not deployed / not recorded |
 | Vercel deployment ID | Not recorded |
-| Production Supabase schema check | All 11 required tables were readable through the server boundary on 2026-08-24; migration-history/RLS dashboard review remains |
-| Latest successful indexer run | Not current; scheduled run `#27` failed during dependency installation on 2026-08-24 |
+| Production Supabase schema check | M0–M13 schema is live; the three M14 evidence tables are pending migration deployment |
+| Latest successful indexer run | BSC Mainnet bootstrap completed on 2026-09-03; scheduled incremental health still needs confirmation |
 | Latest successful assessment run | Not current; scheduled run `#8` failed during dependency installation on 2026-08-24 |
-| Stored index checkpoint | BSC Testnet block `126540754`, persisted 2026-08-22 09:09:32 UTC |
+| Stored index checkpoint | BSC Mainnet block/head `119684064`, reported 2026-09-03; BSC Testnet block/head `127211325` was stale at the same observation |
+| Mainnet catalogue | 331,747 real indexed chain-56 identities at the completed checkpoint |
+| M14 category evidence | Repository implementation complete; hosted migration/backfill/report pending |
 | Latest stored health / score evidence | 2026-08-22 20:38:19 UTC / 2026-08-22 20:38:22 UTC |
 | Live RPC smoke | Passed at confirmed BSC Testnet head `126972263` on 2026-08-24 |
 | BSC Testnet demo transaction | Not recorded |
@@ -32,12 +34,15 @@ candidate is committed, pushed, and both scheduled jobs pass.
 - [x] `npm ci` succeeds with npm 10, matching the failed release runner boundary.
 - [x] `npm run lint` passes.
 - [x] `npm run typecheck` passes.
-- [x] `npm test` passes (174 tests).
+- [x] `npm test` passes (199 tests).
 - [x] `npm run test:wallet-ui` passes (8 rendered-state tests).
 - [x] `npm run build` passes with the configured hosted environment.
-- [x] `npm audit` reports 0 vulnerabilities.
-- [x] `npm run release:data` verifies every hosted table and source freshness.
-- [x] `npm run release:smoke -- http://127.0.0.1:3102` passes against the local production build.
+- [ ] `npm audit` currently reports 18 transitive vulnerabilities (17 moderate,
+      1 high) through the existing shadcn tooling and wallet dependency trees;
+      M14 adds no package dependency. Review upgrades separately without forcing
+      a breaking wagmi migration into this milestone.
+- [ ] `npm run release:data` verifies every hosted table and source freshness (blocked until the M14 migration/report is live).
+- [ ] `npm run release:smoke -- http://127.0.0.1:3102` passes against the local production build (the new M14 report gate currently returns 503 until migration deployment).
 - [ ] `npm run release:smoke -- https://<production-origin>` passes.
 
 ## Production services
@@ -50,6 +55,8 @@ candidate is committed, pushed, and both scheduled jobs pass.
 - [ ] The latest scheduled health/score run succeeds with honest bounded output.
 - [ ] RPC primary/fallback behavior succeeds without exposing provider credentials.
 - [ ] Data freshness visible in Sift agrees with the latest persisted observations.
+- [ ] M14 migration, category backfill, 12-agent shortlist, and 8004scan cross-check are persisted.
+- [ ] `npm run report:categories` and the public read-only report pass for all four categories.
 
 ## Clean-browser product path
 

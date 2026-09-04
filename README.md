@@ -12,12 +12,11 @@ transactions are real and source-backed; unavailable evidence stays `Unknown`.
 M0–M8 are complete. M9 is ready for its human-approved BSC Testnet transaction,
 M10 is ready for two-wallet hosted isolation validation, and M11 is ready for a
 final keyboard pass. The M12 release package is implemented locally but remains
-blocked on those checks and a production deployment. M13's dual-network code,
-provenance migration, network UX, scheduler isolation, and operator report are
-implemented; its real BSC mainnet bootstrap remains blocked until an
-archive-capable free-tier RPC is configured and hosted chain-56 evidence exists.
-The hosted Supabase project was also paused during validation, so the M13
-migration must deploy after the project owner unpauses it.
+blocked on those checks and a production deployment. M13 is operational: the
+BSC Mainnet catalogue reached confirmed head `119684064` with 331,747 real
+indexed identities on 2026-09-03. M14's repository implementation is complete
+but remains blocked on deploying its hosted migration, running the historical
+category backfill, and recording the hosted coverage/8004scan report.
 
 **Live application:** not deployed or recorded yet. Do not replace this status
 with a URL until the exact Vercel deployment passes the
@@ -63,6 +62,7 @@ flowchart LR
   rpc --> indexer["Sift Indexer\nGitHub Actions"]
   metadata["Registration files\nand services"] --> indexer
   indexer --> db[("Supabase\nPostgreSQL")]
+  scan["8004scan\noptional validation"] --> db
   assessment["Health + Sift Score\nGitHub Actions"] <--> db
   metadata --> assessment
   browser["Browser"] <--> app["Next.js\nVercel"]
@@ -115,6 +115,7 @@ an honest recovery state and never substitutes demo agents.
 | `BNB_RPC_PRIMARY`, `BNB_RPC_FALLBACK_1`, `BNB_RPC_FALLBACK_2` | Optional | Server/indexer RPC overrides; secrets when token-bearing |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
 | `NEXT_PUBLIC_BNB_TESTNET_RPC_URL`, `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC overrides |
+| `SIFT_8004SCAN_API_KEY` | Optional for core discovery; required for the intended Pro-tier validation run | Server-only external cross-check credential |
 
 Indexer limits, metadata limits, health cadence, score batches, registry
 overrides, and IPFS configuration are documented in `.env.example`. Never
@@ -148,12 +149,19 @@ npm run check:smoke
 npm run score:smoke
 npm run check:agents       # bounded eligible endpoint observations
 npm run score:agents       # bounded affected score recalculation
+npm run classify:categories # one-time resumable mainnet category backfill
+npm run curate:categories   # validate and persist 3 real candidates per category
+npm run enrich:categories   # bounded cached 8004scan cross-check
+npm run report:categories   # timestamped per-category evidence coverage
 ```
 
 Production scheduling uses `.github/workflows/sync-agents.yml` every two hours
 and `.github/workflows/assess-agents.yml` every six hours. See
 [indexer operations](docs/indexer.md) and [scoring](docs/scoring.md) for RPC
 fallbacks, checkpoints, provenance, freshness, and recovery.
+
+The category taxonomy, curation bar, 8004scan boundary, and exact hosted run
+order are documented in [M14 category evidence](docs/categories.md).
 
 ## Validation
 
@@ -200,9 +208,8 @@ The full evidence-bound list is maintained in
 - ERC-8183/APEX support is BSC Testnet-only, bound to the reviewed deployment,
   and intentionally fails closed when an agent service or contract relationship
   is incompatible.
-- The BSC mainnet catalogue bootstrap is not complete until a reviewed
-  archive-capable RPC is supplied and `report:catalogue` proves non-zero
-  chain-56 identities with a caught-up checkpoint.
+- The M14 hosted schema/backfill and category coverage report have not yet run;
+  the local Supabase CLI account cannot deploy to the active project.
 - Mainnet hiring, custody, unlimited token approvals, disputes, refunds,
   pause/revoke writes, and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;
@@ -238,6 +245,7 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Hosted database](docs/database.md)
 - [Sift Indexer](docs/indexer.md)
 - [Sift Score](docs/scoring.md)
+- [M14 category evidence](docs/categories.md)
 - [Comparison](docs/comparison.md)
 - [Wallet](docs/wallet.md)
 - [Hiring](docs/hiring.md)

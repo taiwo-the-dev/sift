@@ -12,6 +12,10 @@ import {
   type DiscoveryResult,
   type DiscoveryService,
 } from "@/features/discovery/model";
+import type {
+  CategoryEvidence,
+  CategoryFact,
+} from "@/features/categories/taxonomy";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { Database, Json, TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
@@ -59,7 +63,7 @@ function mapServices(value: Json): readonly DiscoveryService[] {
 }
 
 function mapCategorySource(value: string | null): CategorySource {
-  return value === "indexed-metadata" || value === "deterministic-keyword"
+  return value === "declared-metadata" || value === "deterministic-rule"
     ? value
     : null;
 }
@@ -84,12 +88,66 @@ function mapMetadataStatus(value: string): MetadataStatus {
   return supported;
 }
 
+function mapCategoryEvidence(value: Json): readonly CategoryEvidence[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item) => {
+    const category = isRecord(item) && typeof item.category === "string"
+      ? discoveryCategorySlugs.find((candidate) => candidate === item.category)
+      : undefined;
+    if (
+      !isRecord(item) ||
+      !category ||
+      typeof item.confidence !== "number" ||
+      typeof item.observedAt !== "string" ||
+      typeof item.ruleVersion !== "string" ||
+      (item.source !== "declared-metadata" && item.source !== "deterministic-rule")
+    ) {
+      return [];
+    }
+
+    const facts = Array.isArray(item.facts)
+      ? item.facts.flatMap((fact) => {
+          if (
+            !isRecord(fact) ||
+            typeof fact.key !== "string" ||
+            typeof fact.label !== "string" ||
+            typeof fact.sourceField !== "string" ||
+            typeof fact.value !== "string"
+          ) {
+            return [];
+          }
+
+          return [fact as CategoryFact];
+        })
+      : [];
+    const matchedTerms = Array.isArray(item.matchedTerms)
+      ? item.matchedTerms.filter(
+          (term): term is string => typeof term === "string",
+        )
+      : [];
+
+    return [
+      {
+        category,
+        confidence: item.confidence,
+        facts,
+        matchedTerms,
+        observedAt: item.observedAt,
+        ruleVersion: item.ruleVersion as CategoryEvidence["ruleVersion"],
+        source: item.source,
+      },
+    ];
+  });
+}
+
 function mapAgent(row: SearchAgentRow): DiscoveryAgent {
   return {
     active: row.active,
     agentDbId: row.agent_db_id,
     agentId: row.agent_id,
     categories: mapCategories(row.resolved_categories),
+    categoryEvidence: mapCategoryEvidence(row.category_evidence),
     categorySource: mapCategorySource(row.category_source),
     chainId: row.chain_id,
     description: row.description,
@@ -154,8 +212,7 @@ export function createDiscoveryRepository(
     }
 
     const firstRow = data[0];
-    const totalCount = firstRow?.total_count ?? 0;
-    const page = firstRow?.result_page ?? 1;
+    const page = firstRow?.result_page ?? query.page;
     const agents = data.map(mapAgent);
     const ids = agents.map((agent) => agent.agentDbId);
     const [healthRecords, scoreRecords] =
@@ -184,10 +241,10 @@ export function createDiscoveryRepository(
         health: healthById.get(agent.agentDbId) ?? null,
         score: scoreById.get(agent.agentDbId) ?? null,
       })),
+      hasNextPage: firstRow?.has_more ?? false,
       page,
       pageSize: query.pageSize,
-      totalCount,
-      totalPages: Math.max(1, Math.ceil(totalCount / query.pageSize)),
+      totalCount: null,
     };
   }
 

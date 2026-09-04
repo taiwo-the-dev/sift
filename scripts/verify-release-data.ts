@@ -4,6 +4,9 @@ import type { Database } from "@/lib/db/database.types";
 
 const requiredTables = [
   "agents",
+  "agent_category_evidence",
+  "agent_category_shortlist",
+  "agent_external_evidence",
   "agent_services",
   "agent_health",
   "agent_reputation",
@@ -79,10 +82,28 @@ async function main(): Promise<void> {
     }
   }
 
+  const { buildCategoryCoverageReport } = await import(
+    "@/features/categories/coverage"
+  );
+  const { createCategoryRepository } = await import(
+    "@/lib/db/category-repository"
+  );
+  const categoryCoverage = buildCategoryCoverageReport(
+    await createCategoryRepository(client).listCoverage(56),
+    new Date().toISOString(),
+  );
+
+  if (categoryCoverage.status !== "pass") {
+    throw new Error(
+      `Hosted category coverage is blocked: ${categoryCoverage.issues.join(" ")}`,
+    );
+  }
+
   process.stdout.write(
     `${JSON.stringify(
       {
         event: "release_data_verified",
+        categoryCoverage,
         freshness: {
           agent: agentResult.data,
           health: healthResult.data,

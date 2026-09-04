@@ -38,6 +38,7 @@ Set these values in Vercel's Production environment without committing them:
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public | WalletConnect QR/mobile connection |
 | `NEXT_PUBLIC_BNB_TESTNET_RPC_URL` | Optional | Browser-public | Public browser RPC override; public fallbacks remain |
 | `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public | Public read-only browser RPC override |
+| `SIFT_8004SCAN_API_KEY` | Required for the intended M14 Pro validation run | Server-only secret | Bounded 12-agent 8004scan cross-check; core discovery does not depend on it |
 
 Preview environments need separate values if they are used for database-backed
 review. Never point an untrusted preview at production service-role credentials.
@@ -72,6 +73,8 @@ in a repository variable or `NEXT_PUBLIC_` value.
 - `sync-agents.yml` incrementally indexes mainnet and testnet every two hours in
   independent matrix jobs and concurrency groups.
 - `assess-agents.yml` checks health and recalculates scores every six hours.
+- The assessment workflow also refreshes the bounded cached 8004scan
+  cross-check after the M14 shortlist exists.
 - Both workflows use read-only repository permissions and no signing material.
 
 Run `npm run index:smoke`, `npm run check:smoke`, and `npm run score:smoke`
@@ -84,6 +87,7 @@ every required table and print only aggregate counts/source freshness:
 ```bash
 npm run release:data
 npm run report:catalogue
+npm run report:categories
 ```
 
 Before enabling the mainnet schedule, run `BNB_NETWORK=bsc-mainnet npm run

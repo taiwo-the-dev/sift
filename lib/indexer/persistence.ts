@@ -19,6 +19,11 @@ import {
   type AgentWriteInput,
 } from "@/lib/db/validation";
 import type { MetadataFetchResult } from "@/lib/indexer/metadata/fetch";
+import { classifyAgentCategories } from "@/features/categories/taxonomy";
+import {
+  createCategoryRepository,
+  type CategoryRepository,
+} from "@/lib/db/category-repository";
 
 export type ObservedAgent = Readonly<{
   agentId: bigint;
@@ -127,11 +132,14 @@ export function buildAgentWriteInput(
 export function createCatalogPersistence(
   repositories: Readonly<{
     agents?: AgentRepository;
+    categories?: CategoryRepository;
     services?: AgentServiceRepository;
     syncState?: SyncStateRepository;
   }> = {},
 ): CatalogPersistence {
   const agents = repositories.agents ?? createAgentRepository();
+  const categories = repositories.categories ??
+    (Object.keys(repositories).length === 0 ? createCategoryRepository() : null);
   const services = repositories.services ?? createAgentServiceRepository();
   const syncState = repositories.syncState ?? createSyncStateRepository();
 
@@ -156,6 +164,19 @@ export function createCatalogPersistence(
         await services.replaceForAgent(
           record.id,
           observation.metadata.metadata.services,
+        );
+        await categories?.replaceEvidence(
+          record.id,
+          classifyAgentCategories({
+            declaredCategories: [
+              ...(observation.metadata.metadata.declaredCategories ?? []),
+              ...(existing?.category ? [existing.category] : []),
+            ],
+            description: observation.metadata.metadata.description,
+            name: observation.metadata.metadata.name,
+            observedAt: observation.observedAt,
+            services: observation.metadata.metadata.services,
+          }),
         );
       }
 

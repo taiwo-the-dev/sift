@@ -271,6 +271,15 @@ export function ProfileHeader({
             Indexed {formatProfileTimestamp(profile.lastSyncedAt)}
           </p>
         </div>
+
+        <div className="mt-4 rounded-xl border border-border bg-background/55 px-4 py-3 text-xs leading-5 text-muted-foreground">
+          <span className="font-semibold text-foreground">Activation availability: </span>
+          {hireable
+            ? "This BSC Testnet identity declares a compatible ERC-8183 service and can enter Sift’s guarded hiring flow."
+            : profile.chainId === 56
+              ? "Discovery and comparison are available on BSC Mainnet. Mainnet hiring is intentionally disabled; Sift currently activates only compatible BSC Testnet ERC-8183 agents."
+              : "This identity is discoverable, but it does not currently meet every validated ERC-8183 hiring requirement. No activation capability is implied."}
+        </div>
       </div>
     </header>
   );

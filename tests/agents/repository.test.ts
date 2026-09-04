@@ -42,6 +42,19 @@ const service: TableRow<"agent_services"> = {
   version: "1.0",
 };
 
+const categoryEvidence: TableRow<"agent_category_evidence"> = {
+  agent_db_id: agent.id,
+  category: "health-factor-monitoring",
+  confidence: 0.65,
+  created_at: "2026-08-22T08:50:02.000Z",
+  evidence: { matchedTerms: ["liquidation risk"] },
+  facts: [],
+  observed_at: "2026-08-22T08:50:02.000Z",
+  rule_version: "sift-category-taxonomy-v1.0.0",
+  source: "deterministic-rule",
+  updated_at: "2026-08-22T08:50:02.000Z",
+};
+
 function sources(
   overrides: Partial<AgentProfileSources> = {},
 ): AgentProfileSources {
@@ -50,6 +63,7 @@ function sources(
     findHealth: async () => null,
     findReputation: async () => null,
     findScore: async () => null,
+    listCategoryEvidence: async () => [categoryEvidence],
     listServices: async () => [service],
     ...overrides,
   };

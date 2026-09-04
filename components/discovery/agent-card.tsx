@@ -83,9 +83,9 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   <span
                     key={category}
                     title={
-                      agent.categorySource === "deterministic-keyword"
-                        ? "Deterministically matched from indexed metadata keywords"
-                        : "Category supplied by indexed metadata"
+                      agent.categorySource === "deterministic-rule"
+                        ? "Lower-confidence deterministic match from validated indexed metadata"
+                        : "Category explicitly declared in validated indexed metadata"
                     }
                     className="inline-flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-brand"
                   >
@@ -99,6 +99,16 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   </span>
                 ) : null}
               </div>
+
+              {agent.categoryEvidence[0] ? (
+                <p className="mt-2 text-[0.68rem] leading-5 text-muted-foreground">
+                  {agent.categoryEvidence[0].source === "declared-metadata"
+                    ? "Declared category"
+                    : "Inferred category"}{" "}
+                  · {Math.round(agent.categoryEvidence[0].confidence * 100)}%
+                  classification confidence · {agent.categoryEvidence[0].ruleVersion}
+                </p>
+              ) : null}
 
               <h2 className="mt-1.5 truncate text-lg font-semibold tracking-[-0.025em] text-foreground sm:text-xl">
                 {profileHref ? (

@@ -1,4 +1,5 @@
 import type { Json } from "@/lib/db/database.types";
+import { extractDeclaredCategoryLabels } from "@/features/categories/taxonomy";
 import type { AgentMetadata } from "@/lib/indexer/metadata/schema";
 
 export type NormalizedService = Readonly<{
@@ -10,6 +11,7 @@ export type NormalizedService = Readonly<{
 
 export type NormalizedAgentMetadata = Readonly<{
   active: boolean | null;
+  declaredCategories?: readonly string[];
   description: string | null;
   imageUrl: string | null;
   name: string;
@@ -38,6 +40,7 @@ export function normalizeAgentMetadata(
 
   return {
     active: metadata.active ?? null,
+    declaredCategories: extractDeclaredCategoryLabels(metadata),
     description: metadata.description || null,
     imageUrl: metadata.image || null,
     name: metadata.name,

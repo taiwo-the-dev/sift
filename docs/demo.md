@@ -14,13 +14,16 @@ valuable mainnet assets and never share its private key or seed phrase.
    mainnet catalogue plus the latest indexer and assessment workflows. If any is
    stale or failing, disclose the catalogue timestamp and resolve the workflow
    before the live demo.
-4. In a clean browser profile, identify one currently indexed profile with a
+4. Run `npm run report:categories` and require three validated candidates and
+   three recorded 8004scan cross-check outcomes in every category. Keep the
+   public `/api/reports/category-coverage` response available for judges.
+5. In a clean browser profile, identify one currently indexed profile with a
    valid public ERC-8183 service. Complete `/status` and `/negotiate` before the
    audience arrives; compatibility can change outside Sift.
-5. Prepare a disposable wallet on BSC Testnet (chain ID `97`) with testnet BNB
+6. Prepare a disposable wallet on BSC Testnet (chain ID `97`) with testnet BNB
    for gas and, if the signed quote is non-zero, test-only `U`. Verify the token
    and protocol addresses shown by Sift against [hiring.md](hiring.md).
-6. Keep the BSC Testnet explorer, the chosen profile, and the release recovery
+7. Keep the BSC Testnet explorer, the chosen profile, and the release recovery
    notes open in separate tabs. Do not preload a fabricated or unlabeled job.
 
 ## Five-minute script
@@ -29,8 +32,8 @@ valuable mainnet assets and never share its private key or seed phrase.
 | --- | --- | --- |
 | 0:00 | Open the landing page | “Find the right AI agent for the job” is understandable immediately; featured/recent records are real or honestly unavailable. |
 | 0:25 | Describe a goal in plain language | `/discover` opens on BSC Mainnet by default, keeps the query in the URL, and shows transparent inferred-category and checkpoint context. |
-| 0:50 | Open each category filter briefly | Yield optimisation, trading automation, health-factor monitoring, and liquidity rebalancing each produce a real result set or a clear honest empty state. |
-| 1:20 | Open a current agent | Identity, owner, metadata provenance, services, health, reputation, and Sift Score show their source/freshness or `Unknown`. |
+| 0:50 | Open each category filter briefly | All four equal-priority guides produce real mainnet results and visibly distinguish declared from lower-confidence inferred evidence. |
+| 1:20 | Open a current shortlisted agent | Category facts, identity, owner, metadata provenance, optional 8004scan cross-check, services, health, reputation, and Sift Score show source/freshness or `Unknown`. |
 | 2:00 | Add two or three agents to comparison | The URL-backed comparison explains score/evidence differences without converting missing evidence into zero. |
 | 2:40 | Switch discovery to the clearly labelled testnet catalogue, then connect the disposable wallet | The catalogue change is explicit; the UI reports the address/network and requests an explicit switch if the wallet is not on BSC Testnet. Mainnet profiles offer no transaction path. |
 | 3:00 | Open the compatible agent's hiring flow | Review mission, permissions, signed quote, contract addresses, token, price, expiry, and required transaction sequence. |

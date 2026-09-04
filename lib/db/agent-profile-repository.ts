@@ -7,30 +7,30 @@ import type {
   AgentProfileService,
   AgentReputationEvidence,
 } from "@/features/agents/model";
-import { resolveProfileCategories } from "@/features/agents/presentation";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { Database, TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
+import { mapCategoryEvidenceRecord } from "@/lib/db/category-repository";
 import { mapHealthRecord } from "@/lib/db/health-repository";
 import { mapScoreRecord } from "@/lib/db/score-repository";
-import {
-  agentCategories,
-  metadataStatuses,
-  type AgentCategory,
-  type MetadataStatus,
-} from "@/lib/db/validation";
+import { mapStored8004ScanEvidence } from "@/lib/integrations/8004scan";
+import { metadataStatuses, type MetadataStatus } from "@/lib/db/validation";
 
 type AgentRecord = TableRow<"agents">;
 type AgentHealthRecord = TableRow<"agent_health">;
 type AgentReputationRecord = TableRow<"agent_reputation">;
 type AgentServiceRecord = TableRow<"agent_services">;
 type AgentScoreRecord = TableRow<"agent_scores">;
+type CategoryEvidenceRecord = TableRow<"agent_category_evidence">;
+type ExternalEvidenceRecord = TableRow<"agent_external_evidence">;
 
 export type AgentProfileSources = Readonly<{
   findAgent(chainId: number, agentId: string): Promise<AgentRecord | null>;
+  findExternalEvidence?(agentDbId: string): Promise<ExternalEvidenceRecord | null>;
   findHealth(agentDbId: string): Promise<AgentHealthRecord | null>;
   findReputation(agentDbId: string): Promise<AgentReputationRecord | null>;
   findScore(agentDbId: string): Promise<AgentScoreRecord | null>;
+  listCategoryEvidence?(agentDbId: string): Promise<readonly CategoryEvidenceRecord[]>;
   listServices(agentDbId: string): Promise<readonly AgentServiceRecord[]>;
 }>;
 
@@ -49,10 +49,6 @@ function mapMetadataStatus(value: string): MetadataStatus {
   }
 
   return status;
-}
-
-function mapCategory(value: string | null): AgentCategory | null {
-  return agentCategories.find((candidate) => candidate === value) ?? null;
 }
 
 function mapReputation(
@@ -109,6 +105,21 @@ function createSupabaseSources(
 
       return data[0] ?? null;
     },
+    async findExternalEvidence(agentDbId) {
+      const { data, error } = await client
+        .from("agent_external_evidence")
+        .select("*")
+        .eq("agent_db_id", agentDbId)
+        .eq("provider", "8004scan")
+        .maybeSingle();
+
+      if (error) {
+        // Optional enrichment must never make the chain-indexed profile fail.
+        return null;
+      }
+
+      return data;
+    },
     async findHealth(agentDbId) {
       const { data, error } = await client
         .from("agent_health")
@@ -164,6 +175,19 @@ function createSupabaseSources(
 
       return data;
     },
+    async listCategoryEvidence(agentDbId) {
+      const { data, error } = await client
+        .from("agent_category_evidence")
+        .select("*")
+        .eq("agent_db_id", agentDbId)
+        .order("category", { ascending: true });
+
+      if (error) {
+        throw new DatabaseOperationError("list profile category evidence", error);
+      }
+
+      return data;
+    },
   };
 }
 
@@ -173,24 +197,26 @@ export function composeAgentProfile(
   healthRecord: AgentHealthRecord | null,
   reputationRecord: AgentReputationRecord | null,
   scoreRecord: AgentScoreRecord | null,
+  categoryEvidenceRecords: readonly CategoryEvidenceRecord[] = [],
+  externalEvidenceRecord: ExternalEvidenceRecord | null = null,
 ): AgentProfile {
   const services = mapServices(serviceRecords);
-  const category = mapCategory(agent.category);
-  const { categories, categorySource } = resolveProfileCategories(
-    category,
-    agent.name,
-    agent.description,
-    services,
-  );
+  const categoryEvidence = categoryEvidenceRecords.map(mapCategoryEvidenceRecord);
+  const categories = categoryEvidence.map((evidence) => evidence.category);
+  const categorySource = categoryEvidence[0]?.source ?? null;
 
   return {
     active: agent.active,
     agentId: agent.agent_id,
     agentUri: agent.agent_uri,
     categories,
+    categoryEvidence,
     categorySource,
     chainId: agent.chain_id,
     description: agent.description,
+    externalEvidence: externalEvidenceRecord
+      ? mapStored8004ScanEvidence(externalEvidenceRecord)
+      : null,
     health: healthRecord ? mapHealthRecord(healthRecord) : null,
     imageUrl: agent.image_url,
     lastSyncedAt: agent.last_synced_at,
@@ -225,12 +251,21 @@ export function createAgentProfileRepository(
         return null;
       }
 
-      const [serviceRecords, healthRecord, reputationRecord, scoreRecord] =
+      const [
+        serviceRecords,
+        healthRecord,
+        reputationRecord,
+        scoreRecord,
+        categoryEvidenceRecords,
+        externalEvidenceRecord,
+      ] =
         await Promise.all([
           sources.listServices(agent.id),
           sources.findHealth(agent.id),
           sources.findReputation(agent.id),
           sources.findScore(agent.id),
+          sources.listCategoryEvidence?.(agent.id) ?? Promise.resolve([]),
+          sources.findExternalEvidence?.(agent.id) ?? Promise.resolve(null),
         ]);
       return composeAgentProfile(
         agent,
@@ -238,6 +273,8 @@ export function createAgentProfileRepository(
         healthRecord,
         reputationRecord,
         scoreRecord,
+        categoryEvidenceRecords,
+        externalEvidenceRecord,
       );
     },
   };

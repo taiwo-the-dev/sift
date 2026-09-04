@@ -11,6 +11,8 @@ flowchart LR
   rpc["Public / free RPC\nwith fallbacks"]
   metadata["Agent registration files\nand declared services"]
   indexer["Sift Indexer\nGitHub Actions"]
+  taxonomy["Versioned category evidence\nand curated shortlist"]
+  scan["8004scan API\noptional cross-check"]
   assessment["Health + Sift Score\nGitHub Actions"]
   db[("Supabase PostgreSQL\nRLS + server-only access")]
   app["Next.js App Router\nVercel"]
@@ -22,6 +24,8 @@ flowchart LR
   testnet --> rpc --> indexer
   metadata --> indexer
   indexer --> db
+  indexer --> taxonomy --> db
+  scan -->|"bounded server-side cache"| db
   metadata --> assessment
   db <--> assessment
   browser <--> app
@@ -42,6 +46,12 @@ flowchart LR
 - The health and score workflow checks eligible public declarations in bounded
   batches, records the observation source/time, and calculates a versioned Sift
   Score only when enough current evidence exists.
+- The shared M14 taxonomy classifies validated metadata during indexing and a
+  resumable historical backfill. Discovery reads materialized evidence instead
+  of rescanning the catalogue or duplicating keyword rules in UI code.
+- 8004scan is an optional validation/enrichment boundary for the 12-agent
+  shortlist. Its key, requests, raw cache, normalized evidence and failures
+  remain server-side. Sift discovery never depends on that service.
 - Next.js Server Components and server route handlers read through typed,
   server-only repositories. `SUPABASE_SECRET_KEY` never enters the browser.
 - The browser owns wallet interaction. Sift requests each BSC Testnet action

@@ -6,6 +6,8 @@ import type { Json } from "@/lib/db/database.types";
 import type { MetadataStatus } from "@/lib/db/validation";
 import type { HealthOutcome } from "@/features/health/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
+import type { CategoryEvidence } from "@/features/categories/taxonomy";
+import type { ScanCrossCheck } from "@/lib/integrations/8004scan";
 
 export type AgentProfileService = Readonly<{
   endpoint: string | null;
@@ -43,9 +45,11 @@ export type AgentProfile = Readonly<{
   agentId: string;
   agentUri: string | null;
   categories: readonly DiscoveryCategory[];
+  categoryEvidence: readonly CategoryEvidence[];
   categorySource: CategorySource;
   chainId: number;
   description: string | null;
+  externalEvidence: ScanCrossCheck | null;
   health: AgentHealthEvidence | null;
   imageUrl: string | null;
   lastSyncedAt: string | null;

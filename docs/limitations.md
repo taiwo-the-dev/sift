@@ -2,17 +2,15 @@
 
 These limitations are product boundaries, not placeholder claims.
 
-- The M13 application and database migration support independent BSC mainnet
-  and testnet catalogues, but the hosted mainnet catalogue currently contains
-  zero identities. Historical bootstrap is blocked on a reviewed,
-  archive-capable free-tier BSC RPC URL.
-- The hosted Supabase project was paused during M13 validation, so the additive
-  M13 migration is not deployed. M13 routes that use its network-scoped RPC
-  remain unavailable until the owner unpauses the project and the GitHub
-  integration applies the migration.
-- A passing recent-block RPC smoke test does not prove that a provider can read
-  registry logs back to deployment block `79,027,268`. The operator report and
-  caught-up checkpoint are the release evidence.
+- The BSC Mainnet bootstrap completed on 2026-09-03 with 331,747 indexed
+  identities and checkpoint/confirmed head `119684064`. That is a timestamped
+  observation, not a promise that the catalogue stays current without the
+  incremental workflow.
+- The M14 migration, category backfill, validated shortlist, stored 8004scan
+  sample, and hosted coverage report are not deployed yet. The current local
+  Supabase CLI identity lacks permission to link the active hosted project.
+- 8004scan may omit fields, disagree, rate-limit, or become unavailable. It is
+  optional validation only; Sift's own indexed identity remains the core.
 - ERC-8004 registration proves an identity event, not endpoint health,
   reputation, work quality, or ERC-8183 compatibility. Missing evidence remains
   unavailable or `Unknown`.

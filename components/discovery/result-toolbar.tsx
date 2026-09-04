@@ -8,13 +8,22 @@ import {
 } from "@/features/discovery/model";
 
 interface ResultToolbarProps {
+  hasMoreResults: boolean;
   query: DiscoveryQuery;
-  totalCount: number;
+  resultCount: number;
+  totalCount: number | null;
 }
 
 const countFormatter = new Intl.NumberFormat("en");
 
-export function ResultToolbar({ query, totalCount }: ResultToolbarProps) {
+export function ResultToolbar({
+  hasMoreResults,
+  query,
+  resultCount,
+  totalCount,
+}: ResultToolbarProps) {
+  const displayedCount = totalCount ?? resultCount;
+
   return (
     <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
       <div aria-live="polite" aria-atomic="true">
@@ -22,8 +31,14 @@ export function ResultToolbar({ query, totalCount }: ResultToolbarProps) {
           Indexed catalogue
         </p>
         <p className="mt-1 text-lg font-semibold text-foreground">
-          {countFormatter.format(totalCount)} {totalCount === 1 ? "agent" : "agents"}
+          {countFormatter.format(displayedCount)} {displayedCount === 1 ? "agent" : "agents"}
+          {totalCount === null ? " on this page" : ""}
         </p>
+        {totalCount === null && hasMoreResults ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            More matching agents are available.
+          </p>
+        ) : null}
       </div>
 
       <Form action="/discover" className="flex flex-wrap items-end gap-2">

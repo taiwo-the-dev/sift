@@ -16,6 +16,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_category_evidence: {
+        Row: {
+          agent_db_id: string;
+          category: string;
+          confidence: number;
+          created_at: string;
+          evidence: Json;
+          facts: Json;
+          observed_at: string;
+          rule_version: string;
+          source: string;
+          updated_at: string;
+        };
+        Insert: {
+          agent_db_id: string;
+          category: string;
+          confidence: number;
+          created_at?: string;
+          evidence?: Json;
+          facts?: Json;
+          observed_at: string;
+          rule_version: string;
+          source: string;
+          updated_at?: string;
+        };
+        Update: {
+          agent_db_id?: string;
+          category?: string;
+          confidence?: number;
+          created_at?: string;
+          evidence?: Json;
+          facts?: Json;
+          observed_at?: string;
+          rule_version?: string;
+          source?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agent_category_evidence_agent_db_id_fkey";
+            columns: ["agent_db_id"];
+            isOneToOne: false;
+            referencedRelation: "agents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      agent_category_shortlist: {
+        Row: {
+          agent_db_id: string;
+          category: string;
+          created_at: string;
+          rationale: string;
+          selected_at: string;
+          selection_version: string;
+          shortlist_rank: number;
+          updated_at: string;
+        };
+        Insert: {
+          agent_db_id: string;
+          category: string;
+          created_at?: string;
+          rationale: string;
+          selected_at: string;
+          selection_version: string;
+          shortlist_rank: number;
+          updated_at?: string;
+        };
+        Update: {
+          agent_db_id?: string;
+          category?: string;
+          created_at?: string;
+          rationale?: string;
+          selected_at?: string;
+          selection_version?: string;
+          shortlist_rank?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agent_category_shortlist_agent_db_id_fkey";
+            columns: ["agent_db_id"];
+            isOneToOne: false;
+            referencedRelation: "agents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      agent_external_evidence: {
+        Row: {
+          agent_db_id: string;
+          availability: string;
+          conflict_fields: string[];
+          created_at: string;
+          expires_at: string;
+          normalized_evidence: Json;
+          observed_at: string;
+          provider: string;
+          raw_payload: Json | null;
+          source_reference: string;
+          updated_at: string;
+        };
+        Insert: {
+          agent_db_id: string;
+          availability: string;
+          conflict_fields?: string[];
+          created_at?: string;
+          expires_at: string;
+          normalized_evidence?: Json;
+          observed_at: string;
+          provider: string;
+          raw_payload?: Json | null;
+          source_reference: string;
+          updated_at?: string;
+        };
+        Update: {
+          agent_db_id?: string;
+          availability?: string;
+          conflict_fields?: string[];
+          created_at?: string;
+          expires_at?: string;
+          normalized_evidence?: Json;
+          observed_at?: string;
+          provider?: string;
+          raw_payload?: Json | null;
+          source_reference?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agent_external_evidence_agent_db_id_fkey";
+            columns: ["agent_db_id"];
+            isOneToOne: false;
+            referencedRelation: "agents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       agent_health: {
         Row: {
           agent_db_id: string;
@@ -606,6 +744,40 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      category_classification_candidates: {
+        Args: {
+          p_after?: string | null;
+          p_chain_id?: number;
+          p_limit?: number;
+        };
+        Returns: {
+          agent_db_id: string;
+          agent_id: string;
+          declared_category: string | null;
+          description: string | null;
+          source_observed_at: string;
+          name: string | null;
+          services: Json;
+        }[];
+      };
+      category_coverage_report: {
+        Args: { p_chain_id?: number };
+        Returns: {
+          activation_available: number;
+          category: string;
+          external_cross_checks: number;
+          inventory: number;
+          latest_observed_at: string | null;
+          shortlist_count: number;
+          valid_metadata: number;
+          with_endpoint: number;
+          with_health: number;
+          with_image: number;
+          with_reputation: number;
+          with_score: number;
+          with_services: number;
+        }[];
+      };
       featured_agent_candidates: {
         Args: {
           p_chain_ids?: number[];
@@ -645,6 +817,17 @@ export type Database = {
         };
         Returns: undefined;
       };
+      replace_agent_category_evidence: {
+        Args: {
+          p_agent_ids: string[];
+          p_records: Json;
+        };
+        Returns: undefined;
+      };
+      replace_agent_category_shortlist: {
+        Args: { p_records: Json };
+        Returns: undefined;
+      };
       score_recalculation_candidates: {
         Args: {
           p_limit?: number;
@@ -666,9 +849,11 @@ export type Database = {
           active: boolean | null;
           agent_db_id: string;
           agent_id: string;
+          category_evidence: Json;
           category_source: string | null;
           chain_id: number;
           description: string | null;
+          has_more: boolean;
           image_url: string | null;
           last_synced_at: string | null;
           metadata_status: string;
@@ -681,7 +866,6 @@ export type Database = {
           resolved_categories: string[];
           result_page: number;
           services: Json;
-          total_count: number;
           x402_supported: boolean | null;
         }[];
       };

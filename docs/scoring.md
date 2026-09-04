@@ -115,3 +115,17 @@ Deploy `20260822111500_add_metadata_verification_time.sql` first if it is not al
 5. confirm unsupported endpoints remain `Unknown` and have no successful probe history.
 
 Do not run assessment commands against a project that has not applied the M6 migration. Never add synthetic rows to make a score or Featured state appear populated.
+
+## M14 shortlist coverage
+
+Category membership and its `0.65`/`1.0` classification confidence are not
+inputs to Sift Score v1. They describe how validated metadata was mapped, not
+whether an agent performs well. M14 does not change score weights or the
+formula version.
+
+The bounded health queue prioritizes validated M14 shortlist members only when
+they also satisfy the unchanged safe endpoint criteria. A later score run
+recalculates records whose real source inputs changed. Missing health,
+reputation, or job evidence remains unavailable and may keep a score withheld.
+The UI continues to show formula version, confidence, missing components,
+source freshness, and calculation time.
