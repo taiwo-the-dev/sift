@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { deriveCatalogueSyncState } from "../../features/catalogue/status";
+import { createCatalogueStatusRepository } from "../../lib/db/catalogue-status-repository";
 
 const now = new Date("2026-08-25T12:00:00.000Z");
 
@@ -44,5 +45,21 @@ describe("catalogue network status", () => {
       ),
       { isStale: true, phase: "current" },
     );
+  });
+
+  it("keeps planned inventory counts explicitly labelled as estimates", async () => {
+    const statuses = await createCatalogueStatusRepository({
+      async observe() {
+        return {
+          agentCount: 331_000,
+          agentCountIsEstimate: true,
+          checkpoint: null,
+          latestAgentSyncAt: null,
+        };
+      },
+    }).list(now);
+
+    assert.equal(statuses.length, 2);
+    assert.ok(statuses.every((status) => status.agentCountIsEstimate));
   });
 });

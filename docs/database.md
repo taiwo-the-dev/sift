@@ -176,6 +176,13 @@ backfill, curation, enrichment, health/score and reporting sequence in
 profile and comparison repositories intentionally expect the protected M14
 tables to exist.
 
+`20260904150000_optimize_catalogue_status.sql` adds the composite partial index
+used to read the latest per-network agent synchronization time. The discovery
+status panel uses a clearly labelled PostgreSQL planned inventory estimate;
+exact agent rows, registry checkpoints, and category evidence are unchanged.
+This informational estimate prevents a full-table count from blocking each
+request on the hosted free tier.
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.

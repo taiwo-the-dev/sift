@@ -168,7 +168,7 @@ stored 8004scan Pro sample, hosted browser matrix, and timestamped hosted report
 remain external completion gates. No fabricated substitute was added.
 
 The repository was revalidated on 2026-09-04: strict TypeScript, ESLint, all
-199 unit/integration tests, the 8 wallet rendered-state tests, and the Next.js
+201 unit/integration tests, the 8 wallet rendered-state tests, and the Next.js
 production build passed. A deployment retry against the project configured in
 `.env.local` was rejected by Supabase because the authenticated CLI account
 lacks project privileges. The application secret key cannot deploy database
@@ -180,6 +180,13 @@ confirmed that the M14 tables and RPCs are absent. The pending migration now
 keeps catalogue filtering to narrow indexed identifiers before loading full
 page data, so it replaces the legacy request-time whole-catalogue classification
 that times out at the current 331,747-agent mainnet scale.
+
+After the M14 migration reached the hosted database, the remaining discovery
+failure was traced to an unrelated exact inventory count in the network-status
+panel. Catalogue status now uses an explicitly labelled PostgreSQL planned
+estimate for that informational count, while checkpoint and agent records stay
+exact. A follow-up additive index bounds the latest-sync lookup; discovery no
+longer blocks on a full-table count.
 
 ## Codex Completion Report
 

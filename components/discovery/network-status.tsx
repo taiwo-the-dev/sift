@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface NetworkStatusProps {
   query: DiscoveryQuery;
-  statuses: readonly CatalogueNetworkStatus[];
+  statuses: readonly CatalogueNetworkStatus[] | null;
 }
 
 const timestampFormatter = new Intl.DateTimeFormat("en", {
@@ -41,6 +41,28 @@ function describeState(status: CatalogueNetworkStatus): string {
 }
 
 export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
+  if (!statuses) {
+    return (
+      <div
+        className="mb-6 flex items-start gap-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.045] px-4 py-4"
+        role="status"
+      >
+        <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-amber-400/20 bg-amber-400/8 text-amber-200">
+          <CircleAlert className="size-4" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Network status is temporarily unavailable
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Agent results below remain source-backed. Refresh later to see the
+            latest index checkpoint.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const visible = statuses.filter((status) =>
     query.network === "all"
       ? true
@@ -85,7 +107,8 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
                   </span>
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {describeState(status)} · {status.agentCount.toLocaleString("en")} source-backed identities
+                  {describeState(status)} · {status.agentCountIsEstimate ? "approximately " : ""}
+                  {status.agentCount.toLocaleString("en")} source-backed identities
                   {status.checkpoint === null
                     ? ""
                     : ` · checkpoint ${status.checkpoint.toLocaleString("en")}`}
@@ -96,7 +119,9 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
               </div>
             </div>
 
-            {status.network === "bsc-mainnet" && status.agentCount === 0 ? (
+            {status.network === "bsc-mainnet" &&
+            !status.agentCountIsEstimate &&
+            status.agentCount === 0 ? (
               <Link
                 href={buildDiscoveryHref(query, {
                   network: "bsc-testnet",

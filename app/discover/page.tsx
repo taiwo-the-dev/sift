@@ -28,11 +28,23 @@ interface DiscoverPageProps {
   searchParams: Promise<DiscoverySearchParams>;
 }
 
+async function loadCatalogueStatuses() {
+  try {
+    return await createCatalogueStatusRepository().list();
+  } catch (error) {
+    console.error(
+      "Sift could not read catalogue network status.",
+      error instanceof Error ? error.message : "Unknown database error.",
+    );
+    return null;
+  }
+}
+
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
   const query = parseDiscoverySearchParams(await searchParams);
   const [result, networkStatuses] = await Promise.all([
     createDiscoveryRepository().search(query),
-    createCatalogueStatusRepository().list(),
+    loadCatalogueStatuses(),
   ]);
 
   return (

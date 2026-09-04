@@ -6,6 +6,7 @@ export type CatalogueSyncPhase = "current" | "partial" | "unavailable";
 
 export type CatalogueNetworkStatus = Readonly<{
   agentCount: number;
+  agentCountIsEstimate: boolean;
   chainId: number;
   checkpoint: number | null;
   checkpointUpdatedAt: string | null;

@@ -11,6 +11,7 @@ import { DatabaseOperationError } from "@/lib/db/errors";
 
 type NetworkObservation = Readonly<{
   agentCount: number;
+  agentCountIsEstimate: boolean;
   checkpoint: TableRow<"sync_state"> | null;
   latestAgentSyncAt: string | null;
 }>;
@@ -37,7 +38,7 @@ function createSupabaseSources(
       const [countResult, latestResult, checkpointResult] = await Promise.all([
         client
           .from("agents")
-          .select("id", { count: "exact", head: true })
+          .select("id", { count: "estimated", head: true })
           .eq("chain_id", chainId)
           .eq("registry_address", normalizedRegistry),
         client
@@ -66,6 +67,7 @@ function createSupabaseSources(
 
       return {
         agentCount: countResult.count,
+        agentCountIsEstimate: true,
         checkpoint: checkpointResult.data,
         latestAgentSyncAt: latestResult.data?.last_synced_at ?? null,
       };
@@ -100,6 +102,7 @@ export function createCatalogueStatusRepository(
 
           return {
             agentCount: observation.agentCount,
+            agentCountIsEstimate: observation.agentCountIsEstimate,
             chainId: definition.chainId,
             checkpoint: observation.checkpoint?.last_synced_block ?? null,
             checkpointUpdatedAt: observation.checkpoint?.updated_at ?? null,
