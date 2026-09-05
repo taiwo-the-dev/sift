@@ -22,6 +22,7 @@ local result is not evidence that a production wallet transaction succeeded.
 | Latest stored health / score evidence | 2026-08-22 20:38:19 UTC / 2026-08-22 20:38:22 UTC |
 | Live RPC smoke | Passed at confirmed BSC Testnet head `126972263` on 2026-08-24 |
 | BSC Testnet demo transaction | Not recorded |
+| M15 activation proof | Blocked; category representatives and human-approved job are not recorded |
 | Validation date | 2026-08-24 (local release candidate) |
 
 The lockfile in this M12 candidate has been regenerated for npm 10/11 clean
@@ -70,6 +71,8 @@ candidate is committed, pushed, and both scheduled jobs pass.
 
 ## Wallet and job path
 
+- [ ] `npm run verify:activation` passes for source-backed representatives in all four categories using a genuine Studio project.
+- [ ] Official Agent Studio CLI `0.0.13` and SDK `0.5.5` evidence is recorded without adding either tool to the production bundle.
 - [ ] A fresh disposable wallet connects on BSC Testnet chain ID `97`.
 - [ ] Wrong-network switch approval and rejection behave safely.
 - [ ] A compatible agent returns a valid owner-bound status and signed quote.

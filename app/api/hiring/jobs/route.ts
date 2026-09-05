@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
+import { assertActivationBinding } from "@/features/hiring/binding";
 import { resolveHiringCompatibility } from "@/features/hiring/compatibility";
 import {
   isHiringIdempotencyKey,
@@ -99,6 +100,16 @@ export async function POST(request: Request): Promise<Response> {
       platformFeeBasisPoints: runtimeState.platformFeeBasisPoints,
       provider: getAddress(profile.ownerAddress),
       publicClient,
+    });
+    assertActivationBinding({
+      agent: {
+        chainId: identity.chainId,
+        ownerAddress: getAddress(profile.ownerAddress),
+      },
+      mission,
+      now: runtimeState.blockTimestamp * 1_000,
+      quote,
+      walletAddress,
     });
     const result = await createHiringIntent({
       agentId: identity.agentId,

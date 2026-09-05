@@ -17,6 +17,9 @@ BSC Mainnet catalogue reached confirmed head `119684064` with 331,747 real
 indexed identities on 2026-09-03. M14's repository implementation is complete
 but remains blocked on deploying its hosted migration, running the historical
 category backfill, and recording the hosted coverage/8004scan report.
+M15's compatibility, recovery, tooling, and evidence foundation is implemented,
+but the milestone remains blocked until genuine category representatives and a
+human-approved testnet activation are recorded.
 
 **Live application:** not deployed or recorded yet. Do not replace this status
 with a URL until the exact Vercel deployment passes the
@@ -89,7 +92,7 @@ verification.
 
 ## Local setup
 
-Use Node.js 20.9 or newer and npm 10 or 11. The hosted Supabase workflow does
+Use Node.js 22 or newer and npm 10 or 11. The hosted Supabase workflow does
 not require Docker or a local Supabase stack.
 
 ```bash
@@ -153,6 +156,8 @@ npm run classify:categories # one-time resumable mainnet category backfill
 npm run curate:categories   # validate and persist 3 real candidates per category
 npm run enrich:categories   # bounded cached 8004scan cross-check
 npm run report:categories   # timestamped per-category evidence coverage
+npm run studio:scan         # read-only Agent Studio project detection
+npm run verify:activation   # real category/Studio/live-service readiness proof
 ```
 
 Production scheduling uses `.github/workflows/sync-agents.yml` every two hours
@@ -246,6 +251,7 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Sift Indexer](docs/indexer.md)
 - [Sift Score](docs/scoring.md)
 - [M14 category evidence](docs/categories.md)
+- [M15 activation proof](docs/activation-proof.md)
 - [Comparison](docs/comparison.md)
 - [Wallet](docs/wallet.md)
 - [Hiring](docs/hiring.md)

@@ -64,6 +64,23 @@ export function describeTransactionStep(step: HiringTransactionStep): string {
   return descriptions[step];
 }
 
+export function describeTransactionEffect(step: HiringTransactionStep): string {
+  const effects: Readonly<Record<HiringTransactionStep, string>> = {
+    approve_token:
+      "Allows only the signed U amount to be spent by the verified commerce contract.",
+    create_job:
+      "Creates a public on-chain job naming the provider, evaluator, expiry, and signed terms.",
+    fund_job:
+      "Moves the signed U amount into the job escrow. Funding does not prove delivery.",
+    register_job:
+      "Attaches Sift's verified evaluation policy to this public job.",
+    set_budget:
+      "Records the signed U budget on the public job before funding.",
+  };
+
+  return effects[step];
+}
+
 export function canRestartHiringIntent(
   intent: Pick<
     HiringIntentSnapshot,

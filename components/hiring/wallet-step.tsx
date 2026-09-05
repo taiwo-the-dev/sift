@@ -41,11 +41,14 @@ import {
   HIRING_CHAIN_ID,
   HIRING_CONFIRMATIONS,
   paymentTokenAbi,
+  buildTestnetAddressHref,
   buildTestnetTransactionHref,
+  transactionDestination,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
 import {
   canRestartHiringIntent,
+  describeTransactionEffect,
   describeTransactionStep,
 } from "@/features/hiring/state";
 import { shortenWalletAddress } from "@/features/wallet/presentation";
@@ -441,6 +444,12 @@ export function WalletStep({
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Connected wallet must remain {shortenWalletAddress(intent.walletAddress)} on BSC Testnet.
             </p>
+            {currentStep ? (
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
+                {describeTransactionEffect(currentStep)} Your wallet will show
+                the testnet BNB gas estimate before you approve it.
+              </p>
+            ) : null}
           </div>
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
             <ShieldCheck className="size-3.5 text-brand" aria-hidden="true" />
@@ -458,6 +467,19 @@ export function WalletStep({
             {currentTransaction.hash}
             <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
           </a>
+        ) : null}
+        {currentStep ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Contract: {" "}
+            <a
+              className="break-all text-foreground underline decoration-border underline-offset-4 hover:text-brand"
+              href={buildTestnetAddressHref(transactionDestination(currentStep))}
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              {transactionDestination(currentStep)}
+            </a>
+          </p>
         ) : null}
       </div>
 

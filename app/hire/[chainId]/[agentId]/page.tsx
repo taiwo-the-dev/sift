@@ -1,4 +1,4 @@
-import { CircleAlert, ExternalLink } from "lucide-react";
+import { CircleAlert, CircleCheck, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,8 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
 import {
-  hasErc8183Declaration,
-  resolveHiringCompatibility,
+  assessHiringCompatibility,
   toHiringAgentSummary,
 } from "@/features/hiring/compatibility";
 import { HIRING_NETWORK_NAME } from "@/features/hiring/protocol";
@@ -48,7 +47,17 @@ export default async function HirePage({ params }: HirePageProps) {
 
   if (!profile) notFound();
 
-  const compatibility = resolveHiringCompatibility(profile);
+  const compatibility = assessHiringCompatibility(profile);
+  const alternativeParams = new URLSearchParams({
+    metadata: "valid",
+    network: "bsc-testnet",
+    q: "ERC-8183",
+  });
+  const firstCategory = profile.categories[0];
+
+  if (firstCategory) {
+    alternativeParams.set("category", firstCategory);
+  }
 
   return (
     <div className="flex-1 bg-background">
@@ -68,7 +77,7 @@ export default async function HirePage({ params }: HirePageProps) {
       </div>
 
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {compatibility ? (
+        {compatibility.compatibility ? (
           <HiringFlow agent={toHiringAgentSummary(profile)} />
         ) : (
           <section className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-7 text-center sm:p-10">
@@ -76,21 +85,37 @@ export default async function HirePage({ params }: HirePageProps) {
               <CircleAlert className="size-6" aria-hidden="true" />
             </div>
             <h2 className="mt-5 text-2xl font-semibold text-foreground">
-              This agent is not currently hireable through Sift.
+              {compatibility.title}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {hasErc8183Declaration(profile.services)
-                ? "Its indexed ERC-8183 declaration does not expose a safe public HTTPS endpoint, or its identity metadata is not currently valid."
-                : "No indexed ERC-8183 commerce service is declared for this agent."}
-              {" "}Sift will not invent a quote, provider, or transaction.
+              {compatibility.explanation} Sift will not invent a quote,
+              provider, or transaction.
             </p>
+            <ul className="mx-auto mt-6 max-w-lg space-y-2 text-left">
+              {compatibility.checks.map((item) => (
+                <li
+                  key={item.key}
+                  className="flex items-start gap-2 rounded-lg border border-border bg-background/45 px-3 py-2.5 text-xs leading-5 text-muted-foreground"
+                >
+                  {item.status === "pass" ? (
+                    <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
+                  ) : (
+                    <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden="true" />
+                  )}
+                  <span>
+                    <strong className="font-semibold text-foreground">{item.label}:</strong>{" "}
+                    {item.detail}
+                  </span>
+                </li>
+              ))}
+            </ul>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href={`/agents/${profile.chainId}/${profile.agentId}?tab=services`} className={cn(buttonVariants({ size: "lg" }))}>
                 Review declared services
                 <ExternalLink className="size-4" aria-hidden="true" />
               </Link>
-              <Link href="/discover" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-                Find another agent
+              <Link href={`/discover?${alternativeParams.toString()}`} className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+                Find declared ERC-8183 alternatives
               </Link>
             </div>
           </section>

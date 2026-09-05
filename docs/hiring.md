@@ -19,13 +19,25 @@ Sift supports this deployment only:
 
 The official deployment source of truth is `apex-contracts/scripts/addresses.ts`. Sift additionally reads live contract bytecode, token, router/commerce relationships, policy whitelist, pause flags, platform fee, token metadata, dispute window, and latest block time before accepting a quote.
 
+Server-side hiring reads use only `BNB_TESTNET_RPC_PRIMARY` and its numbered
+testnet fallbacks, followed by public BSC Testnet endpoints. They never reuse
+the generic `BNB_RPC_*` indexer settings, which may intentionally point to
+mainnet during catalogue operations.
+
 ## Compatibility and negotiation
+
+The durable M15 compatibility and activation evidence contract is recorded in
+[activation-proof.md](activation-proof.md). The UI now reports the first exact
+static compatibility failure rather than reducing every unsupported identity to
+one generic message.
 
 An indexed agent is shown as hireable only when all of these are true:
 
 - it is on chain `97`, has currently valid indexed metadata, and is not declared inactive;
 - its indexed owner is a valid EVM address;
 - it declares an `ERC-8183` service at a public HTTPS endpoint without credentials, query parameters, a private host, or a reserved placeholder hostname;
+- a declared service version is unversioned or within the reviewed `0.x`/`1.x`
+  range; unknown future major versions fail closed;
 - its `/status` response exactly matches the indexed owner and verified deployment (an omitted legacy `decimals` field is resolved from the live verified token contract, while a conflicting declared value is rejected);
 - its `/negotiate` response accepts the normalized terms, targets the verified deployment and token, remains inside the user's maximum spend, and contains a provider signature that Sift verifies as EIP-191 or ERC-1271.
 
@@ -55,6 +67,12 @@ to the populated mission form for a fresh quote. Once a transaction has been
 submitted or an on-chain job ID exists, restart is disabled and the original
 wallet is required; this prevents silently abandoning or duplicating an
 on-chain job.
+
+The non-secret mission fields are also kept in bounded local browser storage so
+a reload does not erase work. Quotes, signatures, approvals, resume
+capabilities, wallet sessions, and transactions are not stored in that draft.
+A wallet change clears a quote that was requested while another wallet was
+connected and requires a fresh review.
 
 ## Testnet demo prerequisites
 

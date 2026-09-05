@@ -31,6 +31,8 @@
     "enrich:categories": "node --conditions=react-server --import tsx scripts/enrich-category-shortlist.ts",
     "report:categories": "node --conditions=react-server --import tsx scripts/report-category-coverage.ts",
     "release:smoke": "node --import tsx scripts/verify-release.ts",
+    "studio:scan": "bag scan",
+    "verify:activation": "node --conditions=react-server --import tsx scripts/verify-agent-studio-activation.ts",
     "db:link": "supabase link",
     "db:migrations": "supabase migration list --linked",
     "db:push:dry-run": "supabase db push --linked --dry-run",
@@ -58,6 +60,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@bnbagent/sdk": "0.5.5",
+    "@bnbagent/studio-cli": "0.0.13",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
@@ -70,6 +74,6 @@
     "typescript": "5.9.3"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.0.0"
   }
 }

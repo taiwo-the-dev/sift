@@ -11,6 +11,7 @@ import { formatDuration } from "@/features/hiring/review";
 interface MissionStepProps {
   error: string | null;
   mission: HiringMissionInput;
+  notice?: string | null;
   onChange: (mission: HiringMissionInput) => void;
   onSubmit: () => void;
   pending: boolean;
@@ -22,6 +23,7 @@ const fieldClassName =
 export function MissionStep({
   error,
   mission,
+  notice,
   onChange,
   onSubmit,
   pending,
@@ -136,6 +138,12 @@ export function MissionStep({
         instructions in the mission. The signed terms become public blockchain data.
       </div>
 
+      {notice ? (
+        <p aria-live="polite" className="rounded-xl border border-sky-400/20 bg-sky-400/7 px-4 py-3 text-sm leading-6 text-sky-100">
+          {notice}
+        </p>
+      ) : null}
+
       {error ? (
         <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/8 px-4 py-3 text-sm text-red-200">
           {error}
@@ -160,4 +168,3 @@ export function MissionStep({
     </form>
   );
 }
-

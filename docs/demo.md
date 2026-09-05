@@ -25,6 +25,9 @@ valuable mainnet assets and never share its private key or seed phrase.
    and protocol addresses shown by Sift against [hiring.md](hiring.md).
 7. Keep the BSC Testnet explorer, the chosen profile, and the release recovery
    notes open in separate tabs. Do not preload a fabricated or unlabeled job.
+8. Complete the read-only Agent Studio/SDK readiness command and the evidence
+   record in [activation-proof.md](activation-proof.md). A static declaration
+   that fails live status or quote validation is not a demo fallback.
 
 ## Five-minute script
 

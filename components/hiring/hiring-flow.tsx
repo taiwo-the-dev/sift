@@ -19,9 +19,17 @@ import {
   requestHiringQuote,
 } from "@/features/hiring/client-api";
 import {
+  assertActivationBinding,
+  quoteRequiresRefreshForWallet,
+} from "@/features/hiring/binding";
+import {
   clearHiringResume,
+  clearHiringDraft,
+  hiringDraftStorageKey,
   hiringResumeStorageKey,
+  readHiringDraft,
   readHiringResume,
+  writeHiringDraft,
   writeHiringResume,
   type SavedHiringResume,
 } from "@/features/hiring/client-storage";
@@ -50,16 +58,28 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
   const [step, setStep] = useState<HiringFlowStep>("mission");
   const [mission, setMission] = useState<HiringMissionInput>(initialMission);
   const [quote, setQuote] = useState<HiringQuote | null>(null);
+  const [quoteWallet, setQuoteWallet] = useState<string | null>(null);
   const [intent, setIntent] = useState<HiringIntentSnapshot | null>(null);
   const [resume, setResume] = useState<SavedHiringResume | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(true);
   const storageKey = hiringResumeStorageKey(agent.chainId, agent.agentId);
+  const draftKey = hiringDraftStorageKey(agent.chainId, agent.agentId);
 
   useEffect(() => {
     let active = true;
+    const draft = readHiringDraft(draftKey);
     const saved = readHiringResume(storageKey);
+
+    if (draft) {
+      queueMicrotask(() => {
+        if (!active) return;
+        setMission(draft.mission);
+        setRecoveryNotice("Your saved mission was restored on this device. No quote, signature, approval, or wallet session was reused.");
+      });
+    }
 
     if (!saved) {
       queueMicrotask(() => {
@@ -95,11 +115,18 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     return () => {
       active = false;
     };
-  }, [storageKey]);
+  }, [draftKey, storageKey]);
+
+  useEffect(() => {
+    if (!restoring) {
+      writeHiringDraft(draftKey, mission);
+    }
+  }, [draftKey, mission, restoring]);
 
   async function negotiate(): Promise<void> {
     setPending(true);
     setError(null);
+    setRecoveryNotice(null);
 
     try {
       const normalized = parseHiringMission(mission);
@@ -109,6 +136,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       );
       setMission(normalized);
       setQuote(nextQuote);
+      setQuoteWallet(account.address?.toLowerCase() ?? null);
       setStep("permissions");
     } catch (caught) {
       setError(
@@ -124,6 +152,16 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
   }
 
   async function createIntent(): Promise<void> {
+    const connectedWallet = account.address?.toLowerCase() ?? null;
+
+    if (quote && quoteRequiresRefreshForWallet(quoteWallet, connectedWallet)) {
+      setQuote(null);
+      setQuoteWallet(null);
+      setStep("mission");
+      setRecoveryNotice("Your wallet changed. Your mission was kept, but the previous quote was cleared so the new wallet starts from a fresh review.");
+      return;
+    }
+
     if (!quote || !account.address || account.chainId !== HIRING_CHAIN_ID) {
       return;
     }
@@ -132,6 +170,12 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     setError(null);
 
     try {
+      assertActivationBinding({
+        agent,
+        mission,
+        quote,
+        walletAddress: account.address,
+      });
       const saved: SavedHiringResume = {
         id: "",
         idempotencyKey: crypto.randomUUID(),
@@ -169,6 +213,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
   function updateIntent(snapshot: HiringIntentSnapshot): void {
     setIntent(snapshot);
     if (snapshot.status === "confirmed") {
+      clearHiringDraft(draftKey);
       setStep("confirmation");
     }
   }
@@ -178,7 +223,9 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     setIntent(null);
     setResume(null);
     setQuote(null);
+    setQuoteWallet(null);
     setError(null);
+    setRecoveryNotice("Your mission was kept. Request a fresh signed quote before continuing with the connected wallet.");
     setStep("mission");
   }
 
@@ -203,6 +250,12 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Agent profile
         </Link>
+        <Link
+          href="/discover?network=bsc-testnet&q=ERC-8183&metadata=valid"
+          className="ml-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Replace agent
+        </Link>
         <div className="mt-6 flex items-center gap-3">
           <AgentAvatar
             agentId={agent.agentId}
@@ -217,10 +270,11 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/7 p-3">
           <p className="flex items-center gap-2 text-xs font-semibold text-emerald-200">
             <BadgeCheck className="size-3.5" aria-hidden="true" />
-            Compatible service verified
+            Compatible declaration found
           </p>
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            Indexed ERC-8183 declaration with a public HTTPS negotiation endpoint.
+            Static identity and endpoint checks passed. Live status, provider
+            signature, contracts, and quote are verified before wallet actions.
           </p>
         </div>
         <div className="mt-5 flex items-start gap-2 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
@@ -236,6 +290,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
             <MissionStep
               error={error}
               mission={mission}
+              notice={recoveryNotice}
               onChange={setMission}
               onSubmit={negotiate}
               pending={pending}

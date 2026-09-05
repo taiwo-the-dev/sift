@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type { Address } from "viem";
 
 import {
+  assessHiringCompatibility,
   hasErc8183Declaration,
   isErc8183ServiceType,
   resolveHiringCompatibility,
@@ -45,9 +46,24 @@ describe("ERC-8183 hiring compatibility", () => {
       { ...profile, ownerAddress: null },
       { ...profile, services: [{ ...service, endpoint: "http://localhost:3000/erc8183" }] },
       { ...profile, services: [{ ...service, endpoint: "https://user:secret@agent.example/erc8183" }] },
+      { ...profile, services: [{ ...service, endpoint: "https://example.com/erc8183" }] },
+      { ...profile, services: [{ ...service, version: "2.0.0" }] },
     ]) {
       assert.equal(resolveHiringCompatibility(candidate), null);
     }
+  });
+
+  it("returns an actionable, checkable reason for an unsupported agent", () => {
+    const result = assessHiringCompatibility({
+      ...profile,
+      services: [],
+    });
+
+    assert.equal(result.code, "missing-service");
+    assert.equal(result.compatibility, null);
+    assert.equal(result.checks.at(-1)?.key, "service");
+    assert.equal(result.checks.at(-1)?.status, "fail");
+    assert.match(result.explanation, /ERC-8183/);
   });
 
   it("accepts a legacy status without decimals but rejects a conflicting declaration", () => {

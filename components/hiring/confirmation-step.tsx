@@ -1,4 +1,4 @@
-import { ArrowUpRight, BadgeCheck, ExternalLink } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, ExternalLink, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -75,6 +75,10 @@ export function ConfirmationStep({
       </dl>
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }))}>
+          Monitor in dashboard
+          <LayoutDashboard className="size-4" aria-hidden="true" />
+        </Link>
         <Link href={agent.profileHref} className={cn(buttonVariants({ size: "lg" }))}>
           View agent profile
           <ArrowUpRight className="size-4" aria-hidden="true" />
@@ -84,7 +88,8 @@ export function ConfirmationStep({
         </Link>
       </div>
       <p className="mt-4 text-xs text-muted-foreground">
-        Ongoing job management is intentionally reserved for M10.
+        The dashboard asks this same wallet for a read-only ownership signature
+        before showing its private job record.
       </p>
     </section>
   );

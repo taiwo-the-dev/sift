@@ -16,34 +16,10 @@ import {
   paymentTokenAbi,
 } from "@/features/hiring/protocol";
 import { HiringQuoteError } from "@/features/hiring/quote";
+import { resolveHiringRpcUrls } from "@/features/hiring/rpc";
 import { publicBnbChainDefinitions } from "@/lib/blockchain/chains";
 
 let cachedClient: PublicClient | undefined;
-
-function parseRpcOverride(value: string | undefined): string | null {
-  const normalized = value?.trim();
-
-  if (!normalized) {
-    return null;
-  }
-
-  try {
-    const url = new URL(normalized);
-
-    if (
-      url.protocol !== "https:" ||
-      url.username ||
-      url.password ||
-      !url.hostname
-    ) {
-      return null;
-    }
-
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
 
 export function getHiringPublicClient(): PublicClient {
   if (cachedClient) {
@@ -51,14 +27,7 @@ export function getHiringPublicClient(): PublicClient {
   }
 
   const definition = publicBnbChainDefinitions["bsc-testnet"];
-  const overrides = [
-    process.env.BNB_RPC_PRIMARY,
-    process.env.BNB_RPC_FALLBACK_1,
-    process.env.BNB_RPC_FALLBACK_2,
-  ].map(parseRpcOverride);
-  const urls = definition.publicRpcUrls.map(
-    (defaultUrl, index) => overrides[index] ?? defaultUrl,
-  );
+  const urls = resolveHiringRpcUrls(definition.publicRpcUrls, process.env);
 
   cachedClient = createPublicClient({
     chain: definition.chain,
@@ -206,4 +175,3 @@ export async function verifyErc8183Runtime(
     platformFeeBasisPoints: Number(platformFee),
   };
 }
-

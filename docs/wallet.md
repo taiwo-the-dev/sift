@@ -66,3 +66,12 @@ Use a dedicated test wallet with no valuable mainnet assets.
 9. Confirm the wallet never requests a signature, approval, balance transfer, or transaction.
 
 Automated validation covers public environment parsing, supported-chain detection, address formatting, sanitized error mapping, and rendered disconnected/connecting/reconnecting/connected/wrong-network/unavailable-provider states. A real extension or mobile wallet approval remains a manual provider-controlled step.
+
+## M15 activation boundary
+
+The activation flow always shows chain 97, the current contract, the effect of
+the next call, and that the wallet will estimate testnet BNB gas before each
+signature. Account changes keep only bounded mission text; wallet-bound quotes,
+intents, signatures, approvals, and dashboard sessions are never silently
+transferred to another account. Follow the real-wallet test and evidence record
+in [activation-proof.md](activation-proof.md).

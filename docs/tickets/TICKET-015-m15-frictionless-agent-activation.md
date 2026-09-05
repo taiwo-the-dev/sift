@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+Blocked on Genuine Studio Agent Supply and Human Testnet Evidence
 
 ## Depends On
 
@@ -127,29 +127,48 @@ rejected, pending, reloaded, and confirmed states.
 
 ## Acceptance Criteria
 
-- [ ] Compatibility rules are documented, centralized, and tested.
+- [x] Compatibility rules are documented, centralized, and tested.
 - [ ] The official Agent Studio CLI/TypeScript SDK is used meaningfully and its
       exact version/commands are recorded.
 - [ ] A genuine Agent Studio agent's ERC-8004 identity and ERC-8183 task
       interface are verified through Sift.
-- [ ] At least one real compatible representative exists for each required
+- [x] At least one real compatible representative exists for each required
       category, or M15 is reported BLOCKED with source evidence.
 - [ ] A novice can complete the full category-to-monitor path without external
       Agent Studio instructions.
 - [ ] One complete human-approved BSC Testnet activation/job has a verified
       receipt, job ID, persisted state, and dashboard recovery record.
-- [ ] The disposable wallet procedure uses official BSC Testnet network,
+- [x] The disposable wallet procedure uses official BSC Testnet network,
       faucet, and explorer resources without exposing wallet secrets.
 - [ ] Every category representative reaches an honest activation outcome.
-- [ ] Unsupported agents provide explanation and compatible alternatives rather
+- [x] Unsupported agents provide explanation and compatible alternatives rather
       than broken controls.
-- [ ] Wallet changes preserve safe form progress and invalidate wallet-bound
+- [x] Wallet changes preserve safe form progress and invalidate wallet-bound
       data correctly.
 - [ ] Rejection, wrong-network, stale, pending, reload, failure, and duplicate
       submission paths behave safely.
 - [ ] A second wallet cannot view or resume the first wallet's private job.
-- [ ] No private key, autonomous transaction, mainnet write, fabricated receipt,
+- [x] No private key, autonomous transaction, mainnet write, fabricated receipt,
       or unlimited approval is introduced.
+
+## Implementation Note — 2026-09-05
+
+The repository-side compatibility contract, SDK deployment check, read-only CLI
+verification path, recovery UX, dashboard handoff, and evidence procedure are
+implemented. The installed official versions are Agent Studio CLI `0.0.13` and
+TypeScript SDK `0.5.5`, both development-only.
+
+M15 is not complete. Sift has no supplied genuine persistent Studio project for
+the CLI identity check, no verified activatable representative for every
+required category, and no human-approved BSC Testnet receipt/job/dashboard
+record. M14 is also still blocked on its hosted evidence prerequisites. See
+`docs/activation-proof.md`; do not convert any unchecked acceptance item to a
+pass without real source evidence.
+
+The bounded 2026-09-05 hosted readiness run verified the chain-97 deployment,
+but six real yield/grid candidates returned invalid status documents and the
+search returned no health-factor or liquidity-rebalancing candidate. This is
+recorded as blocked supply rather than replaced with fabricated agents.
 
 ## Testing Requirements
 

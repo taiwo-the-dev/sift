@@ -43,3 +43,11 @@ Pause and revoke are absent. The current verified APEX/ERC-8183 client ABI does 
 5. Sign the read-only message and verify that only that wallet's jobs appear.
 6. Repeat with a second labelled wallet to verify there is no cross-wallet data exposure.
 7. Test an empty wallet, a pending/rejected job where available, manual refresh, reload persistence, and a mobile viewport.
+
+## Activation handoff
+
+The funded confirmation screen now links directly to `/dashboard`. The user
+must keep the hiring wallet connected and complete the existing read-only
+ownership signature; the local hiring resume capability is not accepted as
+dashboard authorization. Record confirmed reload, dashboard recovery, and a
+second-wallet denial in [the M15 activation evidence](activation-proof.md).
