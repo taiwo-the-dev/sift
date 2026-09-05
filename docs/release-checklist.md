@@ -34,7 +34,7 @@ candidate is committed, pushed, and both scheduled jobs pass.
 - [x] `npm ci` succeeds with npm 10, matching the failed release runner boundary.
 - [x] `npm run lint` passes.
 - [x] `npm run typecheck` passes.
-- [x] `npm test` passes (201 tests).
+- [x] `npm test` passes (203 tests).
 - [x] `npm run test:wallet-ui` passes (8 rendered-state tests).
 - [x] `npm run build` passes with the configured hosted environment.
 - [ ] `npm audit` currently reports 18 transitive vulnerabilities (17 moderate,

@@ -254,6 +254,11 @@ Application and indexer code must use the repositories in `lib/db/` rather than 
 
 Repository inputs require unavailable upstream fields to be passed explicitly as `null`, keeping missing information distinguishable from fabricated defaults.
 
+Discovery uses separate bounded database plans for general searches and for
+requests that combine category and text filters. Combined searches materialize
+the category evidence candidates first so common terms such as `trading` do not
+scan and rank the entire mainnet catalogue before applying the category.
+
 ## Validation
 
 ```bash

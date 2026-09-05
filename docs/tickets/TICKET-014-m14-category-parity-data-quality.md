@@ -183,10 +183,16 @@ that times out at the current 331,747-agent mainnet scale.
 
 After the M14 migration reached the hosted database, the remaining discovery
 failure was traced to an unrelated exact inventory count in the network-status
-panel. Catalogue status now uses an explicitly labelled PostgreSQL planned
-estimate for that informational count, while checkpoint and agent records stay
+panel. Catalogue status now uses an explicitly labelled PostgreSQL estimate
+for that informational count, while checkpoint and agent records stay
 exact. A follow-up additive index bounds the latest-sync lookup; discovery no
 longer blocks on a full-table count.
+
+Hosted browser testing on 2026-09-05 then exposed a narrower timeout when a
+high-frequency term such as `trading` was combined with category evidence. The
+follow-up search migration preserves the general indexed query and gives this
+combined request shape a category-first, bounded plan. This changes no indexed
+agent or evidence records and requires no blockchain re-index.
 
 ## Codex Completion Report
 
