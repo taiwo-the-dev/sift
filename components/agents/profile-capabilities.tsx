@@ -109,9 +109,9 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
   return (
     <ProfileSection
       id="services"
-      eyebrow="Declared interfaces"
+      eyebrow="Agent interfaces"
       title="Services"
-      description="Endpoints and capabilities published in this agent's indexed registration metadata. Health appears only where Sift has a matching persisted observation."
+      description="Services and capabilities published in the agent's ERC-8004 profile."
     >
       <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
         <div>
@@ -124,7 +124,7 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
                 Service summary
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Registration declarations, separated from observed evidence
+                Published services and latest health checks
               </p>
             </div>
           </div>
@@ -175,12 +175,12 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
                         <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground">
                           {service.version
                             ? `Version ${service.version}`
-                            : "Version not declared"}
+                            : "Version not listed"}
                         </span>
                       </div>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
                         {description ??
-                          "This service was declared in indexed agent metadata; no additional description was supplied."}
+                          "No description is available for this service."}
                       </p>
                     </div>
                   </div>
@@ -207,21 +207,21 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
 
                 <div className="border-y border-border bg-background/45 px-5 py-4 sm:px-6">
                   <p className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                    Declared endpoint
+                    Service address
                   </p>
                   {service.endpoint ? (
                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
                       <code className="min-w-0 flex-1 truncate text-xs text-foreground" title={service.endpoint}>
                         {service.endpoint}
                       </code>
-                      <CopyButton label="service endpoint" value={service.endpoint} />
+                      <CopyButton label="service address" value={service.endpoint} />
                       {endpointHref ? (
                         <a
                           href={endpointHref}
                           target="_blank"
                           rel="noreferrer noopener"
-                          aria-label="Open declared service endpoint"
-                          title="Open declared service endpoint"
+                          aria-label="Open service address"
+                          title="Open service address"
                           className="grid size-8 shrink-0 place-items-center rounded-md border border-border text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
                         >
                           <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -230,13 +230,13 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
                     </div>
                   ) : (
                     <p className="mt-2 text-sm text-muted-foreground">
-                      No endpoint was supplied.
+                      No service address was supplied.
                     </p>
                   )}
                 </div>
 
                 <dl className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-5">
-                  <ServiceFact label="Observation" value={health.status} />
+                  <ServiceFact label="Health" value={health.status} />
                   <ServiceFact label="Latency" value={health.latency} />
                   <ServiceFact
                     label="Transport"
@@ -246,10 +246,10 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
                     label="x402"
                     value={
                       profile.x402Supported === null
-                        ? "Not declared"
+                        ? "Not listed"
                         : profile.x402Supported
-                          ? "Declared supported"
-                          : "Not declared"
+                          ? "Supported"
+                          : "Not listed"
                     }
                   />
                   <ServiceFact label="Last checked" value={health.lastChecked} />
@@ -259,7 +259,7 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
                   <div className="p-5 sm:p-6">
                     <p className="inline-flex items-center gap-2 text-[0.68rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                       <Braces className="size-3.5 text-brand" aria-hidden="true" />
-                      Declared capabilities
+                      Capabilities
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {serviceCapabilities.map((capability) => (
@@ -281,11 +281,10 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
         <div className="mt-5 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
           <RadioTower className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
           <p className="mt-3 text-sm font-semibold text-foreground">
-            No service declarations available
+            No services listed
           </p>
           <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-muted-foreground">
-            The indexed identity does not currently expose a normalized service
-            declaration.
+            This agent has not published a supported service.
           </p>
         </div>
       )}
@@ -297,11 +296,10 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
           </span>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              Capability index
+              Capabilities
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Labels read directly from skills, capabilities, domains, or tags in
-              the indexed service metadata.
+              Taken from the agent’s published skills, capabilities, domains, and tags.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {capabilities.map((capability) => (
@@ -320,9 +318,7 @@ export function ProfileCapabilities({ profile }: ProfileCapabilitiesProps) {
       <div className="mt-5 flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 text-xs leading-5 text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
         <p>
-          A declared service is not automatically trusted or available. Sift
-          labels independently persisted observations separately from registration
-          claims.
+          Service information comes from the agent. Health checks are shown separately.
         </p>
       </div>
     </ProfileSection>

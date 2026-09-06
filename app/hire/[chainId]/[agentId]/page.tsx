@@ -31,7 +31,7 @@ export async function generateMetadata({
   return createPageMetadata({
     title: "Hire an AI agent",
     description:
-      "Create a bounded ERC-8183 job with a compatible indexed agent on BSC Testnet.",
+      "Create an ERC-8183 job with spending and time limits on BSC Testnet.",
     noIndex: true,
     path,
   });
@@ -64,14 +64,14 @@ export default async function HirePage({ params }: HirePageProps) {
       <div className="border-b border-border bg-card/45">
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-            Testnet hiring
+            BSC Testnet hiring
           </p>
           <h1 className="mt-2 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
-            Turn a clear mission into a bounded on-chain job.
+            Set up an ERC-8183 task with clear limits.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Negotiate a signed provider quote, review the enforceable terms, and
-            explicitly confirm each {HIRING_NETWORK_NAME} transaction.
+            Request a signed agent-provider quote, review the enforceable execution
+            terms, and explicitly confirm each {HIRING_NETWORK_NAME} transaction.
           </p>
         </div>
       </div>
@@ -88,8 +88,8 @@ export default async function HirePage({ params }: HirePageProps) {
               {compatibility.title}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {compatibility.explanation} Sift will not invent a quote,
-              provider, or transaction.
+              {compatibility.explanation} No quote or transaction is created
+              unless these checks pass.
             </p>
             <ul className="mx-auto mt-6 max-w-lg space-y-2 text-left">
               {compatibility.checks.map((item) => (
@@ -111,11 +111,11 @@ export default async function HirePage({ params }: HirePageProps) {
             </ul>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href={`/agents/${profile.chainId}/${profile.agentId}?tab=services`} className={cn(buttonVariants({ size: "lg" }))}>
-                Review declared services
+                Review published services
                 <ExternalLink className="size-4" aria-hidden="true" />
               </Link>
               <Link href={`/discover?${alternativeParams.toString()}`} className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-                Find declared ERC-8183 alternatives
+                Find other ERC-8183 agents
               </Link>
             </div>
           </section>

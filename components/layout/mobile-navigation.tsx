@@ -33,7 +33,7 @@ export function MobileNavigation() {
                   Sift navigation
                 </Dialog.Title>
                 <Dialog.Description className="mt-0.5 text-xs text-muted-foreground">
-                  Discover, compare, hire, and monitor agents.
+                  Discover, compare, hire, and monitor AI agents.
                 </Dialog.Description>
               </div>
               <Dialog.Close

@@ -4,7 +4,7 @@ import type { HiringFlowStep } from "@/features/hiring/model";
 import { cn } from "@/lib/utils";
 
 const steps: readonly Readonly<{ label: string; value: HiringFlowStep }>[] = [
-  { label: "Mission", value: "mission" },
+  { label: "Task", value: "mission" },
   { label: "Permissions", value: "permissions" },
   { label: "Review", value: "review" },
   { label: "Wallet", value: "wallet" },
@@ -15,7 +15,7 @@ export function HiringStepper({ current }: Readonly<{ current: HiringFlowStep }>
   const currentIndex = steps.findIndex((step) => step.value === current);
 
   return (
-    <nav aria-label="Hiring progress" className="overflow-x-auto">
+    <nav aria-label="Agent hiring progress" className="overflow-x-auto">
       <ol className="flex min-w-[38rem] items-center gap-2">
         {steps.map((step, index) => {
           const complete = index < currentIndex;
@@ -54,4 +54,3 @@ export function HiringStepper({ current }: Readonly<{ current: HiringFlowStep }>
     </nav>
   );
 }
-

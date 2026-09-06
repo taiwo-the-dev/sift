@@ -15,37 +15,37 @@ export const scoreComponentDefinitions = [
     key: "reputation",
     label: "Reputation",
     weight: 25,
-    description: "Persisted reputation value when its source is current.",
+    description: "Current reputation score from a named source.",
   },
   {
     key: "reliability",
-    label: "Observed reliability",
+    label: "Service reliability",
     weight: 20,
-    description: "Successful bounded endpoint probes divided by total probes.",
+    description: "Successful service checks divided by total checks.",
   },
   {
     key: "availability",
-    label: "Current reachability",
+    label: "Service availability",
     weight: 20,
-    description: "The latest fresh, bounded endpoint-health observation.",
+    description: "The latest service health check.",
   },
   {
     key: "capability",
-    label: "Declared capability evidence",
+    label: "Service information",
     weight: 15,
-    description: "Completeness of declared services, not verified performance.",
+    description: "Completeness of the agent's published service information.",
   },
   {
     key: "trackRecord",
-    label: "Supported track record",
+    label: "Task history",
     weight: 15,
-    description: "Successful jobs divided by supported completed job records.",
+    description: "Reported successful tasks divided by completed tasks.",
   },
   {
     key: "metadata",
-    label: "Metadata quality",
+    label: "Profile quality",
     weight: 5,
-    description: "Completeness of recently validated registration metadata.",
+    description: "Completeness of the agent's recently verified profile.",
   },
 ] as const satisfies readonly Readonly<{
   description: string;
@@ -282,12 +282,12 @@ export function calculateSiftScore(
       const definition = scoreComponentDefinitions.find(
         (candidate) => candidate.key === key,
       );
-      return `${definition?.label ?? key} is not included because current supported evidence is unavailable or stale.`;
+      return `${definition?.label ?? key} is not included because the data is missing or out of date.`;
     });
 
   if (!canPublishScore) {
     limitations.unshift(
-      "Not enough independent evidence is available to publish a Sift Score.",
+      "There is not enough reliable data to publish a Sift Score.",
     );
   }
 

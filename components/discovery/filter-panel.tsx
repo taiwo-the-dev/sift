@@ -1,154 +1,257 @@
-import { SlidersHorizontal } from "lucide-react";
-import Form from "next/form";
+import {
+  Activity,
+  Check,
+  CircleEllipsis,
+  Database,
+  FlaskConical,
+  Globe2,
+  Grid3X3,
+  RefreshCw,
+  RotateCcw,
+  SlidersHorizontal,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import {
   discoveryCategories,
   discoveryMetadataStatuses,
   discoveryNetworkOptions,
+  type DiscoveryCategory,
+  type DiscoveryNetworkScope,
   type DiscoveryQuery,
 } from "@/features/discovery/model";
+import { buildDiscoveryHref } from "@/features/discovery/query";
+import type { MetadataStatus } from "@/lib/db/validation";
+import { cn } from "@/lib/utils";
 
 interface FilterPanelProps {
   query: DiscoveryQuery;
 }
 
-interface FilterFormProps extends FilterPanelProps {
-  idPrefix: string;
-}
+const networkIcons = {
+  all: Globe2,
+  "bsc-mainnet": Database,
+  "bsc-testnet": FlaskConical,
+} as const satisfies Readonly<Record<DiscoveryNetworkScope, LucideIcon>>;
 
-function FilterForm({ idPrefix, query }: FilterFormProps) {
+const categoryIcons = {
+  "grid-trading": Grid3X3,
+  "health-factor-monitoring": Activity,
+  "liquidity-rebalancing": RefreshCw,
+  "yield-optimisation": TrendingUp,
+} as const satisfies Readonly<Record<DiscoveryCategory, LucideIcon>>;
+
+const metadataStyles = {
+  invalid: {
+    active: "border-amber-400/35 bg-amber-400/10 text-amber-100",
+    dot: "bg-amber-300",
+  },
+  pending: {
+    active: "border-sky-400/35 bg-sky-400/10 text-sky-100",
+    dot: "bg-sky-300",
+  },
+  unavailable: {
+    active: "border-zinc-400/30 bg-zinc-400/10 text-zinc-200",
+    dot: "bg-zinc-400",
+  },
+  valid: {
+    active: "border-emerald-400/35 bg-emerald-400/10 text-emerald-100",
+    dot: "bg-emerald-300",
+  },
+} as const satisfies Readonly<
+  Record<MetadataStatus, Readonly<{ active: string; dot: string }>>
+>;
+
+function FilterOptions({ query }: FilterPanelProps) {
   return (
-    <Form action="/discover" className="space-y-7">
-      {query.query ? <input type="hidden" name="q" value={query.query} /> : null}
-      {query.sort !== (query.query ? "relevance" : "recent") ? (
-        <input type="hidden" name="sort" value={query.sort} />
-      ) : null}
-      {query.pageSize !== 12 ? (
-        <input type="hidden" name="size" value={query.pageSize} />
-      ) : null}
-
+    <div className="space-y-6">
       <fieldset>
-        <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Network catalogue
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Network
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            1 selected
+          </span>
         </legend>
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 grid gap-2">
           {discoveryNetworkOptions.map((network) => {
-            const id = `${idPrefix}-network-${network.value}`;
+            const selected = query.network === network.value;
+            const Icon = networkIcons[network.value];
 
             return (
-              <label
+              <Link
                 key={network.value}
-                htmlFor={id}
-                className="group flex cursor-pointer items-start gap-3"
+                href={buildDiscoveryHref(query, {
+                  network: network.value,
+                  page: 1,
+                })}
+                prefetch={false}
+                aria-current={selected ? "true" : undefined}
+                className={cn(
+                  "group grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  selected
+                    ? "border-brand/35 bg-brand/8"
+                    : "border-border bg-background/45 hover:border-brand/25 hover:bg-background",
+                )}
               >
-                <input
-                  id={id}
-                  type="radio"
-                  name="network"
-                  value={network.value}
-                  defaultChecked={query.network === network.value}
-                  className="mt-0.5 size-4 shrink-0 appearance-none rounded-full border border-input bg-background checked:border-[5px] checked:border-brand focus-visible:ring-3 focus-visible:ring-ring/30"
-                />
-                <span>
-                  <span className="block text-sm font-medium text-foreground group-hover:text-brand">
+                <span
+                  className={cn(
+                    "grid size-9 place-items-center rounded-lg border transition-colors",
+                    selected
+                      ? "border-brand/25 bg-brand/10 text-brand"
+                      : "border-border bg-card text-muted-foreground group-hover:text-foreground",
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-foreground">
                     {network.label}
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {network.description}
+                  <span className="mt-0.5 block truncate text-[0.66rem] text-muted-foreground">
+                    {network.value === "bsc-mainnet"
+                      ? "Chain 56 · Production"
+                      : network.value === "bsc-testnet"
+                        ? "Chain 97 · Testing"
+                        : "Chain 56 + 97"}
                   </span>
                 </span>
-              </label>
+                <span
+                  className={cn(
+                    "grid size-5 place-items-center rounded-full border",
+                    selected
+                      ? "border-brand bg-brand text-brand-foreground"
+                      : "border-input text-transparent",
+                  )}
+                >
+                  <Check className="size-3" aria-hidden="true" />
+                </span>
+              </Link>
             );
           })}
         </div>
       </fieldset>
 
-      <fieldset className="border-t border-border pt-6">
-        <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <fieldset className="border-t border-border pt-5">
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Category
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            {query.categories.length > 0
+              ? `${query.categories.length} selected`
+              : "Any"}
+          </span>
         </legend>
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
           {discoveryCategories.map((category) => {
-            const id = `${idPrefix}-category-${category.slug}`;
+            const selected = query.categories.includes(category.slug);
+            const Icon = categoryIcons[category.slug];
+            const nextCategories = selected
+              ? query.categories.filter((value) => value !== category.slug)
+              : [...query.categories, category.slug];
 
             return (
-              <label
+              <Link
                 key={category.slug}
-                htmlFor={id}
-                className="group flex cursor-pointer items-start gap-3"
+                href={buildDiscoveryHref(query, {
+                  categories: nextCategories,
+                  page: 1,
+                })}
+                prefetch={false}
+                role="checkbox"
+                aria-checked={selected}
+                className={cn(
+                  "group flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  selected
+                    ? "border-brand/35 bg-brand/8 text-foreground"
+                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                )}
               >
-                <input
-                  id={id}
-                  type="checkbox"
-                  name="category"
-                  value={category.slug}
-                  defaultChecked={query.categories.includes(category.slug)}
-                  className="mt-0.5 size-4 shrink-0 appearance-none rounded-[0.2rem] border border-input bg-background checked:border-brand checked:bg-brand focus-visible:ring-3 focus-visible:ring-ring/30 checked:[background-image:linear-gradient(135deg,transparent_42%,#0b0e11_42%,#0b0e11_55%,transparent_55%),linear-gradient(45deg,transparent_44%,#0b0e11_44%,#0b0e11_57%,transparent_57%)]"
+                <Icon
+                  className={cn(
+                    "size-4 shrink-0",
+                    selected ? "text-brand" : "text-muted-foreground",
+                  )}
+                  aria-hidden="true"
                 />
-                <span>
-                  <span className="block text-sm font-medium text-foreground group-hover:text-brand">
-                    {category.label}
-                  </span>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {category.description}
-                  </span>
+                <span className="min-w-0 flex-1 leading-5">
+                  {category.label}
                 </span>
-              </label>
+                <span
+                  className={cn(
+                    "grid size-4 shrink-0 place-items-center rounded border",
+                    selected
+                      ? "border-brand bg-brand text-brand-foreground"
+                      : "border-input text-transparent",
+                  )}
+                >
+                  <Check className="size-2.5" aria-hidden="true" />
+                </span>
+              </Link>
             );
           })}
         </div>
       </fieldset>
 
-      <fieldset className="border-t border-border pt-6">
-        <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Metadata provenance
+      <fieldset className="border-t border-border pt-5">
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Profile status
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            {query.metadataStatuses.length > 0
+              ? `${query.metadataStatuses.length} selected`
+              : "Any"}
+          </span>
         </legend>
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           {discoveryMetadataStatuses.map((status) => {
-            const id = `${idPrefix}-metadata-${status.value}`;
+            const selected = query.metadataStatuses.includes(status.value);
+            const nextStatuses = selected
+              ? query.metadataStatuses.filter(
+                  (value) => value !== status.value,
+                )
+              : [...query.metadataStatuses, status.value];
+            const style = metadataStyles[status.value];
 
             return (
-              <label
+              <Link
                 key={status.value}
-                htmlFor={id}
-                className="flex cursor-pointer items-center gap-3 text-sm font-medium text-foreground hover:text-brand"
+                href={buildDiscoveryHref(query, {
+                  metadataStatuses: nextStatuses,
+                  page: 1,
+                })}
+                prefetch={false}
+                role="checkbox"
+                aria-checked={selected}
+                className={cn(
+                  "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  selected
+                    ? style.active
+                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                )}
               >
-                <input
-                  id={id}
-                  type="checkbox"
-                  name="metadata"
-                  value={status.value}
-                  defaultChecked={query.metadataStatuses.includes(status.value)}
-                  className="size-4 shrink-0 appearance-none rounded-[0.2rem] border border-input bg-background checked:border-brand checked:bg-brand focus-visible:ring-3 focus-visible:ring-ring/30 checked:[background-image:linear-gradient(135deg,transparent_42%,#0b0e11_42%,#0b0e11_55%,transparent_55%),linear-gradient(45deg,transparent_44%,#0b0e11_44%,#0b0e11_57%,transparent_57%)]"
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    selected ? style.dot : "bg-muted-foreground/45",
+                  )}
+                  aria-hidden="true"
                 />
-                {status.label}
-              </label>
+                {status.label.replace(" metadata", "")}
+              </Link>
             );
           })}
         </div>
       </fieldset>
 
-      <div className="border-t border-border pt-5">
-        <p className="text-xs leading-5 text-muted-foreground">
-          Health, trust and risk filters are intentionally unavailable until Sift
-          has real supporting observations.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="submit" variant="brand">
-          Apply filters
-        </Button>
-        <Link
-          href="/discover"
-          className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
-        >
-          Clear all
-        </Link>
-      </div>
-    </Form>
+      <Link
+        href="/discover"
+        prefetch={false}
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-3.5 text-sm font-semibold text-foreground outline-none transition-colors hover:border-brand/25 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
+      >
+        <RotateCcw className="size-3.5" aria-hidden="true" />
+        Clear filters
+      </Link>
+    </div>
   );
 }
 
@@ -160,32 +263,43 @@ export function FilterPanel({ query }: FilterPanelProps) {
 
   return (
     <>
-      <details className="group rounded-xl border border-border bg-card lg:hidden">
-        <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30 [&::-webkit-details-marker]:hidden">
+      <details className="group overflow-hidden rounded-xl border border-border bg-card lg:hidden">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/30 [&::-webkit-details-marker]:hidden">
           <span className="inline-flex items-center gap-2">
-            <SlidersHorizontal className="size-4 text-brand" aria-hidden="true" />
-            Filters
+            <span className="grid size-8 place-items-center rounded-lg border border-brand/20 bg-brand/8 text-brand">
+              <SlidersHorizontal className="size-4" aria-hidden="true" />
+            </span>
+            Filter agents
           </span>
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
             {activeCount > 0 ? `${activeCount} active` : "All agents"}
+            <CircleEllipsis className="size-4" aria-hidden="true" />
           </span>
         </summary>
-        <div className="border-t border-border p-5">
-          <FilterForm idPrefix="mobile" query={query} />
+        <div className="border-t border-border p-4 sm:p-5">
+          <FilterOptions query={query} />
         </div>
       </details>
 
-      <aside className="hidden self-start rounded-xl border border-border bg-card p-6 lg:sticky lg:top-24 lg:block">
-        <div className="mb-6 flex items-center justify-between gap-3 border-b border-border pb-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <SlidersHorizontal className="size-4 text-brand" aria-hidden="true" />
-            Refine results
+      <aside className="hidden self-start overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-24 lg:block">
+        <div className="border-b border-border bg-[linear-gradient(135deg,rgba(240,185,11,0.09),transparent_62%)] p-5">
+          <div className="flex items-start justify-between gap-3">
+            <span className="grid size-9 place-items-center rounded-lg border border-brand/20 bg-brand/10 text-brand">
+              <SlidersHorizontal className="size-4" aria-hidden="true" />
+            </span>
+            {activeCount > 0 ? (
+              <span className="rounded-full border border-brand/20 bg-brand/8 px-2 py-1 text-[0.62rem] font-semibold text-brand">
+                {activeCount} active
+              </span>
+            ) : null}
+          </div>
+          <h2 className="mt-4 text-base font-semibold text-foreground">
+            Filters
           </h2>
-          {activeCount > 0 ? (
-            <span className="text-xs text-muted-foreground">{activeCount} active</span>
-          ) : null}
         </div>
-        <FilterForm idPrefix="desktop" query={query} />
+        <div className="p-5">
+          <FilterOptions query={query} />
+        </div>
       </aside>
     </>
   );

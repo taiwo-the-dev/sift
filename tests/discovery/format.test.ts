@@ -10,9 +10,9 @@ import {
 } from "../../features/discovery/format";
 
 describe("discovery display fallbacks", () => {
-  it("uses honest identity and description fallbacks", () => {
+  it("uses honest agent name and description fallbacks", () => {
     assert.equal(formatAgentName(null, "42"), "Agent #42");
-    assert.match(formatAgentDescription(null), /No human-readable description/);
+    assert.match(formatAgentDescription(null), /No description is available/);
   });
 
   it("humanizes service types without damaging known acronyms", () => {
@@ -22,7 +22,7 @@ describe("discovery display fallbacks", () => {
 
   it("formats known networks and unavailable registration time", () => {
     assert.equal(formatChainName(97), "BSC Testnet");
-    assert.equal(formatChainName(56), "BNB Smart Chain");
+    assert.equal(formatChainName(56), "BSC Mainnet");
     assert.equal(formatRegistrationDate(null), "Registration time unavailable");
   });
 });

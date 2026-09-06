@@ -7,7 +7,7 @@ export default function DashboardError({ retry }: Readonly<{ retry: () => void }
     <RouteErrorState
       backHref="/discover"
       backLabel="Browse agents"
-      description="No private job data or replacement values were displayed. Try loading the route again."
+      description="The dashboard is temporarily unavailable. Try again."
       retry={retry}
       title="The dashboard shell could not load"
     />

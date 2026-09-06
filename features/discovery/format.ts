@@ -18,7 +18,7 @@ export function formatAgentName(name: string | null, agentId: string): string {
 export function formatAgentDescription(description: string | null): string {
   return (
     description?.trim() ||
-    "No human-readable description was supplied in this agent’s indexed metadata."
+    "No description is available for this agent."
   );
 }
 
@@ -32,7 +32,7 @@ export function formatCategory(category: DiscoveryCategory): string {
 export function formatMetadataStatus(status: MetadataStatus): string {
   return (
     discoveryMetadataStatuses.find((option) => option.value === status)?.label ??
-    "Unknown metadata state"
+    "Unknown profile status"
   );
 }
 
@@ -71,7 +71,7 @@ export function formatChainName(chainId: number): string {
   }
 
   if (chainId === 56) {
-    return "BNB Smart Chain";
+    return "BSC Mainnet";
   }
 
   return `Chain ${chainId}`;

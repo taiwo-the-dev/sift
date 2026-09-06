@@ -89,6 +89,11 @@ Do not manually recreate or modify these tables in the production Table Editor. 
 
 The function is `security invoker`, is unavailable to `anon` and `authenticated`, and is callable only through the server-side service role. It never creates, updates, seeds, or ranks agent records. “Best text match” is PostgreSQL text relevance, not a Sift Score.
 
+`20260906120000_add_discovery_sort_options.sql` extends both optimized search
+plans with deterministic name Z–A and verified-profile-first ordering. The latter
+uses the persisted metadata verification status and does not infer profile
+quality or fabricate a ranking.
+
 Deploy this migration through the configured Supabase GitHub integration before deploying the M4 application change. A CLI fallback requires a linked checkout owned by an account with project privileges:
 
 ```bash

@@ -12,7 +12,7 @@ export default function CompareError({ error, retry }: CompareErrorProps) {
     <RouteErrorState
       backHref="/discover"
       backLabel="Return to Discover"
-      description="The indexed evidence may be temporarily unavailable. No comparison values have been substituted or simulated."
+      description="Comparison data is temporarily unavailable. Try again shortly."
       error={error}
       retry={retry}
       title="We couldn’t load this comparison"

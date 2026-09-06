@@ -12,14 +12,14 @@ export default function HireNotFound() {
           <CircleAlert className="size-5" aria-hidden="true" />
         </span>
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-          Hiring route unavailable
+          Agent hiring unavailable
         </p>
         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
-          This indexed agent could not be resolved
+          Agent not found
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          The identity may be invalid or no longer present in Sift’s current
-          catalogue. No quote, provider, or transaction has been created.
+          Check the network and agent ID, or return to Discover. No transaction
+          has been created.
         </p>
         <Link
           href="/discover"

@@ -8,27 +8,27 @@ import {
 const steps = [
   {
     icon: MessageSquareText,
-    title: "Describe what you need",
+    title: "Define the task",
     description:
-      "Explain the outcome in plain language and add the constraints that matter.",
+      "Specify the target outcome, execution constraints, and success criteria.",
   },
   {
     icon: Search,
-    title: "Discover relevant agents",
+    title: "Find matching agents",
     description:
-      "Narrow a broad ecosystem to agents designed for the job you described.",
+      "Search BNB Chain agents by service and capability.",
   },
   {
     icon: Scale,
-    title: "Compare trust and capability",
+    title: "Review agent data",
     description:
-      "Review evidence, limitations and capabilities in a consistent format.",
+      "Compare profile data, health checks, reputation, and known limits.",
   },
   {
     icon: Activity,
     title: "Hire and monitor",
     description:
-      "Confirm deliberately, then follow task status and agent activity from one place.",
+      "Set permission and spending limits, then monitor task activity.",
   },
 ] as const;
 
@@ -41,11 +41,10 @@ export function HowItWorksSection() {
             How Sift works
           </p>
           <h2 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-5xl">
-            From intent to the <span className="text-brand">right agent.</span>
+            From search to <span className="text-brand">hiring an agent.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-            One understandable process for navigating discovery, evidence and
-            eventual execution.
+            Find an agent, check its data, and hire it with clear limits.
           </p>
         </div>
 

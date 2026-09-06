@@ -17,7 +17,7 @@ export default function GlobalError({ error, retry }: GlobalErrorProps) {
         <RouteErrorState
           backHref="/"
           backLabel="Return home"
-          description="Sift’s application shell could not be rendered. No private error details or replacement data are shown. Try once more, then reload the site if the problem continues."
+          description="Try again. If the problem continues, reload the site."
           error={error}
           retry={retry}
           title="Sift is temporarily unavailable"

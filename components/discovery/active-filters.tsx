@@ -33,7 +33,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
             page: 1,
           })}
           className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/8 px-3 py-1.5 text-xs font-medium text-brand outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
-          aria-label="Reset network catalogue to BSC Mainnet"
+          aria-label="Show BSC Mainnet agents"
         >
           {query.network === "all" ? "All networks" : "BSC Testnet"}
           <X className="size-3" aria-hidden="true" />

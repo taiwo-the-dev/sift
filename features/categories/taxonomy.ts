@@ -57,7 +57,7 @@ export const categoryTaxonomy = [
   {
     aliases: ["yield", "yield optimization", "yield optimisation"],
     description:
-      "Researches or optimises source-declared yield strategies, protocols, assets, farms or vaults.",
+      "Finds and manages yield opportunities across supported protocols, farms, and vaults.",
     inferencePatterns: [
       { label: "yield optimisation", pattern: /\byield optimi[sz](?:e|es|ed|ing|er|ation)\b/i },
       { label: "yield strategy", pattern: /\byield strateg(?:y|ies)\b/i },
@@ -72,7 +72,7 @@ export const categoryTaxonomy = [
   {
     aliases: ["grid", "grid trading", "grid trader"],
     description:
-      "Declares bounded grid construction, monitoring or execution for a named venue or market.",
+      "Creates, monitors, or runs grid-trading strategies for supported markets.",
     inferencePatterns: [
       { label: "explicit grid label", pattern: /^\s*grid\s*$/i },
       { label: "grid trading", pattern: /\bgrid trad(?:e|er|ing)\b/i },
@@ -90,7 +90,7 @@ export const categoryTaxonomy = [
       "liquidation monitoring",
     ],
     description:
-      "Monitors a source-declared lending position, collateral health factor or liquidation threshold.",
+      "Tracks lending positions, collateral health, and liquidation risk.",
     inferencePatterns: [
       { label: "health factor", pattern: /\bhealth[- ]factor(?:s|[- ]monitor|[- ]monitoring)?\b/i },
       { label: "liquidation risk", pattern: /\bliquidation risk\b/i },
@@ -107,7 +107,7 @@ export const categoryTaxonomy = [
       "range management",
     ],
     description:
-      "Monitors or changes source-declared liquidity allocations, LP positions or concentrated-liquidity ranges.",
+      "Monitors or adjusts liquidity positions, allocations, and price ranges.",
     inferencePatterns: [
       { label: "liquidity rebalancing", pattern: /\bliquidity rebalanc(?:e|es|ed|ing)\b/i },
       { label: "LP rebalancing", pattern: /\blp rebalanc(?:e|es|ed|ing|er)\b/i },
@@ -275,7 +275,7 @@ function collectFacts(
     for (const [index, service] of services.entries()) {
       facts.push({
         key: "service",
-        label: "Declared service",
+        label: "Listed service",
         sourceField: `services[${index}].type`,
         value: service.serviceType,
       });

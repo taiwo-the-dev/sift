@@ -74,7 +74,7 @@ async function verify(): Promise<void> {
 
   const home = await request(origin, "/");
   requireStatus(home, 200, "Landing page");
-  requireText(home, "Find the right AI agent for the job", "Landing page");
+  requireText(home, "built to execute.", "Landing page");
   assert(
     home.body.includes('rel="canonical"'),
     "Landing page has no canonical link.",
@@ -116,7 +116,7 @@ async function verify(): Promise<void> {
 
   const discover = await request(origin, "/discover");
   requireStatus(discover, 200, "Discovery page");
-  requireText(discover, "Live ERC-8004 catalogue", "Discovery page");
+  requireText(discover, "ERC-8004 agents on BNB Chain", "Discovery page");
 
   const agentPaths = [
     ...new Set(
@@ -126,13 +126,13 @@ async function verify(): Promise<void> {
     ),
   ];
   const profilePath = agentPaths[0];
-  assert(profilePath, "Discovery returned no indexed agent profile links.");
-  pass(`Discovery exposes real indexed profile routes (${agentPaths.length} found)`);
+  assert(profilePath, "Discovery returned no agent profile links.");
+  pass(`Discovery exposes real agent profile routes (${agentPaths.length} found)`);
 
   for (const path of categoryRoutes) {
     const category = await request(origin, path);
     requireStatus(category, 200, `Category route ${path}`);
-    requireText(category, "Live ERC-8004 catalogue", `Category route ${path}`);
+    requireText(category, "ERC-8004 agents on BNB Chain", `Category route ${path}`);
   }
 
   const categoryCoverage = await request(origin, "/api/reports/category-coverage");
@@ -140,27 +140,27 @@ async function verify(): Promise<void> {
   requireText(categoryCoverage, '"status":"pass"', "Category coverage report");
 
   const profile = await request(origin, profilePath);
-  requireStatus(profile, 200, `Indexed profile ${profilePath}`);
+  requireStatus(profile, 200, `Agent profile ${profilePath}`);
   assert(
     profile.body.includes("ERC-8004") && profile.body.includes("Sift Score"),
-    "Indexed profile is missing identity or score evidence presentation.",
+    "Agent profile is missing ERC-8004 or Sift Score information.",
   );
-  pass("Indexed profile exposes identity and Sift Score evidence");
+  pass("Agent profile shows ERC-8004 and Sift Score information");
 
   const comparisonParameters = new URLSearchParams();
   for (const path of agentPaths.slice(0, 3)) {
     const [, , chainId, agentId] = path.split("/");
-    assert(chainId && agentId, `Could not parse indexed profile path ${path}.`);
+    assert(chainId && agentId, `Could not parse agent profile path ${path}.`);
     comparisonParameters.append("agent", `${chainId}:${agentId}`);
   }
   const comparisonPath = `/compare?${comparisonParameters.toString()}`;
   const comparison = await request(origin, comparisonPath);
   requireStatus(comparison, 200, "Comparison page");
-  requireText(comparison, "Compare agents", "Comparison page");
+  requireText(comparison, "Evaluate agents against your task", "Comparison page");
 
   const dashboard = await request(origin, "/dashboard");
   requireStatus(dashboard, 200, "Dashboard");
-  requireText(dashboard, "My Agents", "Dashboard");
+  requireText(dashboard, "Monitor verified agent tasks", "Dashboard");
   assert(dashboard.body.includes("noindex"), "Dashboard must remain noindex.");
   pass("Dashboard privacy metadata is present");
 

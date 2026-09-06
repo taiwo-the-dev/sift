@@ -11,14 +11,13 @@ export function FinalCtaSection() {
         <div className="relative overflow-hidden rounded-2xl bg-brand px-6 py-8 text-brand-foreground sm:px-9 sm:py-10 lg:flex lg:items-center lg:justify-between lg:gap-12">
           <div className="relative z-10">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-foreground/70">
-              Begin with your goal
+              Define your workflow
             </p>
             <h2 className="mt-3 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-              Start with what you want to accomplish.
+              Start with the task you want to automate.
             </h2>
             <p className="mt-3 max-w-2xl text-pretty text-sm leading-6 text-brand-foreground/75 sm:text-base">
-              Describe the job in plain language. Sift is designed to handle the
-              technical discovery work behind it.
+              Search by task, then compare capabilities and supporting evidence.
             </p>
           </div>
 
@@ -31,13 +30,13 @@ export function FinalCtaSection() {
               )}
             >
               <Search className="size-4" aria-hidden="true" />
-              Find your agent
+              Search agents
             </Link>
             <Link
               href="/discover"
               className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold text-brand-foreground outline-none transition-colors duration-200 hover:bg-brand-foreground/8 focus-visible:ring-3 focus-visible:ring-brand-foreground/30"
             >
-              Browse the catalogue
+              Browse all agents
               <ArrowRight
                 className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
                 aria-hidden="true"

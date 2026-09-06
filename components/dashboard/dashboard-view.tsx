@@ -35,9 +35,9 @@ interface DashboardViewProps {
 }
 
 const summaryCards = [
-  { key: "active", label: "Active jobs", icon: BriefcaseBusiness },
-  { key: "completed", label: "Completed jobs", icon: CheckCheck },
-  { key: "pending", label: "Pending jobs", icon: Clock3 },
+  { key: "active", label: "Active tasks", icon: BriefcaseBusiness },
+  { key: "completed", label: "Completed tasks", icon: CheckCheck },
+  { key: "pending", label: "Pending tasks", icon: Clock3 },
   { key: "totalActivity", label: "Recorded activity", icon: Activity },
 ] as const;
 
@@ -63,8 +63,8 @@ export function DashboardView({
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p className="text-sm leading-6">
             {refreshFailed
-              ? "The latest refresh failed. Sift is showing the last successful wallet snapshot and has not substituted newer status or activity."
-              : "This active or pending snapshot is stale. Refresh before relying on its current status."}
+              ? "The latest refresh failed. Sift is showing the last successfully loaded wallet activity."
+              : "This task status may be out of date. Refresh it before taking action."}
           </p>
         </div>
       ) : null}
@@ -73,7 +73,8 @@ export function DashboardView({
         <div role="status" className="mb-6 flex gap-3 rounded-xl border border-amber-400/25 bg-amber-400/8 p-4 text-amber-100">
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p className="text-sm leading-6">
-            Some current protocol states could not be refreshed. Sift is showing persisted transaction evidence and clearly marks unavailable observations.
+            Some blockchain updates could not be loaded. Sift is showing the last
+            saved transaction details and marks anything unavailable.
           </p>
         </div>
       ) : null}
@@ -96,8 +97,8 @@ export function DashboardView({
                 {card.key === "completed"
                   ? "Only ERC-8183 Completed state"
                   : card.key === "totalActivity"
-                    ? "Persisted, attributable records"
-                    : "Derived from persisted and verified state"}
+                    ? "Saved wallet and transaction activity"
+                    : "Based on saved and verified task status"}
               </p>
             </div>
           );
@@ -107,19 +108,19 @@ export function DashboardView({
       <section className="mt-8" aria-labelledby="wallet-jobs-heading">
         <div className="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Wallet-scoped records</p>
-            <h2 id="wallet-jobs-heading" className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">Your jobs</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Connected wallet</p>
+            <h2 id="wallet-jobs-heading" className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">Agent tasks</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Last refreshed {formatDashboardTimestamp(dashboard.observedAt)}
             </p>
           </div>
           <Button type="button" variant="outline" onClick={onRefresh} disabled={refreshing} aria-live="polite">
             <RefreshCw className={cn("size-4", refreshing && "animate-spin")} aria-hidden="true" />
-            {refreshing ? "Refreshing…" : "Refresh evidence"}
+            {refreshing ? "Refreshing…" : "Refresh activity"}
           </Button>
         </div>
 
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter jobs by status">
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter agent tasks by status">
           {dashboardFilters.map((candidate) => {
             const count =
               candidate === "all"
@@ -138,7 +139,7 @@ export function DashboardView({
                     : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
-                {candidate === "all" ? "All jobs" : dashboardCategoryLabel(candidate)}
+                {candidate === "all" ? "All tasks" : dashboardCategoryLabel(candidate)}
                 <span className={cn("rounded-full px-1.5 py-0.5 text-[0.65rem]", filter === candidate ? "bg-black/15" : "bg-background")}>{count}</span>
               </button>
             );
@@ -150,9 +151,9 @@ export function DashboardView({
             <span className="mx-auto grid size-12 place-items-center rounded-xl border border-brand/20 bg-brand/8 text-brand">
               <BriefcaseBusiness className="size-5" aria-hidden="true" />
             </span>
-            <h3 className="mt-5 text-xl font-semibold text-foreground">No jobs for this wallet yet</h3>
+            <h3 className="mt-5 text-xl font-semibold text-foreground">No agent tasks for this wallet yet</h3>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-              Hire a compatible indexed agent to create a real persisted mission. Sift will not populate this dashboard with sample jobs.
+              Hire a compatible agent to create your first ERC-8183 task.
             </p>
             <Link href="/discover" className={cn(buttonVariants({ variant: "brand", size: "lg" }), "mt-6")}>
               <Search className="size-4" aria-hidden="true" />
@@ -161,9 +162,9 @@ export function DashboardView({
           </div>
         ) : visibleJobs.length === 0 ? (
           <div className="mt-7 rounded-xl border border-dashed border-border bg-card px-5 py-10 text-center">
-            <h3 className="text-lg font-semibold text-foreground">No {filter} jobs</h3>
-            <p className="mt-2 text-sm text-muted-foreground">This wallet has no real records in the selected status.</p>
-            <Button type="button" variant="outline" className="mt-5" onClick={() => setFilter("all")}>Show all jobs</Button>
+            <h3 className="text-lg font-semibold text-foreground">No {filter} tasks</h3>
+            <p className="mt-2 text-sm text-muted-foreground">No tasks match this status.</p>
+            <Button type="button" variant="outline" className="mt-5" onClick={() => setFilter("all")}>Show all tasks</Button>
           </div>
         ) : (
           <div className="mt-7 grid gap-5">
@@ -173,7 +174,7 @@ export function DashboardView({
       </section>
 
       <p className="mt-8 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
-        Sift distinguishes submitted missions, application state, indexed observations, and verified blockchain events. Missing activity is reported as unavailable—not as proof that an agent was inactive.
+        Activity includes only recorded application events and verified blockchain events.
       </p>
     </>
   );

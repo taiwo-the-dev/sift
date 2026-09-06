@@ -29,6 +29,69 @@ import {
 type SearchAgentRow =
   Database["public"]["Functions"]["search_agents"]["Returns"][number];
 
+type RecentAgentRow = Pick<
+  TableRow<"agents">,
+  | "active"
+  | "agent_id"
+  | "chain_id"
+  | "description"
+  | "id"
+  | "image_url"
+  | "last_synced_at"
+  | "metadata_status"
+  | "name"
+  | "owner_address"
+  | "registered_at"
+  | "registered_block"
+  | "registry_address"
+  | "x402_supported"
+> & {
+  agent_category_evidence: Pick<
+    TableRow<"agent_category_evidence">,
+    | "category"
+    | "confidence"
+    | "evidence"
+    | "facts"
+    | "observed_at"
+    | "rule_version"
+    | "source"
+  >[];
+  agent_services: Pick<
+    TableRow<"agent_services">,
+    "service_type" | "version"
+  >[];
+};
+
+const recentAgentSelect = `
+  id,
+  chain_id,
+  agent_id,
+  registry_address,
+  owner_address,
+  name,
+  description,
+  image_url,
+  active,
+  x402_supported,
+  metadata_status,
+  registered_block,
+  registered_at,
+  last_synced_at,
+  agent_category_evidence (
+    category,
+    confidence,
+    evidence,
+    facts,
+    observed_at,
+    rule_version,
+    source
+  ),
+  agent_services (
+    service_type,
+    version
+  )
+` as const;
+
 export type DiscoveryRepository = Readonly<{
   listRecentlyRegistered(pageSize?: DiscoveryPageSize): Promise<DiscoveryResult>;
   search(query: DiscoveryQuery): Promise<DiscoveryResult>;
@@ -167,6 +230,63 @@ function mapAgent(row: SearchAgentRow): DiscoveryAgent {
   };
 }
 
+function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
+  const categoryEvidence = mapCategoryEvidence(
+    row.agent_category_evidence.map((evidence) => ({
+      category: evidence.category,
+      confidence: evidence.confidence,
+      facts: evidence.facts,
+      matchedTerms:
+        isRecord(evidence.evidence) &&
+        Array.isArray(evidence.evidence.matchedTerms)
+          ? evidence.evidence.matchedTerms
+          : [],
+      observedAt: evidence.observed_at,
+      ruleVersion: evidence.rule_version,
+      source: evidence.source,
+    })),
+  );
+  const categories = discoveryCategorySlugs.filter((category) =>
+    categoryEvidence.some((evidence) => evidence.category === category),
+  );
+  const categorySource = categoryEvidence.some(
+    (evidence) => evidence.source === "declared-metadata",
+  )
+    ? "declared-metadata"
+    : categoryEvidence.some(
+          (evidence) => evidence.source === "deterministic-rule",
+        )
+      ? "deterministic-rule"
+      : null;
+
+  return {
+    active: row.active,
+    agentDbId: row.id,
+    agentId: row.agent_id,
+    categories,
+    categoryEvidence,
+    categorySource,
+    chainId: row.chain_id,
+    description: row.description,
+    health: null,
+    imageUrl: row.image_url,
+    lastSyncedAt: row.last_synced_at,
+    metadataStatus: mapMetadataStatus(row.metadata_status),
+    name: row.name,
+    ownerAddress: row.owner_address,
+    registeredAt: row.registered_at,
+    registeredBlock: row.registered_block,
+    registryAddress: row.registry_address,
+    relevance: 0,
+    score: null,
+    services: row.agent_services.map((service) => ({
+      serviceType: service.service_type,
+      version: service.version,
+    })),
+    x402Supported: row.x402_supported,
+  };
+}
+
 export function createDiscoveryRepository(
   client: SupabaseClient<Database> = getSupabaseServerClient(),
   evidenceSources: DiscoveryEvidenceSources = {
@@ -196,24 +316,9 @@ export function createDiscoveryRepository(
     },
   },
 ): DiscoveryRepository {
-  async function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
-    const { data, error } = await client.rpc("search_agents", {
-      p_categories: [...query.effectiveCategories],
-      p_chain_ids: [...query.networkChainIds],
-      p_metadata_statuses: [...query.metadataStatuses],
-      p_page: query.page,
-      p_page_size: query.pageSize,
-      p_search_terms: [...query.searchTerms],
-      p_sort: query.sort,
-    });
-
-    if (error) {
-      throw new DatabaseOperationError("search indexed agents", error);
-    }
-
-    const firstRow = data[0];
-    const page = firstRow?.result_page ?? query.page;
-    const agents = data.map(mapAgent);
+  async function attachEvidence(
+    agents: readonly DiscoveryAgent[],
+  ): Promise<DiscoveryAgent[]> {
     const ids = agents.map((agent) => agent.agentDbId);
     const [healthRecords, scoreRecords] =
       ids.length > 0
@@ -235,12 +340,80 @@ export function createDiscoveryRepository(
       ]),
     );
 
+    return agents.map((agent) => ({
+      ...agent,
+      health: healthById.get(agent.agentDbId) ?? null,
+      score: scoreById.get(agent.agentDbId) ?? null,
+    }));
+  }
+
+  async function searchRecentAgents(
+    query: DiscoveryQuery,
+  ): Promise<DiscoveryResult> {
+    const offset = (query.page - 1) * query.pageSize;
+    let request = client.from("agents").select(recentAgentSelect);
+
+    request =
+      query.networkChainIds.length === 1
+        ? request.eq("chain_id", query.networkChainIds[0]!)
+        : request.in("chain_id", [...query.networkChainIds]);
+
+    if (query.metadataStatuses.length > 0) {
+      request = request.in("metadata_status", [...query.metadataStatuses]);
+    }
+
+    const { data, error } = await request
+      .order("registered_block", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + query.pageSize);
+
+    if (error) {
+      throw new DatabaseOperationError("list recent indexed agents", error);
+    }
+
+    const hasNextPage = data.length > query.pageSize;
+    const agents = await attachEvidence(
+      data.slice(0, query.pageSize).map(mapRecentAgent),
+    );
+
     return {
-      agents: agents.map((agent) => ({
-        ...agent,
-        health: healthById.get(agent.agentDbId) ?? null,
-        score: scoreById.get(agent.agentDbId) ?? null,
-      })),
+      agents,
+      hasNextPage,
+      page: query.page,
+      pageSize: query.pageSize,
+      totalCount: null,
+    };
+  }
+
+  async function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
+    if (
+      query.sort === "recent" &&
+      query.effectiveCategories.length === 0 &&
+      query.searchTerms.length === 0
+    ) {
+      return searchRecentAgents(query);
+    }
+
+    const { data, error } = await client.rpc("search_agents", {
+      p_categories: [...query.effectiveCategories],
+      p_chain_ids: [...query.networkChainIds],
+      p_metadata_statuses: [...query.metadataStatuses],
+      p_page: query.page,
+      p_page_size: query.pageSize,
+      p_search_terms: [...query.searchTerms],
+      p_sort: query.sort,
+    });
+
+    if (error) {
+      throw new DatabaseOperationError("search indexed agents", error);
+    }
+
+    const firstRow = data[0];
+    const page = firstRow?.result_page ?? query.page;
+    const agents = await attachEvidence(data.map(mapAgent));
+
+    return {
+      agents,
       hasNextPage: firstRow?.has_more ?? false,
       page,
       pageSize: query.pageSize,

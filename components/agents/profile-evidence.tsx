@@ -37,9 +37,9 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
   return (
     <ProfileSection
       id="evidence"
-      eyebrow="03 · Evidence"
-      title="What Sift can independently show"
-      description="Persisted observations appear only when a verifiable source has supplied them. Missing evidence is never replaced with estimates."
+      eyebrow="03 · Trust"
+      title="Health and reputation"
+      description="See the agent's health checks, reputation, and Sift Score."
     >
       <CategoryEvidencePanel profile={profile} />
 
@@ -55,16 +55,15 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
                 <Activity className="size-4" aria-hidden="true" />
               </span>
               <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold capitalize text-foreground">
-                {isHealthStale(profile.health) ? "Stale" : "Observed"}{" "}
+                {isHealthStale(profile.health) ? "Out of date" : "Checked"}{" "}
                 {profile.health.status}
               </span>
             </div>
             <h3 className="mt-5 text-lg font-semibold text-foreground">
-              Latest persisted health observation
+              Latest health check
             </h3>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              This is a timestamped observation, not a guarantee of current
-              availability.
+              A point-in-time check, not a guarantee of current availability.
             </p>
             <dl className="mt-5 grid gap-3 border-t border-border pt-4 text-sm">
               <div className="flex justify-between gap-4">
@@ -80,7 +79,7 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Observed checks</dt>
+                <dt className="text-muted-foreground">Service checks</dt>
                 <dd className="font-medium text-foreground">
                   {formatIdentifierCount(profile.health.successCount)} successful
                   of {formatIdentifierCount(profile.health.checkCount)}
@@ -110,8 +109,8 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
           </article>
         ) : (
           <EvidenceUnavailable
-            title="Health evidence not available"
-            description="Sift has no persisted endpoint-health observation for this agent yet, so no online or reliability claim is shown."
+            title="Health check not available"
+            description="Sift has not checked this agent's service yet."
           />
         )}
 
@@ -121,12 +120,11 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
               <MessageSquareText className="size-4" aria-hidden="true" />
             </span>
             <h3 className="mt-5 text-lg font-semibold text-foreground">
-              Persisted reputation evidence
+              Reputation data
             </h3>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Values are displayed as stored and enter the versioned Sift Score
-              only when explicit source, range, and freshness requirements are
-              satisfied.
+              Reputation contributes to Sift Score only when its source and
+              update time meet the scoring requirements.
             </p>
             <dl className="mt-5 grid gap-3 border-t border-border pt-4 text-sm">
               <div className="flex justify-between gap-4">
@@ -148,19 +146,19 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Successful jobs</dt>
+                <dt className="text-muted-foreground">Successful tasks</dt>
                 <dd className="font-medium text-foreground">
                   {formatIdentifierCount(profile.reputation.successfulJobs)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Failed jobs</dt>
+                <dt className="text-muted-foreground">Failed tasks</dt>
                 <dd className="font-medium text-foreground">
                   {formatIdentifierCount(profile.reputation.failedJobs)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Source observed</dt>
+                <dt className="text-muted-foreground">Source checked</dt>
                 <dd className="text-right font-medium text-foreground">
                   {formatProfileTimestamp(
                     profile.reputation.sourceObservedAt,
@@ -168,7 +166,7 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Evidence updated</dt>
+                <dt className="text-muted-foreground">Last updated</dt>
                 <dd className="text-right font-medium text-foreground">
                   {formatProfileTimestamp(profile.reputation.updatedAt)}
                 </dd>
@@ -177,8 +175,8 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
           </article>
         ) : (
           <EvidenceUnavailable
-            title="Reputation evidence not available"
-            description="No persisted reputation, feedback, or job evidence is available for this identity. Sift does not infer a rating."
+            title="Reputation not available"
+            description="No reputation or feedback data has been recorded for this agent."
           />
         )}
       </div>

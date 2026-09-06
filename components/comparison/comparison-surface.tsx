@@ -64,14 +64,14 @@ function ScoreValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
   if (!score) {
     return (
-      <UnknownValue>No persisted Sift Score exists for this identity.</UnknownValue>
+      <UnknownValue>Sift Score is not available for this agent.</UnknownValue>
     );
   }
 
   return (
     <div>
       <p className="text-lg font-semibold text-foreground">
-        {score.score === null ? "Withheld" : `${score.score}/100`}
+        {score.score === null ? "Not enough data" : `${score.score}/100`}
       </p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
         {describeScoreConfidence(score.confidence)} ·{" "}
@@ -87,7 +87,7 @@ function ScoreValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   if (!agent.score) {
-    return <UnknownValue>No score breakdown has been persisted.</UnknownValue>;
+    return <UnknownValue>Score details are not available.</UnknownValue>;
   }
 
   return (
@@ -113,7 +113,7 @@ function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
           </dd>
         </div>
         <div className="mt-2">
-          <dt>Metadata source</dt>
+          <dt>Profile source</dt>
           <dd className="mt-0.5 text-foreground">
             {formatProfileTimestamp(agent.score.sourceFreshness.metadataAt)}
           </dd>
@@ -133,7 +133,7 @@ function ReputationValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   const reputation = agent.reputation;
 
   if (!reputation) {
-    return <UnknownValue>No reputation evidence has been indexed.</UnknownValue>;
+    return <UnknownValue>No reputation data is available.</UnknownValue>;
   }
 
   return (
@@ -149,7 +149,7 @@ function ReputationValue({ agent }: Readonly<{ agent: AgentProfile }>) {
           : `${reputation.feedbackCount} feedback records`}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Source: {reputation.source ?? "Not available"} · observed{" "}
+        Source: {reputation.source ?? "Not available"} · checked{" "}
         {formatProfileTimestamp(reputation.sourceObservedAt)}
       </p>
     </div>
@@ -160,7 +160,7 @@ function HealthValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   const health = agent.health;
 
   if (!health) {
-    return <UnknownValue>No bounded health observation exists.</UnknownValue>;
+    return <UnknownValue>No health check is available.</UnknownValue>;
   }
 
   return (
@@ -192,19 +192,19 @@ function CategoriesValue({ agent }: Readonly<{ agent: AgentProfile }>) {
       ))}
       <p className="w-full text-xs leading-5 text-muted-foreground">
         {agent.categorySource === "deterministic-rule"
-          ? "Lower-confidence deterministic inference from validated indexed metadata."
-          : "Explicitly declared in validated indexed metadata."}
+          ? "Suggested from the agent's verified profile data."
+          : "Published in the agent's verified profile."}
       </p>
       {agent.categoryEvidence[0] ? (
         <p className="w-full text-xs leading-5 text-muted-foreground">
-          {Math.round(agent.categoryEvidence[0].confidence * 100)}% classification
-          confidence · {agent.categoryEvidence[0].ruleVersion} · observed{" "}
+          {Math.round(agent.categoryEvidence[0].confidence * 100)}% match
+          confidence · {agent.categoryEvidence[0].ruleVersion} · checked{" "}
           {formatProfileTimestamp(agent.categoryEvidence[0].observedAt)}
         </p>
       ) : null}
     </div>
   ) : (
-    <UnknownValue>No supported category was supplied or inferred.</UnknownValue>
+    <UnknownValue>No supported category is listed.</UnknownValue>
   );
 }
 
@@ -218,7 +218,7 @@ function CapabilityValue({ agent }: Readonly<{ agent: AgentProfile }>) {
       ))}
     </ul>
   ) : (
-    <UnknownValue>No structured capability declarations were indexed.</UnknownValue>
+    <UnknownValue>No capabilities are listed.</UnknownValue>
   );
 }
 
@@ -235,7 +235,7 @@ function CategoryFactsValue({ agent }: Readonly<{ agent: AgentProfile }>) {
       ))}
     </dl>
   ) : (
-    <UnknownValue>No category-specific facts were declared by a verified source.</UnknownValue>
+    <UnknownValue>No additional category details are available.</UnknownValue>
   );
 }
 
@@ -245,13 +245,13 @@ function ExternalCrossCheckValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   return evidence ? (
     <div className="text-xs leading-5">
       <p className="font-semibold capitalize text-foreground">{evidence.availability.replaceAll("-", " ")}</p>
-      <p className="mt-1 text-muted-foreground">8004scan · observed {formatProfileTimestamp(evidence.observedAt)}</p>
+      <p className="mt-1 text-muted-foreground">8004scan · checked {formatProfileTimestamp(evidence.observedAt)}</p>
       {evidence.conflictFields.length > 0 ? (
         <p className="mt-1 text-amber-200">Conflict: {evidence.conflictFields.join(", ")}</p>
       ) : null}
     </div>
   ) : (
-    <UnknownValue>No cached 8004scan cross-check exists.</UnknownValue>
+    <UnknownValue>No 8004scan comparison is available.</UnknownValue>
   );
 }
 
@@ -264,13 +264,13 @@ function ServicesValue({ agent }: Readonly<{ agent: AgentProfile }>) {
             {formatServiceType(service.serviceType)}
           </span>
           <span className="block text-xs text-muted-foreground">
-            Version {service.version ?? "not declared"}
+            Version {service.version ?? "not listed"}
           </span>
         </li>
       ))}
     </ul>
   ) : (
-    <UnknownValue>No service declarations were indexed.</UnknownValue>
+    <UnknownValue>No services are listed.</UnknownValue>
   );
 }
 
@@ -282,7 +282,7 @@ function ActivityValue({ agent }: Readonly<{ agent: AgentProfile }>) {
     (reputation.successfulJobs === null && reputation.failedJobs === null)
   ) {
     return (
-      <UnknownValue>No supported successful or failed job totals exist.</UnknownValue>
+      <UnknownValue>No task history is available.</UnknownValue>
     );
   }
 
@@ -309,9 +309,9 @@ function ActivityValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 function ProtocolValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   const protocols = [
-    "ERC-8004 identity",
+    "ERC-8004",
     ...new Set(agent.services.map((service) => formatServiceType(service.serviceType))),
-    agent.x402Supported === true ? "x402 declared" : null,
+    agent.x402Supported === true ? "x402 supported" : null,
   ].filter((value): value is string => Boolean(value));
 
   return (
@@ -327,7 +327,7 @@ function ProtocolValue({ agent }: Readonly<{ agent: AgentProfile }>) {
         </p>
       ) : agent.x402Supported === false ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          x402 was not declared.
+          x402 support is not listed.
         </p>
       ) : null}
     </div>
@@ -338,13 +338,13 @@ function LastVerifiedValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   return (
     <dl className="grid gap-2 text-xs">
       <div>
-        <dt className="text-muted-foreground">Metadata</dt>
+        <dt className="text-muted-foreground">Profile verified</dt>
         <dd className="mt-0.5 text-foreground">
           {formatProfileTimestamp(agent.metadataVerifiedAt)}
         </dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Indexed</dt>
+        <dt className="text-muted-foreground">Last updated</dt>
         <dd className="mt-0.5 text-foreground">
           {formatProfileTimestamp(agent.lastSyncedAt)}
         </dd>
@@ -355,78 +355,78 @@ function LastVerifiedValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 const comparisonRows: readonly ComparisonRow[] = [
   {
-    description: "Versioned score, confidence, coverage and assessment time.",
+    description: "Score, confidence, available data, and last update.",
     label: "Sift Score",
     render: (agent) => <ScoreValue agent={agent} />,
   },
   {
-    description: "The six supported score components and source freshness.",
+    description: "How the six score factors contribute.",
     label: "Score breakdown",
     render: (agent) => <ScoreBreakdownValue agent={agent} />,
   },
   {
-    description: "Indexed reputation evidence with its source and observation time.",
+    description: "Reputation score, feedback, source, and update time.",
     label: "Reputation",
     render: (agent) => <ReputationValue agent={agent} />,
   },
   {
-    description: "Latest bounded endpoint observation; not a safety guarantee.",
-    label: "Observed health",
+    description: "Latest service health check.",
+    label: "Health",
     render: (agent) => <HealthValue agent={agent} />,
   },
   {
-    description: "Supported goal categories from indexed metadata or documented rules.",
+    description: "Published or suggested agent categories.",
     label: "Categories",
     render: (agent) => <CategoriesValue agent={agent} />,
   },
   {
-    description: "Structured capability labels declared in service metadata.",
+    description: "Capabilities published by the agent.",
     label: "Capabilities",
     render: (agent) => <CapabilityValue agent={agent} />,
   },
   {
-    description: "Category-specific facts retained with their verified metadata field.",
-    label: "Category evidence",
+    description: "Additional details related to the selected category.",
+    label: "Category details",
     render: (agent) => <CategoryFactsValue agent={agent} />,
   },
   {
-    description: "Independent cached identity and evidence cross-check; never the core catalogue.",
-    label: "8004scan cross-check",
+    description: "Agent details compared with 8004scan.",
+    label: "8004scan comparison",
     render: (agent) => <ExternalCrossCheckValue agent={agent} />,
   },
   {
-    description: "Declared service types and versions.",
+    description: "Published service types and versions.",
     label: "Services",
     render: (agent) => <ServicesValue agent={agent} />,
   },
   {
-    description: "Supported successful and failed activity totals, when sourced.",
-    label: "Verified activity",
+    description: "Reported successful and failed tasks.",
+    label: "Task history",
     render: (agent) => <ActivityValue agent={agent} />,
   },
   {
-    description: "Identity and declared service/payment protocols.",
+    description: "Agent, service, and payment protocols.",
     label: "Protocols",
     render: (agent) => <ProtocolValue agent={agent} />,
   },
   {
-    description: "Recorded metadata verification and index freshness.",
-    label: "Last verified",
+    description: "Profile verification and latest directory update.",
+    label: "Updates",
     render: (agent) => <LastVerifiedValue agent={agent} />,
   },
   {
-    description: "Only indexed, attributable cost evidence is eligible.",
+    description: "Recorded pricing or cost information.",
     label: "Known cost",
     render: () => (
-      <UnknownValue>The current indexed schema has no cost evidence.</UnknownValue>
+      <UnknownValue>No cost information is available.</UnknownValue>
     ),
   },
   {
-    description: "Only supported, attributable risk classifications are eligible.",
-    label: "Risk classification",
+    description: "Recorded agent risk information.",
+    label: "Risk rating",
     render: () => (
       <UnknownValue>
-        The current evidence model has no supported risk classification.
+        No risk rating is available.
       </UnknownValue>
     ),
   },
@@ -483,7 +483,7 @@ function AgentColumnHeader({
             )}
           </h2>
           <p className="mt-1 font-mono text-[0.68rem] font-semibold text-brand">
-            {formatChainName(agent.chainId)} · chain {agent.chainId} · agent #{agent.agentId}
+            {formatChainName(agent.chainId)} · Agent #{agent.agentId}
           </p>
         </div>
       </div>
@@ -565,7 +565,7 @@ export function ComparisonSurface({
         <div className="max-w-full overflow-x-auto">
           <table className="w-full min-w-[64rem] table-fixed border-collapse">
             <caption className="sr-only">
-              Side-by-side comparison of selected indexed agents
+              Side-by-side comparison of selected agents
             </caption>
             <thead>
               <tr>
@@ -574,7 +574,7 @@ export function ComparisonSurface({
                   className="w-56 border-b border-r border-border bg-background/80 p-5 text-left align-top"
                 >
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Evidence dimension
+                    Comparison
                   </span>
                 </th>
                 {agents.map((agent) => (

@@ -37,19 +37,19 @@ export function MissionStep({
     <form onSubmit={submit} className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-          Step 1 · Define mission
+          Step 1 · Define task
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
           What should this agent deliver?
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          These terms are sent to the agent for a signed quote and anchored in
-          the public on-chain job description if you continue.
+          These terms are sent to the agent for a signed quote and recorded in
+          the public ERC-8183 job description.
         </p>
       </div>
 
       <label className="block text-sm font-semibold text-foreground">
-        Mission
+        Task description
         <textarea
           className={`${fieldClassName} min-h-32 resize-y`}
           maxLength={1_500}
@@ -89,7 +89,7 @@ export function MissionStep({
             onChange={(event) =>
               onChange({ ...mission, qualityStandards: event.target.value })
             }
-            placeholder="Use verifiable public-chain observations and label unavailable evidence."
+            placeholder="Use public blockchain data and clearly mark anything that cannot be verified."
             required
             value={mission.qualityStandards}
           />
@@ -112,7 +112,7 @@ export function MissionStep({
           </span>
         </label>
         <label className="block text-sm font-semibold text-foreground">
-          Job expiry
+          Execution expiry
           <select
             className={fieldClassName}
             onChange={(event) =>
@@ -135,7 +135,8 @@ export function MissionStep({
       <div className="flex items-start gap-3 rounded-xl border border-amber-400/20 bg-amber-400/7 px-4 py-3 text-xs leading-5 text-amber-100">
         <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         Do not put private keys, credentials, personal data, or confidential
-        instructions in the mission. The signed terms become public blockchain data.
+        instructions in the task description. The signed terms become public
+        blockchain data.
       </div>
 
       {notice ? (

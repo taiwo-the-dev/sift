@@ -23,7 +23,7 @@ describe("wallet presentation", () => {
     assert.equal(isSupportedWalletChainId(56), true);
     assert.equal(isSupportedWalletChainId(1), false);
     assert.equal(describeWalletChain(97), "BSC Testnet");
-    assert.equal(describeWalletChain(56), "BNB Smart Chain");
+    assert.equal(describeWalletChain(56), "BSC Mainnet");
     assert.equal(describeWalletChain(1), null);
   });
 

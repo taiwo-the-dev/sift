@@ -103,14 +103,14 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
     <ProfileSection
       id="technical"
       eyebrow="05 · Technical"
-      title="Identity and source details"
-      description="Raw identifiers are kept here so the main profile stays understandable while the underlying ERC-8004 provenance remains auditable."
+      title="Registration and source details"
+      description="Raw ERC-8004 identifiers, registry data, and source links."
     >
       <div className="grid gap-8">
         <div>
           <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
             <Fingerprint className="size-4 text-brand" aria-hidden="true" />
-            On-chain identity
+            Blockchain registration
           </h3>
           <dl className="mt-3 border-y border-border">
             <TechnicalField
@@ -183,11 +183,11 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
         <div>
           <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
             <RadioTower className="size-4 text-brand" aria-hidden="true" />
-            Indexed metadata
+            Profile data
           </h3>
           <dl className="mt-3 border-y border-border">
             <TechnicalField
-              label="Metadata status"
+              label="Profile data status"
               value={formatMetadataStatus(profile.metadataStatus)}
             />
             <TechnicalField
@@ -195,7 +195,7 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
               value={formatProfileTimestamp(profile.metadataVerifiedAt)}
             />
             <TechnicalField
-              label="Last indexed"
+              label="Last updated"
               value={formatProfileTimestamp(profile.lastSyncedAt)}
             />
             <TechnicalField
@@ -207,7 +207,7 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
             />
             <TechnicalField
               label="ERC standard"
-              value="ERC-8004 identity registration"
+              value="ERC-8004 agent registration"
             />
             <TechnicalField
               label="x402"
@@ -215,8 +215,8 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
                 profile.x402Supported === null
                   ? "Not available"
                   : profile.x402Supported
-                    ? "Declared supported"
-                    : "Not declared"
+                    ? "Supported"
+                    : "Not listed"
               }
             />
           </dl>
@@ -224,11 +224,11 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
 
         <div>
           <h3 className="text-sm font-semibold text-foreground">
-            Declared service endpoints
+            Service addresses
           </h3>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Endpoints are untrusted metadata. Only public HTTPS targets are
-            clickable; other values remain inert and copyable.
+            Service endpoints come from unverified metadata. Public HTTPS links
+            open in a new tab; other values can be copied.
           </p>
           {profile.services.some((service) => service.endpoint) ? (
             <dl className="mt-3 border-y border-border">

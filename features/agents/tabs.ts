@@ -5,7 +5,7 @@ export const agentProfileTabs = [
   { label: "Services", value: "services" },
   { label: "Trust", value: "trust" },
   { label: "Activity", value: "activity" },
-  { label: "Metadata", value: "metadata" },
+  { label: "Technical", value: "metadata" },
 ] as const;
 
 export type AgentProfileTab = (typeof agentProfileTabs)[number]["value"];

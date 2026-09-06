@@ -20,7 +20,7 @@ import { createPageMetadata } from "@/lib/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Discover AI agents",
   description:
-    "Search and browse real ERC-8004 AI agents indexed from BNB Smart Chain.",
+    "Search ERC-8004 agents by capability, service, and activity on BNB Chain.",
   path: "/discover",
 });
 
@@ -33,7 +33,7 @@ async function loadCatalogueStatuses() {
     return await createCatalogueStatusRepository().list();
   } catch (error) {
     console.error(
-      "Sift could not read catalogue network status.",
+      "Sift could not load the agent directory status.",
       error instanceof Error ? error.message : "Unknown database error.",
     );
     return null;
@@ -58,14 +58,14 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(28rem,1.22fr)] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-                Source-backed ERC-8004 catalogue
+                ERC-8004 agents on BNB Chain
               </p>
               <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
-                Discover agents by what they can help you do.
+                Find the right agent for your task.
               </h1>
               <p className="mt-5 max-w-xl text-pretty text-base leading-7 text-muted-foreground">
-                Search real BNB Chain registry identities and their indexed
-                metadata. Missing evidence stays clearly marked as unavailable.
+                Search BNB Chain agents by service, capability, and latest health
+                check.
               </p>
             </div>
 
@@ -83,7 +83,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
         <NetworkStatus query={query} statuses={networkStatuses} />
         <ActiveFilters query={query} />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:gap-8">
           <FilterPanel query={query} />
 
           <div className="min-w-0">

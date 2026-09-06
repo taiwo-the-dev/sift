@@ -1,6 +1,9 @@
 export function HeroBackground() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+    >
       <svg
         className="absolute inset-0 h-full w-full"
         viewBox="0 0 1440 760"
@@ -9,22 +12,48 @@ export function HeroBackground() {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <radialGradient id="hero-amber-wash" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1240 40) rotate(137) scale(760 620)">
+          <radialGradient
+            id="hero-amber-wash"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientUnits="userSpaceOnUse"
+            gradientTransform="translate(1240 40) rotate(137) scale(760 620)"
+          >
             <stop stopColor="#F0B90B" stopOpacity="0.34" />
             <stop offset="0.42" stopColor="#F0B90B" stopOpacity="0.12" />
             <stop offset="1" stopColor="#F0B90B" stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="hero-plane" x1="760" y1="80" x2="1210" y2="690" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="hero-plane"
+            x1="760"
+            y1="80"
+            x2="1210"
+            y2="690"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#F0B90B" stopOpacity="0.12" />
             <stop offset="0.58" stopColor="#F0B90B" stopOpacity="0.035" />
             <stop offset="1" stopColor="#F0B90B" stopOpacity="0" />
           </linearGradient>
-          <radialGradient id="hero-dot-fade" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1060 250) rotate(153) scale(800 580)">
+          <radialGradient
+            id="hero-dot-fade"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientUnits="userSpaceOnUse"
+            gradientTransform="translate(1060 250) rotate(153) scale(800 580)"
+          >
             <stop stopColor="white" stopOpacity="0.92" />
             <stop offset="0.56" stopColor="white" stopOpacity="0.48" />
             <stop offset="1" stopColor="white" stopOpacity="0" />
           </radialGradient>
-          <pattern id="hero-dot-pattern" width="9" height="9" patternUnits="userSpaceOnUse">
+          <pattern
+            id="hero-dot-pattern"
+            width="9"
+            height="9"
+            patternUnits="userSpaceOnUse"
+          >
             <circle cx="1" cy="1" r="0.75" fill="#EAECEF" fillOpacity="0.2" />
           </pattern>
           <mask id="hero-dot-mask">
@@ -33,7 +62,10 @@ export function HeroBackground() {
         </defs>
 
         <rect width="1440" height="760" fill="url(#hero-amber-wash)" />
-        <path d="M735 -80H1530V565L1110 625L870 356Z" fill="url(#hero-plane)" />
+        <path
+          d="M735 -80H1530V565L1110 625L870 356Z"
+          fill="url(#hero-plane)"
+        />
         <rect
           x="360"
           width="1080"

@@ -40,20 +40,22 @@ export const discoveryCategories = [
 }>[];
 
 export const discoveryMetadataStatuses = [
-  { label: "Validated metadata", value: "valid" },
-  { label: "Invalid metadata", value: "invalid" },
-  { label: "Unavailable metadata", value: "unavailable" },
-  { label: "Pending validation", value: "pending" },
+  { label: "Verified profile", value: "valid" },
+  { label: "Invalid profile data", value: "invalid" },
+  { label: "No profile data", value: "unavailable" },
+  { label: "Verification pending", value: "pending" },
 ] as const satisfies readonly Readonly<{
   label: string;
   value: MetadataStatus;
 }>[];
 
 export const discoverySortOptions = [
-  { label: "Best text match", value: "relevance" },
-  { label: "Recently registered", value: "recent" },
-  { label: "Oldest registered", value: "oldest" },
+  { label: "Best match", value: "relevance" },
+  { label: "Newest first", value: "recent" },
+  { label: "Oldest first", value: "oldest" },
+  { label: "Verified profiles first", value: "profile-first" },
   { label: "Name A–Z", value: "name-asc" },
+  { label: "Name Z–A", value: "name-desc" },
 ] as const;
 
 export type DiscoverySort =
@@ -62,19 +64,19 @@ export type DiscoverySort =
 export const discoveryNetworkOptions = [
   {
     chainIds: [56],
-    description: "Production ERC-8004 identities registered on BNB Smart Chain",
+    description: "ERC-8004 agents registered on BSC Mainnet",
     label: "BSC Mainnet",
     value: "bsc-mainnet",
   },
   {
     chainIds: [97],
-    description: "Development identities registered on BSC Testnet",
+    description: "ERC-8004 agents registered on BSC Testnet",
     label: "BSC Testnet",
     value: "bsc-testnet",
   },
   {
     chainIds: [56, 97],
-    description: "Browse both catalogues while keeping every network explicit",
+    description: "Browse agents across both supported networks",
     label: "All supported networks",
     value: "all",
   },

@@ -146,7 +146,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
           <DashboardStateCard
             icon={WalletCards}
             title="Connect your hiring wallet"
-            description="The dashboard is scoped to one verified wallet. Connect the wallet used to create your Sift jobs; disconnected visitors never receive private job records."
+            description="Connect the wallet used to hire agents and view its task history."
           >
             <Button type="button" variant="brand" size="lg" onClick={openConnectModal}>
               <WalletCards className="size-4" aria-hidden="true" />
@@ -167,7 +167,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
       <DashboardStateCard
         icon={Network}
         title="Switch to BSC Testnet"
-        description="Sift’s current hiring records and verified ERC-8183 deployment are on BSC Testnet. The dashboard will not mix jobs from another network."
+        description="Agent hiring and task records are currently available on BSC Testnet."
       >
         <div className="flex w-full flex-col items-center gap-3">
           <Button
@@ -209,7 +209,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
       <DashboardStateCard
         icon={ShieldCheck}
         title="Verify wallet ownership"
-        description="Sign one read-only message to prove this wallet is yours. The signature creates a four-hour dashboard session; it cannot move funds, approve tokens, or submit a transaction."
+        description="Sign a read-only message to view this wallet’s task history. This does not grant transaction or spending permission."
       >
         <Button type="button" variant="brand" size="lg" disabled={actionState.pending} aria-live="polite" onClick={verifyWallet}>
           {actionState.pending ? (
@@ -231,7 +231,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
       <DashboardStateCard
         icon={CircleAlert}
         title="Dashboard data is temporarily unavailable"
-        description="Sift could not load the persisted jobs for this wallet. No job, activity, or status values were substituted."
+        description="Task records could not be loaded. Try again."
       >
         <Button type="button" variant="outline" size="lg" onClick={() => dashboardQuery.refetch()}>
           <RefreshCw className="size-4" aria-hidden="true" />

@@ -30,7 +30,7 @@ export function ConfirmationStep({
         Step 5 · Confirmed on-chain
       </p>
       <h2 className="mt-2 text-balance text-3xl font-semibold tracking-tight text-foreground">
-        Job #{intent.onchainJobId} is funded.
+        ERC-8183 job #{intent.onchainJobId} is funded.
       </h2>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
         {agent.name} is the named provider for this ERC-8183 job on {HIRING_NETWORK_NAME}.
@@ -39,7 +39,7 @@ export function ConfirmationStep({
 
       <dl className="mx-auto mt-8 max-w-3xl overflow-hidden rounded-xl border border-border bg-card text-left">
         <div className="grid gap-1 border-b border-border px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <dt className="text-xs text-muted-foreground">Job identifier</dt>
+          <dt className="text-xs text-muted-foreground">ERC-8183 job ID</dt>
           <dd className="text-sm font-semibold text-foreground">{intent.onchainJobId}</dd>
         </div>
         <div className="grid gap-1 border-b border-border px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
@@ -47,7 +47,7 @@ export function ConfirmationStep({
           <dd className="text-sm text-foreground">{agent.name}</dd>
         </div>
         <div className="grid gap-1 border-b border-border px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <dt className="text-xs text-muted-foreground">Mission</dt>
+          <dt className="text-xs text-muted-foreground">Task description</dt>
           <dd className="text-sm leading-6 text-foreground">{intent.mission}</dd>
         </div>
         <div className="grid gap-1 border-b border-border px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
@@ -89,7 +89,7 @@ export function ConfirmationStep({
       </div>
       <p className="mt-4 text-xs text-muted-foreground">
         The dashboard asks this same wallet for a read-only ownership signature
-        before showing its private job record.
+        before showing its private agent task record.
       </p>
     </section>
   );

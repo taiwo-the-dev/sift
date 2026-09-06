@@ -15,11 +15,10 @@ export default function AgentProfileNotFound() {
           Profile not found
         </p>
         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
-          This indexed agent could not be resolved
+          Agent not found
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          The chain or agent identifier may be invalid, or the identity may not
-          exist in Sift&apos;s current ERC-8004 catalogue.
+          Check the network and agent ID, or return to Discover.
         </p>
         <Link
           href="/discover"

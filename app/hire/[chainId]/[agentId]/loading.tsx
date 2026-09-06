@@ -4,7 +4,7 @@ export default function HireLoading() {
   return (
     <div
       role="status"
-      aria-label="Loading hiring flow"
+      aria-label="Loading agent hiring page"
       className="flex-1 bg-background"
     >
       <div className="border-b border-border bg-card/45">

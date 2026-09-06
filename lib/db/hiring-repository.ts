@@ -60,7 +60,7 @@ const transactionSteps: readonly HiringTransactionStep[] = [
 export type HiringIntentRecord = JobRecord;
 
 export class HiringAuthorizationError extends Error {
-  constructor(message = "This saved hiring flow cannot be resumed.") {
+  constructor(message = "This saved hiring process cannot be resumed.") {
     super(message);
     this.name = "HiringAuthorizationError";
   }
@@ -255,7 +255,7 @@ export async function createHiringIntent(
       !intentMatchesInput(existingResult.data, input)
     ) {
       throw new HiringConflictError(
-        "The idempotency key is already bound to different hiring inputs.",
+        "This request ID is already connected to different hiring details.",
       );
     }
 

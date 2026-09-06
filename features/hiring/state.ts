@@ -56,7 +56,7 @@ export function describeTransactionStep(step: HiringTransactionStep): string {
   const descriptions: Readonly<Record<HiringTransactionStep, string>> = {
     approve_token: "Approve exact U token spend",
     create_job: "Create the on-chain job",
-    fund_job: "Fund and activate escrow",
+    fund_job: "Fund the task",
     register_job: "Register the evaluation policy",
     set_budget: "Set the signed quote budget",
   };

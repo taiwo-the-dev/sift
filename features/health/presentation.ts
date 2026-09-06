@@ -5,24 +5,24 @@ import type {
 
 const outcomeLabels: Readonly<Record<HealthOutcome, string>> = {
   "dns-error": "Public host could not be resolved",
-  "http-client-error": "Endpoint responded, but the check was inconclusive",
-  "http-server-error": "Endpoint returned a transient or server error",
-  "invalid-endpoint": "Declared endpoint is invalid",
-  "invalid-response": "Endpoint response did not match the check protocol",
+  "http-client-error": "The service responded, but the result was unclear",
+  "http-server-error": "The service returned an error",
+  "invalid-endpoint": "The service address is invalid",
+  "invalid-response": "The service response could not be verified",
   "network-error": "Network connection failed",
-  "no-endpoint": "No endpoint was declared",
-  "redirect-error": "Endpoint redirect could not be checked safely",
-  "response-too-large": "Endpoint response exceeded the safety limit",
-  success: "Bounded endpoint check succeeded",
-  timeout: "Endpoint did not respond before the timeout",
-  "unsafe-endpoint": "Endpoint was blocked by the safety policy",
+  "no-endpoint": "No service address is available",
+  "redirect-error": "The service redirect could not be checked safely",
+  "response-too-large": "The service response exceeded the safety limit",
+  success: "The service responded successfully",
+  timeout: "The service did not respond in time",
+  "unsafe-endpoint": "The service address was blocked by the safety policy",
   "unsupported-service": "Service type is not safely checkable",
 };
 
 export function describeHealthOutcome(
   outcome: HealthOutcome | null,
 ): string {
-  return outcome ? outcomeLabels[outcome] : "Observation detail unavailable";
+  return outcome ? outcomeLabels[outcome] : "Health-check details unavailable";
 }
 
 export function isHealthStale(

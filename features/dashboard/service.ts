@@ -59,9 +59,9 @@ function activityPresentation(type: string, details: Json): Readonly<{
     title: string;
   }>>> = {
     intent_created: {
-      description: "Mission terms were saved by Sift. No blockchain action is implied.",
+      description: "Task requirements were saved in Sift. No blockchain transaction has happened yet.",
       source: "application",
-      title: "Hiring intent saved",
+      title: "Hiring request saved",
     },
     job_confirmed: {
       description: "The funding transaction and ERC-8183 job state were verified.",
@@ -101,7 +101,7 @@ function activityPresentation(type: string, details: Json): Readonly<{
   };
 
   return presentations[type] ?? {
-    description: "A persisted hiring record was observed.",
+    description: "Sift saved an update for this agent task.",
     source: "application",
     title: "Recorded activity",
   };
@@ -139,7 +139,7 @@ async function observeProtocolJob(
     getAddress(onchain.client) !== getAddress(record.job.wallet_address) ||
     getAddress(onchain.provider) !== getAddress(record.job.provider_address)
   ) {
-    throw new Error("The on-chain job identity does not match the persisted owner and provider.");
+    throw new Error("The blockchain job does not match the saved owner and provider wallets.");
   }
 
   return {

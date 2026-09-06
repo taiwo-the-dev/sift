@@ -19,13 +19,13 @@ const geist = Geist({
 });
 
 const description =
-  "Discover, compare, and safely hire autonomous agents on BNB Chain.";
+  "Discover, compare, hire, and monitor AI agents on BNB Chain.";
 
 export const metadata: Metadata = {
   ...createPageMetadata({
     description,
     path: "/",
-    title: "Sift — Find the right AI agent for the job",
+    title: "Sift — On-chain AI agent discovery for BNB Chain",
   }),
   applicationName: "Sift",
   category: "technology",
@@ -40,12 +40,13 @@ export const metadata: Metadata = {
     "BNB Chain",
     "ERC-8004",
     "ERC-8183",
-    "agent marketplace",
+    "on-chain agent discovery",
+    "autonomous agent infrastructure",
   ],
   manifest: "/manifest.webmanifest",
   metadataBase: resolveSiteUrl(),
   title: {
-    default: "Sift — Find the right AI agent for the job",
+    default: "Sift — On-chain AI agent discovery for BNB Chain",
     template: "%s | Sift",
   },
 };

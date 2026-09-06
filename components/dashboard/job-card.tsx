@@ -105,13 +105,13 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             <dt className="text-xs text-muted-foreground">Agent health</dt>
             <dd className="mt-1 font-medium capitalize text-foreground">
               {job.agent.healthStatus === "unknown"
-                ? "Not observed"
-                : `Observed ${job.agent.healthStatus}`}
+                ? "Not checked"
+                : job.agent.healthStatus}
             </dd>
             <p className="mt-1 text-[0.7rem] text-muted-foreground">
               {job.agent.healthCheckedAt
                 ? `Checked ${formatDashboardTimestamp(job.agent.healthCheckedAt)}`
-                : "No bounded health timestamp"}
+                : "No recent health check"}
             </p>
           </div>
           <div>
@@ -125,7 +125,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
 
       <details className="group border-t border-border">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-foreground outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 sm:px-6 [&::-webkit-details-marker]:hidden">
-          View job details and audit trail
+          View task and transaction details
           <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
 
@@ -134,7 +134,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             <section aria-labelledby={`mission-${job.id}`}>
               <h3 id={`mission-${job.id}`} className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <FileCheck2 className="size-4 text-brand" aria-hidden="true" />
-                Reviewed mission
+                Reviewed task
               </h3>
               <dl className="mt-4 grid gap-4 text-sm">
                 <div>
@@ -173,7 +173,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-muted-foreground">Protocol state</dt>
+                  <dt className="text-xs text-muted-foreground">Blockchain status</dt>
                   <dd className="mt-1 font-medium capitalize text-foreground">
                     {job.protocolStatus === "unknown" ? "Unavailable" : job.protocolStatus}
                   </dd>
@@ -184,12 +184,12 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             <section aria-labelledby={`evidence-${job.id}`}>
               <h3 id={`evidence-${job.id}`} className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Bot className="size-4 text-brand" aria-hidden="true" />
-                Identifiers and evidence
+                IDs and transaction data
               </h3>
               <dl className="mt-4 grid gap-4 rounded-lg border border-border bg-background p-4 sm:grid-cols-2">
-                <Identifier label="Sift job record" value={job.id} />
+                <Identifier label="Sift task record" value={job.id} />
                 <Identifier label="ERC-8183 job ID" value={job.onchainJobId} />
-                <Identifier label="Agent identity" value={`${job.agent.chainId}:${job.agent.agentId}`} />
+                <Identifier label="Agent ID" value={`${job.agent.chainId}:${job.agent.agentId}`} />
                 <Identifier label="Final transaction" value={job.transactionHash} />
               </dl>
               <div className="mt-3 flex flex-wrap gap-3 text-xs">
@@ -206,10 +206,10 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
                 ) : null}
                 <span className="text-muted-foreground">
                   {job.protocolVerification === "verified"
-                    ? `Protocol state observed ${formatDashboardTimestamp(job.protocolObservedAt)}`
+                    ? `Blockchain status checked ${formatDashboardTimestamp(job.protocolObservedAt)}`
                     : job.protocolVerification === "unavailable"
-                      ? "Current protocol state could not be refreshed; persisted evidence is shown."
-                      : "No on-chain job identifier has been confirmed yet."}
+                      ? "Current blockchain status could not be refreshed; saved transaction data is shown."
+                      : "No blockchain job ID has been confirmed yet."}
                 </span>
               </div>
               {job.failureMessage ? (
@@ -228,7 +228,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
                   Activity and audit trail
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Newest first. Source labels distinguish application records from blockchain evidence.
+                  Newest first. Each entry shows whether it came from Sift or the blockchain.
                 </p>
               </div>
             </div>
@@ -268,10 +268,7 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             ) : (
               <div className="mt-5 rounded-lg border border-dashed border-border bg-background p-6 text-center">
                 <CalendarClock className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-foreground">No activity records available</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  This means Sift has no attributable activity record; it does not prove inactivity.
-                </p>
+                <p className="mt-3 text-sm font-medium text-foreground">No activity recorded</p>
               </div>
             )}
           </section>

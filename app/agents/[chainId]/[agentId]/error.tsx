@@ -15,7 +15,7 @@ export default function AgentProfileError({
     <RouteErrorState
       backHref="/discover"
       backLabel="Return to discovery"
-      description="The indexed catalogue may be temporarily unavailable. Sift has not substituted simulated profile data."
+      description="This agent profile is temporarily unavailable. Try again shortly."
       error={error}
       retry={retry}
       title="We couldn’t load this agent profile"

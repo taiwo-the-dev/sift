@@ -77,15 +77,15 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand/8 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-brand">
                   <Database className="size-3" aria-hidden="true" />
-                  {formatChainName(agent.chainId)} · {agent.chainId}
+                  {formatChainName(agent.chainId)}
                 </span>
                 {agent.categories.slice(0, 2).map((category) => (
                   <span
                     key={category}
                     title={
                       agent.categorySource === "deterministic-rule"
-                        ? "Lower-confidence deterministic match from validated indexed metadata"
-                        : "Category explicitly declared in validated indexed metadata"
+                        ? "Suggested from the agent's verified profile"
+                        : "Published in the agent's verified profile"
                     }
                     className="inline-flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-brand"
                   >
@@ -103,10 +103,10 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
               {agent.categoryEvidence[0] ? (
                 <p className="mt-2 text-[0.68rem] leading-5 text-muted-foreground">
                   {agent.categoryEvidence[0].source === "declared-metadata"
-                    ? "Declared category"
-                    : "Inferred category"}{" "}
+                    ? "Published category"
+                    : "Suggested category"}{" "}
                   · {Math.round(agent.categoryEvidence[0].confidence * 100)}%
-                  classification confidence · {agent.categoryEvidence[0].ruleVersion}
+                  match confidence · {agent.categoryEvidence[0].ruleVersion}
                 </p>
               ) : null}
 
@@ -175,7 +175,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Declared capabilities
+                Services
               </p>
               {visibleServices.length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -207,7 +207,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   aria-hidden="true"
                 />
                 <div>
-                  <dt className="sr-only">Observed reachability</dt>
+                  <dt className="sr-only">Health status</dt>
                   <dd className="capitalize">
                     {agent.health
                       ? `${isHealthStale(agent.health) ? "Stale " : ""}${
@@ -223,7 +223,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   aria-hidden="true"
                 />
                 <div>
-                  <dt className="sr-only">Identity source</dt>
+                  <dt className="sr-only">Registration standard</dt>
                   <dd>ERC-8004</dd>
                 </div>
               </div>

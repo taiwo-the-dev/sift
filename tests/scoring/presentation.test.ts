@@ -31,11 +31,11 @@ const score: PersistedSiftScore = {
 
 describe("Sift Score presentation", () => {
   it("labels confidence without implying certainty", () => {
-    assert.equal(describeScoreConfidence(0), "No supported confidence");
+    assert.equal(describeScoreConfidence(0), "Not enough data");
     assert.equal(describeScoreConfidence(0.4), "Low confidence");
     assert.equal(describeScoreConfidence(0.6), "Moderate confidence");
     assert.equal(describeScoreConfidence(0.9), "High confidence");
-    assert.equal(formatScoreConfidence(0.4), "40% evidence coverage");
+    assert.equal(formatScoreConfidence(0.4), "40% data coverage");
   });
 
   it("uses the exact 24-hour freshness boundary", () => {

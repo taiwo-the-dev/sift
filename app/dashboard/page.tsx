@@ -7,7 +7,7 @@ import { createPageMetadata } from "@/lib/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "My Agents dashboard",
   description:
-    "Monitor real Sift hiring jobs, verified ERC-8183 state, and attributable wallet activity.",
+    "Monitor hired agents, ERC-8183 task status, and linked wallet activity.",
   noIndex: true,
   path: "/dashboard",
 });
@@ -21,19 +21,19 @@ export default function DashboardPage() {
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               <BriefcaseBusiness className="size-4" aria-hidden="true" />
-              Wallet control centre
+              Agent operations
             </p>
             <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
-              Monitor every verified job state.
+              Monitor verified agent tasks.
             </h1>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-              Follow persisted missions, ERC-8183 status, and attributable activity without turning unavailable evidence into invented performance.
+              Track task requirements, ERC-8183 execution state, and wallet activity.
             </p>
           </div>
           <div className="flex max-w-sm gap-3 rounded-xl border border-brand/20 bg-background/80 p-4">
             <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
             <p className="text-xs leading-5 text-muted-foreground">
-              Job records remain hidden until the connected wallet proves ownership with a read-only signature.
+              Agent task records remain hidden until the connected wallet proves ownership with a read-only signature.
             </p>
           </div>
         </div>

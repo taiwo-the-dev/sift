@@ -64,7 +64,7 @@ export function describeWalletChain(chainId: unknown): string | null {
     return null;
   }
 
-  return chain.id === 97 ? "BSC Testnet" : "BNB Smart Chain";
+  return chain.id === 97 ? "BSC Testnet" : "BSC Mainnet";
 }
 
 export function mapWalletError(error: unknown): WalletErrorMessage {
@@ -121,7 +121,7 @@ export function mapWalletError(error: unknown): WalletErrorMessage {
       code: "chain-unavailable",
       title: "Network unavailable",
       description:
-        "This network is not supported by Sift. Select BSC Testnet or BNB Smart Chain in your wallet.",
+        "This network is not supported by Sift. Select BSC Testnet or BSC Mainnet in your wallet.",
     };
   }
 

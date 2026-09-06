@@ -79,17 +79,16 @@ export function ReviewStep({
           Step 3 · Review
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-          Review the exact hiring action.
+          Review this agent hire before continuing.
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Continuing saves an idempotent intent. No blockchain transaction is
-          sent until you approve each request in your wallet.
+          No blockchain transaction is sent until you approve it in your wallet.
         </p>
       </div>
 
       <dl className="overflow-hidden rounded-xl border border-border bg-card">
         <ReviewRow label="Agent" value={`${agent.name} · ERC-8004 #${agent.agentId}`} />
-        <ReviewRow label="Mission" value={mission.mission} />
+        <ReviewRow label="Task description" value={mission.mission} />
         <ReviewRow label="Deliverable" value={mission.deliverables} />
         <ReviewRow label="Quality standard" value={mission.qualityStandards} />
         <ReviewRow label="Network" value={`${HIRING_NETWORK_NAME} · chain 97`} />
@@ -101,7 +100,10 @@ export function ReviewStep({
           label="Maximum spend"
           value={`${quote.maximumSpendDisplay} ${quote.tokenSymbol}`}
         />
-        <ReviewRow label="Job expiry" value={hiringExpiryLabel(quote.expiresAt)} />
+        <ReviewRow
+          label="ERC-8183 job expiry"
+          value={hiringExpiryLabel(quote.expiresAt)}
+        />
         <ReviewRow
           label="Evaluation window"
           value={`${Math.round(quote.disputeWindowSeconds / 60)} minutes`}
@@ -202,7 +204,7 @@ export function ReviewStep({
                 ) : (
                   <ArrowRight className="size-4" aria-hidden="true" />
                 )}
-                {pending ? "Saving secure intent" : "Continue to wallet"}
+                {pending ? "Saving hiring details" : "Continue to wallet"}
               </Button>
             );
           }}
@@ -212,7 +214,7 @@ export function ReviewStep({
       {!correctNetwork && connected ? (
         <p className="flex items-center justify-end gap-2 text-xs text-amber-200">
           <CircleAlert className="size-3.5" aria-hidden="true" />
-          Hiring is testnet-only. Mainnet transactions are blocked.
+          Agent hiring is testnet-only. Mainnet transactions are blocked.
         </p>
       ) : null}
     </section>

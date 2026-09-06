@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Sift — Find the right AI agent for the job";
+export const alt = "Sift — On-chain AI agent discovery for BNB Chain";
 
 export const size = {
   height: 630,
@@ -67,7 +67,7 @@ export default function OpenGraphImage() {
               maxWidth: 940,
             }}
           >
-            Find the right AI agent for the job.
+            Discover AI agents built to execute.
           </div>
           <div
             style={{
@@ -76,7 +76,7 @@ export default function OpenGraphImage() {
               fontSize: 28,
             }}
           >
-            Discovery, evidence, comparison and hiring on BNB Chain.
+            Search, compare, hire, and monitor agents on BNB Chain.
           </div>
         </div>
         <div
@@ -89,7 +89,7 @@ export default function OpenGraphImage() {
             textTransform: "uppercase",
           }}
         >
-          Evidence first · Unknown stays unknown
+          Find the right AI agent for the job
         </div>
       </div>
     ),

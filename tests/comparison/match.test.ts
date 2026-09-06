@@ -134,7 +134,7 @@ describe("contextual comparison", () => {
     );
 
     assert.equal(match?.agent.agentId, "2");
-    assert.match(match?.reason ?? "", /resolved the evidence tie/i);
+    assert.match(match?.reason ?? "", /used to choose between equally matched agents/i);
   });
 
   it("omits a highlight when the goal has insufficient supported evidence", () => {

@@ -10,11 +10,10 @@ export function EmptyState() {
         <SearchX className="size-5" aria-hidden="true" />
       </span>
       <h2 className="mt-5 text-xl font-semibold tracking-[-0.025em] text-foreground">
-        No indexed agents matched this view
+        No agents found
       </h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-        Try removing a filter, using fewer search terms, or starting from one of
-        Sift’s four deterministic category routes.
+        Try a broader search or clear one of the active filters.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Link
@@ -22,7 +21,7 @@ export function EmptyState() {
           className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-brand-foreground outline-none hover:bg-brand-hover focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <RotateCcw className="size-4" aria-hidden="true" />
-          Reset discovery
+          Clear search
         </Link>
         {discoveryCategories.slice(0, 2).map((category) => (
           <Link

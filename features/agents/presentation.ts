@@ -121,10 +121,10 @@ export function describeProfileProvenance(
   if (metadataStatus === "valid") {
     return {
       description: metadataVerifiedAt
-        ? "The displayed registration metadata passed Sift's latest indexed validation."
-        : "The displayed metadata is currently valid; its successful verification time was not recorded by the earlier indexer version.",
+        ? "The agent's profile data passed the latest validation check."
+        : "The profile data is valid, but the verification time is unavailable.",
       isStale: false,
-      label: "Validated indexed metadata",
+      label: "Profile verified",
       tone: "good",
     };
   }
@@ -132,9 +132,9 @@ export function describeProfileProvenance(
   if (metadataStatus === "pending") {
     return {
       description:
-        "The blockchain identity is indexed, but its off-chain metadata has not completed validation yet.",
+        "The agent is listed, but its profile data is still being checked.",
       isStale: false,
-      label: "Metadata validation pending",
+      label: "Profile verification pending",
       tone: "neutral",
     };
   }
@@ -142,22 +142,22 @@ export function describeProfileProvenance(
   if (hasRetainedMetadata) {
     return {
       description: metadataVerifiedAt
-        ? "The latest refresh did not validate successfully. Sift is showing the last successfully verified representation."
-        : "The latest refresh did not validate successfully. Retained indexed fields are shown, but the earlier successful verification time is unavailable.",
+        ? "The latest check failed. The last verified profile data is shown."
+        : "The latest check failed. Earlier profile data is shown, but its verification time is unavailable.",
       isStale: true,
-      label: "Last-known-good metadata",
+      label: "Last verified profile",
       tone: "caution",
     };
   }
 
   return {
     description:
-      "The on-chain identity is indexed, but no successfully validated human-readable metadata is currently available.",
+      "The agent is listed, but verified profile data is unavailable.",
     isStale: false,
     label:
       metadataStatus === "invalid"
-        ? "Invalid metadata"
-        : "Metadata unavailable",
+        ? "Invalid profile data"
+        : "Profile unavailable",
     tone: "caution",
   };
 }

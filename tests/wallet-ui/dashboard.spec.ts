@@ -115,7 +115,7 @@ describe("dashboard browser-facing states", () => {
       }),
     );
     assert.match(html, /Rejected on-chain/);
-    assert.match(html, /On-chain evidence/);
+    assert.match(html, /Blockchain record/);
     assert.match(html, /Test-only mission/);
     assert.match(html, /overflow-x-auto/);
     assert.doesNotMatch(html, />Pause</);

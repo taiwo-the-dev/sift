@@ -28,7 +28,7 @@ function metadataDescription(
   chainId: number,
   agentId: string,
 ): string {
-  const fallback = `View the indexed ERC-8004 profile for agent #${agentId} on ${formatChainName(chainId)}.`;
+  const fallback = `View ERC-8004 agent #${agentId} on ${formatChainName(chainId)}.`;
   const normalized = description?.replace(/\s+/g, " ").trim() || fallback;
 
   return normalized.length > 160
@@ -44,7 +44,7 @@ export async function generateMetadata({
 
   if (!identity) {
     return createPageMetadata({
-      description: "The requested indexed ERC-8004 agent profile could not be resolved.",
+      description: "The requested ERC-8004 agent profile could not be found.",
       noIndex: true,
       path: "/agents/profile-not-found",
       title: "Agent not found",
@@ -55,7 +55,7 @@ export async function generateMetadata({
 
   if (!profile) {
     return createPageMetadata({
-      description: "The requested indexed ERC-8004 agent profile could not be resolved.",
+      description: "The requested ERC-8004 agent profile could not be found.",
       noIndex: true,
       path: "/agents/profile-not-found",
       title: "Agent not found",

@@ -12,7 +12,7 @@ export default function AppError({ error, retry }: AppErrorProps) {
     <RouteErrorState
       backHref="/"
       backLabel="Return home"
-      description="An unexpected rendering error interrupted this page. No unavailable agent, wallet, or blockchain values were substituted. Try the page again or return home."
+      description="Something interrupted this page. Try again or return home."
       error={error}
       retry={retry}
       title="Sift couldn’t finish loading this page"

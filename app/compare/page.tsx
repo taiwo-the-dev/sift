@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = createPageMetadata({
   title: "Compare AI agents",
   description:
-    "Compare real indexed BNB Chain agent evidence side by side for your stated goal.",
+    "Compare BNB Chain agents by capability, health, reputation, and service data.",
   path: "/compare",
 });
 
@@ -65,15 +65,14 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               <GitCompareArrows className="size-4" aria-hidden="true" />
-              Evidence-led comparison
+              Agent comparison
             </p>
             <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
-              Compare agents for the job at hand.
+              Evaluate agents against your task.
             </h1>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-              Review the same supported evidence side by side. Unknown values
-              stay unknown, and any highlighted match is tied only to your
-              stated goal.
+              Compare capabilities, health checks, reputation, and services.
+              Matches are based on the task you provide.
             </p>
           </div>
 
@@ -94,7 +93,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               htmlFor="comparison-goal"
               className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground"
             >
-              Your current goal
+              Task requirements
             </label>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <input
@@ -111,12 +110,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 className={cn(buttonVariants({ variant: "brand" }), "h-11 px-4")}
               >
                 <Search className="size-4" aria-hidden="true" />
-                Apply goal
+                Update task
               </button>
             </div>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              The goal is stored in the shareable URL and only affects the
-              documented contextual match rule.
+              Included in the shareable comparison link.
             </p>
           </form>
         </div>
@@ -126,13 +124,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Selected evidence sets
+              Selected agents
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">
               {result.agents.length} available agent{result.agents.length === 1 ? "" : "s"}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Select 2–4 indexed identities to activate side-by-side comparison.
+              Select 2–4 agents to compare.
             </p>
           </div>
           {selection.references.length > 0 ? (
@@ -144,7 +142,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <div className="mt-5 flex gap-3 rounded-lg border border-amber-400/25 bg-amber-400/8 p-4 text-amber-100">
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <p className="text-sm leading-6">
-              {ignoredCount} invalid, duplicate, or over-limit URL {ignoredCount === 1 ? "entry was" : "entries were"} ignored before data was requested.
+              {ignoredCount} invalid, duplicate, or over-limit {ignoredCount === 1 ? "selection was" : "selections were"} ignored.
             </p>
           </div>
         ) : null}
@@ -155,10 +153,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               <CircleAlert className="mt-0.5 size-5 shrink-0 text-amber-300" aria-hidden="true" />
               <div>
                 <h2 className="text-base font-semibold text-foreground">
-                  Some selected identities are unavailable
+                  Some selected agents are unavailable
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  They may no longer be indexed or may map to more than one registry record. Sift did not substitute another agent.
+                  They may no longer be listed or may match more than one registration.
                 </p>
               </div>
             </div>
@@ -173,8 +171,8 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {missing.reason === "ambiguous"
-                      ? "Ambiguous registry identity"
-                      : "Indexed identity not found"}
+                      ? "Multiple registrations found"
+                      : "Agent not found"}
                   </p>
                   <AgentSelectionActions
                     goal={selection.goal}
@@ -196,8 +194,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               Start with two real agents
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-              Add agents from Discover or an agent profile. Your selection will
-              stay on this device and the comparison URL can be shared.
+              Select agents from Discover or an agent profile.
             </p>
             <Link
               href="/discover"
@@ -213,7 +210,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               No available agents to compare
             </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-              Remove the unavailable identities above or choose current indexed agents.
+              Remove the unavailable agents above or choose different agents.
             </p>
           </div>
         ) : (
@@ -225,7 +222,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                     Add one more available agent
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    One selection is saved. Comparison starts at two available identities.
+                    Select at least two agents to compare.
                   </p>
                 </div>
                 <Link
@@ -241,22 +238,22 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 <Sparkles className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden="true" />
                 <div>
                   <h2 className="font-semibold text-foreground">
-                    Best match for your stated requirements
+                    Best match for this task
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {contextualMatch.reason} This is contextual decision support, not a universal ranking or safety guarantee.
+                    {contextualMatch.reason} Based on currently available agent data.
                   </p>
                 </div>
               </div>
             ) : (
               <div className="mb-5 rounded-xl border border-border bg-card p-5">
                 <h2 className="font-semibold text-foreground">
-                  No contextual match highlighted
+                  No task-specific match highlighted
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {selection.goal
-                    ? "The current goal produced insufficient evidence or a tie, so Sift left the decision unresolved."
-                    : "Add a specific goal above to evaluate supported category and metadata matches."}
+                    ? "The available agent data does not show a clear match."
+                    : "Add task requirements to assess category and profile matches."}
                 </p>
               </div>
             )}

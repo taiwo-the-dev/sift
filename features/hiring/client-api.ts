@@ -130,4 +130,3 @@ export async function recordRemoteClientState(
   >(response);
   return payload.intent;
 }
-

@@ -22,7 +22,7 @@ export const agentCategories: readonly AgentCategory[] = [
     slug: "yield-optimisation",
     title: "Yield optimisation",
     description:
-      "Explore agents designed to assess yield opportunities and manage positions around the constraints you set.",
+      "Agents for yield research, position monitoring, and strategy execution.",
     icon: ChartNoAxesCombined,
   },
   {
@@ -30,7 +30,7 @@ export const agentCategories: readonly AgentCategory[] = [
     slug: "grid-trading",
     title: "Trading automation",
     description:
-      "Find rule-based agents built to monitor markets and execute defined trading strategies without obscuring the rules.",
+      "Rule-based agents for market monitoring and automated trading strategies.",
     icon: Activity,
   },
   {
@@ -38,7 +38,7 @@ export const agentCategories: readonly AgentCategory[] = [
     slug: "health-factor-monitoring",
     title: "Loan health protection",
     description:
-      "Identify monitoring agents focused on collateral health, borrowing positions and liquidation risk.",
+      "Agents that monitor collateral health, borrowing positions, and liquidation risk.",
     icon: ShieldCheck,
   },
   {
@@ -46,7 +46,7 @@ export const agentCategories: readonly AgentCategory[] = [
     slug: "liquidity-rebalancing",
     title: "Liquidity rebalancing",
     description:
-      "Explore agents designed to watch liquidity positions and respond when a range or allocation needs attention.",
+      "Agents for liquidity range monitoring and allocation management.",
     icon: RefreshCw,
   },
 ];

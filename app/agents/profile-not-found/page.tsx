@@ -4,7 +4,7 @@ import AgentProfileNotFound from "@/app/agents/[chainId]/[agentId]/not-found";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  description: "The requested indexed ERC-8004 agent profile could not be resolved.",
+  description: "The requested ERC-8004 agent profile could not be found.",
   noIndex: true,
   path: "/agents/profile-not-found",
   title: "Agent not found",

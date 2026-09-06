@@ -30,14 +30,14 @@ function formatTimestamp(value: string | null): string {
 
 function describeState(status: CatalogueNetworkStatus): string {
   if (status.phase === "unavailable") {
-    return "Catalogue unavailable";
+    return "Directory unavailable";
   }
 
   if (status.phase === "partial") {
-    return status.isStale ? "Partial index · stale" : "Bootstrap in progress";
+    return status.isStale ? "Update delayed" : "Updating";
   }
 
-  return status.isStale ? "Checkpoint stale" : "Checkpoint current";
+  return status.isStale ? "Update overdue" : "Up to date";
 }
 
 export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
@@ -55,8 +55,7 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
             Network status is temporarily unavailable
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Agent results below remain source-backed. Refresh later to see the
-            latest index checkpoint.
+            Results are available, but sync details could not be loaded.
           </p>
         </div>
       </div>
@@ -70,7 +69,7 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
   );
 
   return (
-    <div className="mb-6 grid gap-3" aria-label="Catalogue network status">
+    <div className="mb-6 grid gap-3" aria-label="Agent directory status">
       {visible.map((status) => {
         const needsAttention = status.phase !== "current" || status.isStale;
 
@@ -108,13 +107,13 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {describeState(status)} · {status.agentCountIsEstimate ? "approximately " : ""}
-                  {status.agentCount.toLocaleString("en")} source-backed identities
-                  {status.checkpoint === null
-                    ? ""
-                    : ` · checkpoint ${status.checkpoint.toLocaleString("en")}`}
+                  {status.agentCount.toLocaleString("en")} agents
                 </p>
                 <p className="mt-0.5 text-[0.68rem] text-muted-foreground/80">
-                  Last checkpoint observation: {formatTimestamp(status.checkpointUpdatedAt)}. This is indexed evidence, not a real-time chain feed.
+                  Last updated {formatTimestamp(status.checkpointUpdatedAt)}
+                  {status.checkpoint === null
+                    ? ""
+                    : ` · block ${status.checkpoint.toLocaleString("en")}`}
                 </p>
               </div>
             </div>
@@ -130,7 +129,7 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
                 className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground outline-none hover:border-brand/40 focus-visible:ring-3 focus-visible:ring-ring/30"
               >
                 <RefreshCw className="size-3.5" aria-hidden="true" />
-                View testnet catalogue
+                View testnet agents
               </Link>
             ) : null}
           </div>

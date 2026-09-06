@@ -33,7 +33,7 @@ export async function GET(request: Request): Promise<Response> {
       error: error instanceof Error ? error.name : "UnknownError",
     });
     return json(
-      { error: "Sift could not load persisted jobs. No data was substituted." },
+      { error: "Task records could not be loaded." },
       500,
     );
   }

@@ -26,14 +26,14 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
       id="overview"
       eyebrow="01 · Overview"
       title="What this agent says it does"
-      description="A human-readable summary from the latest available indexed registration metadata."
+      description="Information published by the agent in its ERC-8004 profile."
     >
       <div className="border-l-2 border-brand pl-5 sm:pl-7">
-        <p className="text-pretty text-xl leading-8 text-foreground sm:text-2xl sm:leading-9">
+        <p className="text-pretty text-base leading-7 text-foreground sm:text-lg sm:leading-8">
           {formatAgentDescription(profile.description)}
         </p>
         <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          This is a declared description, not independent proof of performance.
+          Published by the agent; not a performance guarantee.
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
         <div className="bg-card p-5">
           <dt className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <RadioTower className="size-4 text-brand" aria-hidden="true" />
-            Declared services
+            Services
           </dt>
           <dd className="mt-3 text-sm font-medium text-foreground">
             {serviceTypes.length > 0
@@ -63,7 +63,7 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
         <div className="bg-card p-5">
           <dt className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <CircleDot className="size-4 text-brand" aria-hidden="true" />
-            Declared active flag
+            Agent status
           </dt>
           <dd className="mt-3 text-sm font-medium text-foreground">
             {profile.active === null
@@ -76,14 +76,14 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
         <div className="bg-card p-5">
           <dt className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <Blocks className="size-4 text-brand" aria-hidden="true" />
-            x402 declaration
+            x402 support
           </dt>
           <dd className="mt-3 text-sm font-medium text-foreground">
             {profile.x402Supported === null
               ? "Not available"
               : profile.x402Supported
-                ? "Declared supported"
-                : "Not declared"}
+                ? "Supported"
+                : "Not listed"}
           </dd>
         </div>
       </dl>

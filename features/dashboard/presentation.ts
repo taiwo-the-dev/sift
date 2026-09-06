@@ -32,9 +32,9 @@ export function dashboardCategoryLabel(category: DashboardJobCategory): string {
 export function dashboardActivitySourceLabel(
   source: DashboardActivitySource,
 ): string {
-  if (source === "onchain") return "On-chain evidence";
-  if (source === "indexed-observation") return "Indexed observation";
-  return "Application record";
+  if (source === "onchain") return "Blockchain record";
+  if (source === "indexed-observation") return "Blockchain status check";
+  return "Sift record";
 }
 
 export function dashboardTransactionHref(hash: string | null): string | null {
@@ -42,4 +42,3 @@ export function dashboardTransactionHref(hash: string | null): string | null {
     ? `https://testnet.bscscan.com/tx/${hash}`
     : null;
 }
-

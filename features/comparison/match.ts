@@ -81,11 +81,11 @@ function describeMatch(candidate: CandidateEvidence, usedScore: boolean): string
     candidate.matchedTerms.length > 0
       ? `${candidate.matchedTerms.length} goal ${
           candidate.matchedTerms.length === 1 ? "term" : "terms"
-        } in indexed metadata`
+        } in the agent's profile`
       : null,
   ].filter((value): value is string => Boolean(value));
   const scoreSuffix = usedScore
-    ? " A current, moderate-or-higher-confidence Sift Score resolved the evidence tie."
+    ? " The Sift Score was used to choose between equally matched agents."
     : "";
 
   return `The selected agent matches ${signals.join(

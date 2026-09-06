@@ -350,7 +350,7 @@ export function WalletStep({
     try {
       const refreshed = await loadRemoteHiringIntent(intent.id, resume.resumeToken);
       onIntentChange(refreshed);
-      setNotice("Saved hiring state refreshed.");
+      setNotice("Saved hiring details refreshed.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Sift could not refresh the saved state.");
     } finally {
@@ -369,14 +369,14 @@ export function WalletStep({
         intent.id,
         resume.resumeToken,
         "cancelled",
-        "Untouched hiring intent cancelled before changing wallets.",
+        "Hiring request cancelled before changing wallets.",
       );
       onRestart();
     } catch (error) {
       setNotice(
         error instanceof Error
           ? error.message
-          : "Sift could not safely cancel this untouched intent.",
+          : "Sift could not cancel this hiring request.",
       );
       setConfirmRestart(false);
     } finally {
@@ -395,7 +395,7 @@ export function WalletStep({
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
           Sift simulates every call, your wallet shows the request, and the server
-          verifies its receipt before unlocking the next action.
+          verifies its receipt before the next action is available.
         </p>
       </div>
 
@@ -492,7 +492,7 @@ export function WalletStep({
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <div>
               <p className="font-semibold">
-                This intent belongs to another wallet.
+                This hiring request belongs to another wallet.
               </p>
               <p className="mt-1 text-xs leading-5 text-amber-100/75">
                 Reconnect {shortenWalletAddress(intent.walletAddress)} to
@@ -534,7 +534,7 @@ export function WalletStep({
 
           {!restartAllowed ? (
             <p className="mt-3 text-xs leading-5 text-amber-100/70">
-              Restart is disabled because this intent already has submitted or
+              Restart is disabled because this hiring request already has submitted or
               confirmed blockchain activity. Switch back to the original wallet
               to avoid abandoning or duplicating the on-chain job.
             </p>
@@ -545,11 +545,11 @@ export function WalletStep({
       {confirmRestart ? (
         <div className="rounded-xl border border-border bg-background/60 p-4">
           <p className="text-sm font-semibold text-foreground">
-            Restart this untouched hiring flow?
+            Restart this hiring request?
           </p>
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            No blockchain transaction exists for this intent. Sift will cancel
-            only the saved database intent, keep your mission text in the form,
+            No blockchain transaction exists. Sift will cancel the saved
+            hiring request, keep your task description,
             and request a fresh signed quote for the currently connected wallet.
           </p>
           <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -559,7 +559,7 @@ export function WalletStep({
               disabled={busy}
               onClick={() => setConfirmRestart(false)}
             >
-              Keep current intent
+              Keep current hiring request
             </Button>
             <Button
               type="button"
@@ -574,7 +574,7 @@ export function WalletStep({
               ) : (
                 <ArrowLeft className="size-4" aria-hidden="true" />
               )}
-              Cancel intent and restart
+              Cancel and restart
             </Button>
           </div>
         </div>
@@ -601,7 +601,7 @@ export function WalletStep({
             onClick={() => setConfirmRestart(true)}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Edit mission or change wallet
+            Edit task or change wallet
           </Button>
         ) : null}
         <Button type="button" variant="outline" size="lg" onClick={refreshIntent} disabled={busy}>

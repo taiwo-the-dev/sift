@@ -22,11 +22,10 @@ export default function NotFound() {
           404 · Page not found
         </p>
         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
-          This route isn’t in the Sift catalogue
+          Page not found
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          The address may be outdated or mistyped. Return home or browse the
-          currently indexed ERC-8004 agents.
+          The address may be outdated or mistyped. Return home or browse agents.
         </p>
         <div className="mt-7 flex flex-col justify-center gap-2 sm:flex-row">
           <Link

@@ -54,7 +54,7 @@ export async function POST(request: Request): Promise<Response> {
     (origin && origin !== new URL(request.url).origin) ||
     !request.headers.get("content-type")?.startsWith("application/json")
   ) {
-    return json({ error: "Invalid hiring intent request." }, 400);
+    return json({ error: "Invalid hiring request." }, 400);
   }
 
   try {
@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<Response> {
       !isHiringIdempotencyKey(raw.idempotencyKey) ||
       !isHiringResumeToken(raw.resumeToken)
     ) {
-      return json({ error: "Invalid hiring intent identifiers." }, 400);
+      return json({ error: "Invalid hiring request IDs." }, 400);
     }
 
     let walletAddress: Address;
@@ -87,7 +87,7 @@ export async function POST(request: Request): Promise<Response> {
       !profile?.ownerAddress ||
       !resolveHiringCompatibility(profile)
     ) {
-      return json({ error: "The selected agent is not currently hireable." }, 409);
+      return json({ error: "The selected agent is not currently available to hire." }, 409);
     }
 
     const publicClient = getHiringPublicClient();
@@ -132,7 +132,7 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return json(
-        { error: error.issues[0]?.message ?? "Invalid hiring intent." },
+        { error: error.issues[0]?.message ?? "Invalid hiring request." },
         400,
       );
     }
@@ -148,6 +148,6 @@ export async function POST(request: Request): Promise<Response> {
     console.error("[hiring] intent creation failed", {
       error: error instanceof Error ? error.name : "UnknownError",
     });
-    return json({ error: "Sift could not save the hiring intent." }, 500);
+    return json({ error: "Sift could not save the hiring request." }, 500);
   }
 }

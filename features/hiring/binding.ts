@@ -53,7 +53,7 @@ export function assertActivationBinding(input: Readonly<{
   ) {
     throw new ActivationBindingError(
       "chain",
-      "The quote, agent, and activation deployment must all use BSC Testnet (chain 97).",
+      "The price quote, agent, and hiring contract must all use BSC Testnet (chain 97).",
     );
   }
 
@@ -63,7 +63,7 @@ export function assertActivationBinding(input: Readonly<{
   ) {
     throw new ActivationBindingError(
       "owner",
-      "The signed quote provider no longer matches the indexed agent owner.",
+      "The signed price quote no longer matches the agent owner's wallet.",
     );
   }
 
@@ -111,24 +111,24 @@ export function assertActivationBinding(input: Readonly<{
   if (new Date(input.quote.quoteExpiresAt).getTime() <= now + 30_000) {
     throw new ActivationBindingError(
       "expiry",
-      "The signed quote expired or leaves too little time to activate safely.",
+      "The signed price quote expired or leaves too little time to hire safely.",
     );
   }
 
   if (!isAddress(input.walletAddress)) {
     throw new ActivationBindingError(
       "wallet",
-      "A valid connected wallet is required before the activation intent can be saved.",
+      "Connect a valid wallet before saving the hiring request.",
     );
   }
 
   return [
     { key: "chain", label: "BSC Testnet · chain 97" },
-    { key: "owner", label: "Quote provider matches indexed owner" },
+    { key: "owner", label: "Price quote matches the agent owner" },
     { key: "contract", label: "Verified Agentic Commerce deployment" },
     { key: "token", label: "Verified U test token" },
     { key: "amount", label: "Finite budget at or below the reviewed maximum" },
-    { key: "expiry", label: "Current, bounded provider quote" },
-    { key: "wallet", label: "Explicitly connected activation wallet" },
+    { key: "expiry", label: "Price quote is current and has an expiry time" },
+    { key: "wallet", label: "Connected hiring wallet" },
   ];
 }

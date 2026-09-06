@@ -127,7 +127,7 @@ describe("Sift Score formula", () => {
     assert.equal(invalid.components.capability, null);
   });
 
-  it("caps declared capability evidence and does not call it performance", () => {
+  it("caps published service information and does not call it performance", () => {
     const singleDeclaration = calculateSiftScore(
       completeInput({
         services: [
@@ -148,7 +148,7 @@ describe("Sift Score formula", () => {
     assert.match(
       scoreComponentDefinitions.find(({ key }) => key === "capability")
         ?.description ?? "",
-      /declared/i,
+      /published|listed/i,
     );
   });
 
@@ -290,7 +290,7 @@ describe("Sift Score formula", () => {
 
     assert.equal(declarationsOnly.confidence, 0.2);
     assert.equal(declarationsOnly.score, null);
-    assert.match(declarationsOnly.limitations[0], /not enough independent/i);
+    assert.match(declarationsOnly.limitations[0], /not enough reliable data/i);
     assert.equal(oneHealthObservation.confidence, 0.4);
     assert.equal(oneHealthObservation.score, 100);
   });

@@ -29,8 +29,8 @@ export function SiteFooter() {
           <div>
             <Brand />
             <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
-              Find the right AI agent for the job through clear discovery,
-              comparison and trust signals.
+              Discover and compare on-chain AI agents using profile, capability,
+              and activity data linked to its source.
             </p>
           </div>
 
@@ -59,14 +59,14 @@ export function SiteFooter() {
               Ecosystem
             </p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Designed for agents and jobs across BNB Chain.
+              Built for ERC-8004 agent discovery and ERC-8183 task execution on BNB Chain.
             </p>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs leading-5 text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Sift.</p>
-          <p>Evidence first. Unknown stays unknown.</p>
+          <p>Agent data shown clearly, with its source.</p>
         </div>
       </div>
     </footer>

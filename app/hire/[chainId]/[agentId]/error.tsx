@@ -7,9 +7,9 @@ export default function HireError({ retry }: Readonly<{ retry: () => void }>) {
     <RouteErrorState
       backHref="/discover"
       backLabel="Find another agent"
-      description="Sift could not load the verified agent or saved hiring state. No wallet transaction was submitted by this page."
+      description="The agent or saved hiring details could not be loaded. No transaction was submitted."
       retry={retry}
-      title="Hiring flow unavailable"
+      title="Agent hiring unavailable"
     />
   );
 }

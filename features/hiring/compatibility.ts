@@ -138,58 +138,58 @@ export function assessHiringCompatibility(
   const checks: HiringCompatibilityCheck[] = [];
 
   if (profile.chainId !== HIRING_CHAIN_ID) {
-    checks.push(compatibilityCheck("network", "BSC Testnet", "fail", `Found chain ${profile.chainId}; activation requires chain 97.`));
+    checks.push(compatibilityCheck("network", "BSC Testnet", "fail", `Found chain ${profile.chainId}; hiring requires chain 97.`));
     return compatibilityAssessment(
       "unsupported-network",
-      "Activation is testnet-only",
-      "This identity is not registered on Sift's supported BSC Testnet activation network.",
+      "Hiring is testnet-only",
+      "This agent is not registered on BSC Testnet, the network Sift currently supports for hiring.",
       checks,
     );
   }
-  checks.push(compatibilityCheck("network", "BSC Testnet", "pass", "Indexed on chain 97."));
+  checks.push(compatibilityCheck("network", "BSC Testnet", "pass", "Registered on BSC Testnet (chain 97)."));
 
   if (profile.metadataStatus !== "valid") {
-    checks.push(compatibilityCheck("metadata", "Validated metadata", "fail", `Indexed metadata is ${profile.metadataStatus}.`));
+    checks.push(compatibilityCheck("metadata", "Verified profile", "fail", `Profile status: ${profile.metadataStatus}.`));
     return compatibilityAssessment(
       "invalid-metadata",
-      "Metadata is not currently validated",
-      "Sift cannot bind an activation to agent details that failed or have not completed validation.",
+      "The agent's profile is not verified",
+      "Sift cannot hire an agent until its profile passes verification.",
       checks,
     );
   }
-  checks.push(compatibilityCheck("metadata", "Validated metadata", "pass", "The indexed metadata passed validation."));
+  checks.push(compatibilityCheck("metadata", "Verified profile", "pass", "The agent's profile passed verification."));
 
   if (profile.active === false) {
-    checks.push(compatibilityCheck("identity", "Active identity", "fail", "The indexed identity is declared inactive."));
+    checks.push(compatibilityCheck("identity", "Active agent", "fail", "The agent is listed as inactive."));
     return compatibilityAssessment(
       "inactive-agent",
-      "This identity is inactive",
-      "The agent has been marked inactive, so Sift will not request a quote or prepare a transaction.",
+      "This agent is inactive",
+      "This agent is inactive. Price quotes and hiring transactions are unavailable.",
       checks,
     );
   }
 
   if (!profile.ownerAddress || !isAddress(profile.ownerAddress)) {
-    checks.push(compatibilityCheck("identity", "Verified owner", "fail", "No valid indexed EVM owner is available."));
+    checks.push(compatibilityCheck("identity", "Verified owner", "fail", "No valid wallet address is available for the agent owner."));
     return compatibilityAssessment(
       "missing-owner",
       "A verified owner is unavailable",
-      "Sift needs the indexed owner to verify the provider status and signed quote.",
+      "Sift needs the owner's wallet address to verify the agent and its signed price quote.",
       checks,
     );
   }
-  checks.push(compatibilityCheck("identity", "Verified owner", "pass", "A valid indexed EVM owner is available."));
+  checks.push(compatibilityCheck("identity", "Verified owner", "pass", "A valid owner wallet address is available."));
 
   const declarations = profile.services.filter((service) =>
     isErc8183ServiceType(service.serviceType),
   );
 
   if (declarations.length === 0) {
-    checks.push(compatibilityCheck("service", "ERC-8183 service", "fail", "No ERC-8183 service is declared in indexed metadata."));
+    checks.push(compatibilityCheck("service", "ERC-8183 service", "fail", "The agent's profile does not list an ERC-8183 service."));
     return compatibilityAssessment(
       "missing-service",
-      "No supported hiring service is declared",
-      "This agent can still be inspected, but it has not published the ERC-8183 service Sift needs for activation.",
+      "No supported hiring service is listed",
+      "This agent can still be viewed, but it has not published the ERC-8183 service Sift needs for hiring.",
       checks,
     );
   }
@@ -199,37 +199,37 @@ export function assessHiringCompatibility(
   );
 
   if (supportedDeclarations.length === 0) {
-    checks.push(compatibilityCheck("service", "Supported ERC-8183 version", "fail", "The declared service version is outside Sift's reviewed 0.x/1.x contract."));
+    checks.push(compatibilityCheck("service", "Supported ERC-8183 version", "fail", "Sift does not support the ERC-8183 version listed by this agent."));
     return compatibilityAssessment(
       "unsupported-service-version",
       "The service version is not supported",
-      "Sift supports current 0.x and 1.x ERC-8183 declarations and fails closed for unknown major versions.",
+      "Sift currently supports ERC-8183 versions 0.x and 1.x. Agents using unknown major versions cannot be hired.",
       checks,
     );
   }
-  checks.push(compatibilityCheck("service", "Supported ERC-8183 service", "pass", "A reviewed 0.x, 1.x, or unversioned declaration is present."));
+  checks.push(compatibilityCheck("service", "Supported ERC-8183 service", "pass", "A supported 0.x, 1.x, or unversioned service is listed."));
 
   for (const service of supportedDeclarations) {
     if (!service.endpoint) continue;
     const compatibility = deriveProtocolUrls(service.endpoint);
 
     if (compatibility) {
-      checks.push(compatibilityCheck("endpoint", "Public task endpoint", "pass", "A public HTTPS status and negotiation path can be derived."));
+      checks.push(compatibilityCheck("endpoint", "Public service address", "pass", "A public HTTPS address is available for status and price checks."));
       return compatibilityAssessment(
         "compatible",
         "Ready for live compatibility checks",
-        "The declaration passed static checks. Sift will still verify the live service, signed quote, deployment, and receipts.",
+        "The profile passed the first checks. Sift will still verify the live service, signed price quote, contract, and transaction receipts.",
         checks,
         compatibility,
       );
     }
   }
 
-  checks.push(compatibilityCheck("endpoint", "Public task endpoint", "fail", "No safe public HTTPS endpoint can be derived from the declaration."));
+  checks.push(compatibilityCheck("endpoint", "Public service address", "fail", "No safe public HTTPS service address is available."));
   return compatibilityAssessment(
     "unsafe-endpoint",
-    "A safe public task endpoint is unavailable",
-    "The declaration is missing an endpoint or uses credentials, query parameters, a placeholder host, a non-HTTPS URL, or a non-standard port.",
+    "A safe public service address is unavailable",
+    "The service address is missing or uses an unsupported URL, credentials, query parameters, host, or port.",
     checks,
   );
 }
@@ -248,7 +248,7 @@ export function hasErc8183Declaration(
 
 export function toHiringAgentSummary(profile: AgentProfile): HiringAgentSummary {
   if (!profile.ownerAddress || !isAddress(profile.ownerAddress)) {
-    throw new TypeError("A hireable agent must have a valid indexed owner address.");
+    throw new TypeError("An activatable agent must have a valid owner wallet address.");
   }
 
   return {

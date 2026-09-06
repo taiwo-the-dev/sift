@@ -92,7 +92,7 @@ export async function fetchSafeAgentJson(
         if (error instanceof MetadataUrlError) {
           throw new HiringQuoteError(
             "agent-unavailable",
-            "The declared agent endpoint could not pass Sift's public-network safety checks.",
+            "The agent's service address did not pass Sift's network safety checks.",
           );
         }
 
@@ -117,7 +117,7 @@ export async function fetchSafeAgentJson(
         if (!location || redirectCount === 2) {
           throw new HiringQuoteError(
             "agent-unavailable",
-            "The agent endpoint returned an unsafe redirect chain.",
+            "The agent's service address redirected to an unsafe location.",
           );
         }
 
@@ -162,4 +162,3 @@ export async function fetchSafeAgentJson(
     "Sift could not reach the agent's quote service.",
   );
 }
-

@@ -29,22 +29,22 @@ interface PermissionsStepProps {
 
 const restrictions = [
   {
-    detail: "The signed quote and on-chain job both name the selected indexed owner.",
+    detail: "The signed quote and on-chain job use the agent's registered owner.",
     icon: UserRoundCheck,
     title: "Fixed provider",
   },
   {
-    detail: "The job budget is the provider's signed quote, never your higher spending cap.",
+    detail: "The ERC-8183 job budget is the provider's signed quote, never your higher spending cap.",
     icon: CircleDollarSign,
     title: "Exact budget",
   },
   {
     detail: "The escrow job has an on-chain deadline after which protocol recovery rules apply.",
     icon: CalendarClock,
-    title: "Bounded expiry",
+    title: "Fixed deadline",
   },
   {
-    detail: "Evaluation is routed only through the verified allowlisted optimistic policy.",
+    detail: "Evaluation uses the verified optimistic policy approved by Sift.",
     icon: Route,
     title: "Verified evaluator",
   },
@@ -61,15 +61,14 @@ export function PermissionsStep({
     <section className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-          Step 2 · Enforceable permissions
+          Step 2 · Limits and permissions
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-          These are the limits the protocol can enforce.
+          Review what the protocol will allow.
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Sift does not show switches for unsupported controls. Wallet access,
-          private data, arbitrary contracts, and autonomous spending are not
-          granted by this flow.
+          This flow grants no access to private data, arbitrary contracts, or
+          unrestricted spending.
         </p>
       </div>
 
@@ -132,10 +131,10 @@ export function PermissionsStep({
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <Button type="button" variant="outline" size="lg" onClick={onBack}>
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Edit mission
+          Edit task
         </Button>
         <Button type="button" size="lg" onClick={onContinue}>
-          Review exact action
+          Review hiring details
           <ArrowRight className="size-4" aria-hidden="true" />
         </Button>
       </div>

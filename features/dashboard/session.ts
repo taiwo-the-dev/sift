@@ -43,7 +43,7 @@ export function buildDashboardChallengeMessage(input: Readonly<{
   return [
     "Sift Dashboard",
     "",
-    "Approve read-only access to jobs owned by this wallet.",
+    "Approve read-only access to agent task records owned by this wallet.",
     "",
     `URI: ${input.origin}`,
     `Wallet: ${getAddress(input.walletAddress)}`,

@@ -80,7 +80,7 @@ export const hiringMissionSchema = z.object({
       return z.NEVER;
     }
   }),
-  mission: normalizedText(20, 1_500, "Mission"),
+  mission: normalizedText(20, 1_500, "Task description"),
   qualityStandards: normalizedText(10, 700, "Quality standards"),
 });
 
@@ -126,7 +126,7 @@ export function calculateExpiry(
   nowMilliseconds: number = Date.now(),
 ): Date {
   if (!hiringDurations.some((duration) => duration === durationSeconds)) {
-    throw new TypeError("Unsupported hiring duration.");
+    throw new TypeError("Unsupported execution duration.");
   }
 
   const expiry = new Date(nowMilliseconds + durationSeconds * 1_000);

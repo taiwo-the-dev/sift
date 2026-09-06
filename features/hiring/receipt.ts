@@ -53,7 +53,7 @@ function unixSeconds(isoTimestamp: string): bigint {
   if (!Number.isFinite(milliseconds)) {
     throw new HiringTransactionVerificationError(
       "invalid-transaction",
-      "The saved hiring expiry is invalid.",
+      "The saved hiring expiry time is invalid.",
     );
   }
 

@@ -20,8 +20,8 @@ export function ProfileActivity({ profile }: ProfileActivityProps) {
     <ProfileSection
       id="activity"
       eyebrow="04 · Activity"
-      title="Traceable identity events"
-      description="Only registration and Sift indexing events with persisted timestamps are shown. This is not a transaction or job-activity feed."
+      title="Registration history"
+      description="Registration and index history. This is separate from agent execution activity."
     >
       <ol className="relative ml-4 border-l border-border">
         <li className="relative pb-8 pl-8">
@@ -29,7 +29,7 @@ export function ProfileActivity({ profile }: ProfileActivityProps) {
             <Blocks className="size-3.5" aria-hidden="true" />
           </span>
           <p className="text-sm font-semibold text-foreground">
-            ERC-8004 identity registered
+            Agent registered with ERC-8004
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {formatProfileTimestamp(profile.registeredAt)} on{" "}
@@ -58,11 +58,10 @@ export function ProfileActivity({ profile }: ProfileActivityProps) {
               <BadgeCheck className="size-3.5" aria-hidden="true" />
             </span>
             <p className="text-sm font-semibold text-foreground">
-              Metadata validation succeeded
+              Profile verified
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {formatProfileTimestamp(profile.metadataVerifiedAt)} · Sift Indexer
-              observation
+              {formatProfileTimestamp(profile.metadataVerifiedAt)} · Sift profile check
             </p>
           </li>
         ) : null}
@@ -72,11 +71,10 @@ export function ProfileActivity({ profile }: ProfileActivityProps) {
             <Database className="size-3.5" aria-hidden="true" />
           </span>
           <p className="text-sm font-semibold text-foreground">
-            Catalogue record last synchronized
+            Agent record updated
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {formatProfileTimestamp(profile.lastSyncedAt)} · This timestamp
-            describes Sift&apos;s index, not agent execution.
+            {formatProfileTimestamp(profile.lastSyncedAt)} · Sift update
           </p>
         </li>
       </ol>

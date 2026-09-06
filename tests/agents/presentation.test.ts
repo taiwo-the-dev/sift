@@ -39,11 +39,11 @@ describe("agent profile presentation", () => {
     ]);
   });
 
-  it("describes valid, stale and unavailable provenance honestly", () => {
+  it("describes valid, stale and unavailable profile data honestly", () => {
     assert.equal(
       describeProfileProvenance("valid", true, "2026-08-22T10:00:00Z")
         .label,
-      "Validated indexed metadata",
+      "Profile verified",
     );
     assert.equal(
       describeProfileProvenance(
@@ -55,7 +55,7 @@ describe("agent profile presentation", () => {
     );
     assert.equal(
       describeProfileProvenance("invalid", false, null).label,
-      "Invalid metadata",
+      "Invalid profile data",
     );
   });
 

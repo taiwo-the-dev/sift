@@ -66,14 +66,14 @@ export async function POST(request: Request): Promise<Response> {
     );
 
     if (!identity) {
-      return json({ error: "Invalid agent identity." }, 400);
+      return json({ error: "Invalid agent ID or network." }, 400);
     }
 
     const mission = parseHiringMission(raw);
     const profile = await getAgentProfile(identity.chainId, identity.agentId);
 
     if (!profile || !profile.ownerAddress) {
-      return json({ error: "The indexed agent is not available." }, 404);
+      return json({ error: "This agent is not available." }, 404);
     }
 
     const compatibility = resolveHiringCompatibility(profile);
@@ -82,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
       return json(
         {
           error:
-            "This agent does not expose a safe, supported ERC-8183 testnet quote endpoint.",
+            "This agent does not provide a safe ERC-8183 price service on BSC Testnet.",
         },
         409,
       );
@@ -121,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
     if (BigInt(quote.budgetBaseUnits) < status.servicePrice) {
       throw new HiringQuoteError(
         "invalid-quote",
-        "The signed quote is below the agent's currently declared service price.",
+        "The signed price quote is below the price listed by the agent.",
       );
     }
 
@@ -136,7 +136,7 @@ export async function POST(request: Request): Promise<Response> {
       return json(
         {
           error:
-            error.issues[0]?.message ?? "Review the mission fields and try again.",
+            error.issues[0]?.message ?? "Review the task fields and try again.",
         },
         400,
       );
@@ -151,4 +151,3 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 }
-

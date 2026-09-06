@@ -75,6 +75,91 @@ const noEvidence = {
 };
 
 describe("discovery repository integration boundary", () => {
+  it("uses a bounded indexed table path for the unfiltered recent catalogue", async () => {
+    const calls: unknown[] = [];
+    const recentRow = {
+      active: true,
+      agent_category_evidence: [
+        {
+          category: "grid-trading",
+          confidence: 0.65,
+          evidence: { matchedTerms: ["grid strategy"] },
+          facts: [],
+          observed_at: "2026-09-05T09:00:00.000Z",
+          rule_version: "sift-category-taxonomy-v1.0.0",
+          source: "deterministic-rule",
+        },
+      ],
+      agent_id: "205",
+      agent_services: [{ service_type: "A2A", version: "1.0" }],
+      chain_id: 56,
+      description: "Fixture latest registration",
+      id: "33333333-3333-4333-8333-333333333333",
+      image_url: null,
+      last_synced_at: "2026-09-05T09:00:00.000Z",
+      metadata_status: "valid",
+      name: "Fixture Latest Agent",
+      owner_address: "0x3333333333333333333333333333333333333333",
+      registered_at: "2026-09-05T08:59:00.000Z",
+      registered_block: 205,
+      registry_address: "0x8004a169fb4a3325136eb29fa0ceb6d2e539a432",
+      x402_supported: false,
+    };
+    const request = {
+      eq(column: string, value: unknown) {
+        calls.push({ column, operation: "eq", value });
+        return request;
+      },
+      in(column: string, value: unknown) {
+        calls.push({ column, operation: "in", value });
+        return request;
+      },
+      order(column: string, options: unknown) {
+        calls.push({ column, operation: "order", options });
+        return request;
+      },
+      async range(from: number, to: number) {
+        calls.push({ from, operation: "range", to });
+        return { data: [recentRow], error: null };
+      },
+      select() {
+        calls.push({ operation: "select" });
+        return request;
+      },
+    };
+    const client = {
+      from(table: string) {
+        calls.push({ operation: "from", table });
+        return request;
+      },
+      async rpc() {
+        throw new Error("The recent fast path must not call search_agents.");
+      },
+    } as unknown as SupabaseClient<Database>;
+
+    const result = await createDiscoveryRepository(
+      client,
+      noEvidence,
+    ).listRecentlyRegistered();
+
+    assert.equal(result.agents.length, 1);
+    assert.equal(result.agents[0]?.agentId, "205");
+    assert.deepEqual(result.agents[0]?.categories, ["grid-trading"]);
+    assert.deepEqual(result.agents[0]?.services, [
+      { serviceType: "A2A", version: "1.0" },
+    ]);
+    assert.deepEqual(calls.slice(0, 3), [
+      { operation: "from", table: "agents" },
+      { operation: "select" },
+      { column: "chain_id", operation: "eq", value: 56 },
+    ]);
+    assert.deepEqual(calls.at(-1), {
+      from: 0,
+      operation: "range",
+      to: 12,
+    });
+  });
+
   it("passes validated combined filters to the database function", async () => {
     const calls: unknown[] = [];
     const client = {
@@ -89,7 +174,7 @@ describe("discovery repository integration boundary", () => {
       page: "2",
       q: "automate grid trading",
       size: "12",
-      sort: "recent",
+      sort: "profile-first",
     });
 
     const result = await createDiscoveryRepository(client, noEvidence).search(query);
@@ -104,7 +189,7 @@ describe("discovery repository integration boundary", () => {
           p_page: 2,
           p_page_size: 12,
           p_search_terms: ["automate", "grid", "trading"],
-          p_sort: "recent",
+          p_sort: "profile-first",
         },
       },
     ]);

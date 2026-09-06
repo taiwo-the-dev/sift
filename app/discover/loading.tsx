@@ -4,7 +4,7 @@ export default function DiscoverLoading() {
   return (
     <div
       role="status"
-      aria-label="Loading indexed agents"
+      aria-label="Loading agents"
       className="flex-1 bg-background"
     >
       <div className="border-b border-border bg-card">

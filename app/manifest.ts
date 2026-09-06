@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     background_color: "#0b0e11",
-    description: "Find the right AI agent for the job on BNB Chain.",
+    description: "Discover, compare, and hire AI agents on BNB Chain.",
     display: "standalone",
     icons: [
       {

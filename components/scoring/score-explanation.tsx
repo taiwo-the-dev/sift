@@ -22,8 +22,7 @@ export function ScoreExplanation({ score }: ScoreExplanationProps) {
           Sift Score not calculated yet
         </h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          No persisted M6 assessment exists for this identity. Sift does not
-          substitute a placeholder rating.
+          No Sift Score is available for this agent.
         </p>
       </article>
     );
@@ -45,21 +44,21 @@ export function ScoreExplanation({ score }: ScoreExplanationProps) {
           </p>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <p className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-              {score.score === null ? "Not enough evidence" : `${score.score}/100`}
+              {score.score === null ? "Not enough data" : `${score.score}/100`}
             </p>
             <span className="text-sm font-medium text-brand">
               {describeScoreConfidence(score.confidence)}
             </span>
           </div>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {formatScoreConfidence(score.confidence)}. Missing signals lower
-            confidence instead of becoming assumed values.
+            {formatScoreConfidence(score.confidence)}. Missing data lowers the
+            confidence level.
           </p>
         </div>
         <div className="text-xs text-muted-foreground sm:text-right">
           <p className="inline-flex items-center gap-1.5 sm:justify-end">
             <History className="size-3.5" aria-hidden="true" />
-            {stale ? "Stale assessment" : "Current assessment"}
+            {stale ? "Update needed" : "Up to date"}
           </p>
           <p className="mt-1">{formatProfileTimestamp(score.calculatedAt)}</p>
         </div>
@@ -110,23 +109,23 @@ export function ScoreExplanation({ score }: ScoreExplanationProps) {
 
           <div className="mt-6 border-t border-border pt-5">
             <p className="text-xs font-semibold text-foreground">
-              Evidence freshness
+              Source updates
             </p>
             <dl className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
               <div>
-                <dt>Health observed</dt>
+                <dt>Health check</dt>
                 <dd className="mt-1 font-medium text-foreground">
                   {formatProfileTimestamp(score.sourceFreshness.healthAt)}
                 </dd>
               </div>
               <div>
-                <dt>Metadata verified</dt>
+                <dt>Profile verified</dt>
                 <dd className="mt-1 font-medium text-foreground">
                   {formatProfileTimestamp(score.sourceFreshness.metadataAt)}
                 </dd>
               </div>
               <div>
-                <dt>Reputation observed</dt>
+                <dt>Reputation checked</dt>
                 <dd className="mt-1 font-medium text-foreground">
                   {formatProfileTimestamp(score.sourceFreshness.reputationAt)}
                 </dd>
@@ -140,10 +139,10 @@ export function ScoreExplanation({ score }: ScoreExplanationProps) {
               {missingRows.length > 0
                 ? `${missingRows.map((row) => row.label).join(", ")} ${
                     missingRows.length === 1 ? "is" : "are"
-                  } not included because current supported evidence is unavailable or stale.`
-                : "All versioned formula components have supported current inputs."}
-              {" "}A Sift Score is decision support—not proof that an agent is
-              safe, suitable, or best for every task.
+                  } not included because the data is missing or outdated.`
+                : "All six scoring factors have current data."}
+              {" "}Sift Score supports comparison; it does not certify agent
+              safety or suitability.
             </p>
           </div>
         </div>

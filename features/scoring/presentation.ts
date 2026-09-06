@@ -17,11 +17,11 @@ export function describeScoreConfidence(confidence: number): string {
     return "Low confidence";
   }
 
-  return "No supported confidence";
+  return "Not enough data";
 }
 
 export function formatScoreConfidence(confidence: number): string {
-  return `${Math.round(Math.max(0, Math.min(1, confidence)) * 100)}% evidence coverage`;
+  return `${Math.round(Math.max(0, Math.min(1, confidence)) * 100)}% data coverage`;
 }
 
 export function isScoreStale(

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 const localSiteUrl = new URL("http://localhost:3000");
 const socialImage = {
-  alt: "Sift — Find the right AI agent for the job",
+  alt: "Sift — On-chain AI agent discovery for BNB Chain",
   height: 630,
   url: "/opengraph-image",
   width: 1_200,

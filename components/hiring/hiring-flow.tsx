@@ -77,7 +77,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       queueMicrotask(() => {
         if (!active) return;
         setMission(draft.mission);
-        setRecoveryNotice("Your saved mission was restored on this device. No quote, signature, approval, or wallet session was reused.");
+        setRecoveryNotice("Your saved task was restored on this device. No quote, signature, approval, or wallet session was reused.");
       });
     }
 
@@ -141,7 +141,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     } catch (caught) {
       setError(
         caught instanceof z.ZodError
-          ? caught.issues[0]?.message ?? "Review the mission fields."
+          ? caught.issues[0]?.message ?? "Review the task fields."
           : caught instanceof Error
             ? caught.message
             : "Sift could not request a signed quote.",
@@ -158,7 +158,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       setQuote(null);
       setQuoteWallet(null);
       setStep("mission");
-      setRecoveryNotice("Your wallet changed. Your mission was kept, but the previous quote was cleared so the new wallet starts from a fresh review.");
+      setRecoveryNotice("Your wallet changed. Your task was kept, but the previous quote was cleared so the new wallet starts from a fresh review.");
       return;
     }
 
@@ -203,7 +203,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       setError(
         caught instanceof Error
           ? caught.message
-          : "Sift could not save the hiring intent.",
+          : "Sift could not save the hiring request.",
       );
     } finally {
       setPending(false);
@@ -225,7 +225,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     setQuote(null);
     setQuoteWallet(null);
     setError(null);
-    setRecoveryNotice("Your mission was kept. Request a fresh signed quote before continuing with the connected wallet.");
+    setRecoveryNotice("Your task was kept. Request a fresh signed quote before continuing with the connected wallet.");
     setStep("mission");
   }
 
@@ -234,7 +234,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       <div className="grid min-h-[28rem] place-items-center rounded-2xl border border-border bg-card p-8">
         <div className="text-center">
           <LoaderCircle className="mx-auto size-6 animate-spin text-brand" aria-hidden="true" />
-          <p className="mt-3 text-sm text-muted-foreground">Checking for a saved hiring flow…</p>
+          <p className="mt-3 text-sm text-muted-foreground">Checking for a saved hiring session…</p>
         </div>
       </div>
     );
@@ -270,11 +270,11 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/7 p-3">
           <p className="flex items-center gap-2 text-xs font-semibold text-emerald-200">
             <BadgeCheck className="size-3.5" aria-hidden="true" />
-            Compatible declaration found
+            Compatible service found
           </p>
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            Static identity and endpoint checks passed. Live status, provider
-            signature, contracts, and quote are verified before wallet actions.
+            Registration and endpoint checks passed. The provider signature,
+            contracts, and quote are checked before wallet approval.
           </p>
         </div>
         <div className="mt-5 flex items-start gap-2 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">

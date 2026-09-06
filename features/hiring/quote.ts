@@ -197,7 +197,7 @@ export function buildSignedJobDescription(
   if (new TextEncoder().encode(description).byteLength > MAXIMUM_DESCRIPTION_BYTES) {
     throw new HiringQuoteError(
       "invalid-quote",
-      "The signed quote is too large for Sift's bounded on-chain description.",
+      "The signed price quote is too large to save in the blockchain transaction.",
     );
   }
 
@@ -245,7 +245,7 @@ export function parseAgentCommerceStatus(
   ) {
     throw new HiringQuoteError(
       "invalid-agent-status",
-      "The agent status does not match its indexed owner and Sift's verified testnet deployment.",
+      "The live agent status does not match its registered owner or Sift's verified testnet contract.",
     );
   }
 
@@ -271,7 +271,7 @@ export function parseNegotiationEnvelope(
     throw new HiringQuoteError(
       "quote-declined",
       result.data.response.reason?.slice(0, 200) ||
-        "The agent declined this mission.",
+        "The agent declined this task.",
     );
   }
 
@@ -324,7 +324,7 @@ async function verifyEnvelopeSignature(
 
   throw new HiringQuoteError(
     "quote-signature-invalid",
-    "The provider signature could not be verified against the indexed owner.",
+    "The provider signature does not match the agent owner's wallet.",
   );
 }
 
@@ -370,7 +370,7 @@ export async function validateHiringQuote(
   ) {
     throw new HiringQuoteError(
       "invalid-quote",
-      "The quote does not preserve the mission terms submitted to the agent.",
+      "The quote does not preserve the task requirements submitted to the agent.",
     );
   }
 

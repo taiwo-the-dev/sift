@@ -91,6 +91,17 @@ describe("discovery query parsing", () => {
     assert.equal(query.sort, "relevance");
   });
 
+  it("accepts the extended catalogue sort options", () => {
+    assert.equal(
+      parseDiscoverySearchParams({ sort: "profile-first" }).sort,
+      "profile-first",
+    );
+    assert.equal(
+      parseDiscoverySearchParams({ sort: "name-desc" }).sort,
+      "name-desc",
+    );
+  });
+
   it("serializes shareable combined state with repeated filters", () => {
     const query = parseDiscoverySearchParams({
       category: ["yield-optimisation", "grid-trading"],

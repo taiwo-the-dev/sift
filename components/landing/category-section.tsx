@@ -10,14 +10,13 @@ export function CategorySection() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Explore by category
+              Explore by use case
             </p>
             <h2 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-5xl">
-              What should your <span className="text-brand">agent do?</span>
+              What workflow should an <span className="text-brand">agent automate?</span>
             </h2>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-              Start with a familiar outcome, then move toward evidence and
-              comparison as verified agent data becomes available.
+              Browse agents by task, then compare their services, health, and ratings.
             </p>
           </div>
           <Link
@@ -35,10 +34,10 @@ export function CategorySection() {
         <div className="mt-12 rounded-2xl border border-brand/80 p-3 sm:p-5">
           <div className="flex items-center justify-between gap-4 border-b border-border px-2 pb-4 sm:px-1">
             <p className="text-sm font-semibold text-foreground">
-              Core discovery routes
+              Supported agent use cases
             </p>
             <p className="hidden text-xs uppercase tracking-[0.14em] text-muted-foreground sm:block">
-              Choose an outcome
+              Four categories
             </p>
           </div>
 
@@ -60,7 +59,7 @@ export function CategorySection() {
                       {category.description}
                     </p>
                     <p className="mt-auto pt-6 text-sm font-semibold text-foreground transition-colors group-hover:text-brand">
-                      Explore this category
+                      View matching agents
                     </p>
                   </div>
                   <ArrowUpRight

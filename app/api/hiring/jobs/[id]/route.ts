@@ -112,7 +112,7 @@ export async function GET(
   const token = resumeToken(request);
 
   if (!id || !token) {
-    return json({ error: "Saved hiring flow not found." }, 404);
+    return json({ error: "Saved hiring process not found." }, 404);
   }
 
   try {
@@ -126,7 +126,7 @@ export async function GET(
     console.error("[hiring] intent load failed", {
       error: error instanceof Error ? error.name : "UnknownError",
     });
-    return json({ error: "Sift could not load the saved hiring flow." }, 500);
+    return json({ error: "Sift could not load the saved hiring process." }, 500);
   }
 }
 
@@ -147,7 +147,7 @@ export async function PATCH(
     (request.headers.get("origin") &&
       request.headers.get("origin") !== new URL(request.url).origin)
   ) {
-    return json({ error: "Invalid saved hiring flow request." }, 400);
+    return json({ error: "Invalid saved hiring request." }, 400);
   }
 
   try {
@@ -160,7 +160,7 @@ export async function PATCH(
 
       if (!canTransitionHiringIntent(authorized.snapshot.status, nextStatus)) {
         throw new HiringConflictError(
-          "The saved hiring flow cannot move to that state.",
+          "The saved hiring process cannot move to that step.",
         );
       }
 
@@ -194,7 +194,7 @@ export async function PATCH(
         return json({ intent: authorized.snapshot });
       }
 
-      throw new HiringConflictError("This hiring flow is already confirmed.");
+      throw new HiringConflictError("This hiring process is already confirmed.");
     }
 
     const confirmedSteps = authorized.snapshot.transactions
@@ -303,7 +303,7 @@ export async function PATCH(
     return json({ intent: snapshot });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return json({ error: "Invalid hiring state update." }, 400);
+      return json({ error: "Invalid hiring status update." }, 400);
     }
 
     if (error instanceof HiringAuthorizationError) {

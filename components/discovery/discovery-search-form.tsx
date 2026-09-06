@@ -32,7 +32,7 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
 
         <div className="relative min-w-0">
           <label htmlFor="discovery-query" className="sr-only">
-            Search indexed agents
+            Search agents
           </label>
           <Search
             aria-hidden="true"
@@ -44,7 +44,7 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
             type="search"
             maxLength={180}
             defaultValue={query.query}
-            placeholder="Describe a goal, capability or service"
+            placeholder="Search by task, protocol, service, or capability"
             className="h-14 w-full rounded-lg border border-input bg-background pl-12 pr-4 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-ring focus:ring-3 focus:ring-ring/15"
           />
         </div>
@@ -60,12 +60,12 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
           role="status"
           className="mt-4 flex flex-col gap-1 border-l-2 border-brand pl-4 text-sm sm:flex-row sm:items-center sm:gap-2"
         >
-          <span className="font-semibold text-foreground">Intent mapped:</span>
+          <span className="font-semibold text-foreground">Suggested category:</span>
           <span className="text-brand">
             {formatCategory(query.inferredCategory)}
           </span>
           <span className="text-muted-foreground sm:before:mr-2 sm:before:content-['·']">
-            using deterministic keywords, not an AI-generated ranking
+            Based on your search terms
           </span>
         </div>
       ) : null}

@@ -22,7 +22,6 @@ import {
   hasHumanReadableMetadata,
 } from "@/features/agents/presentation";
 import {
-  formatAgentDescription,
   formatAgentName,
   formatCategory,
   formatChainName,
@@ -83,21 +82,21 @@ export function ProfileHeader({
     profile.registryAddress,
   );
   const scoreValue = !profile.score
-    ? "Not assessed"
+    ? "Not available"
     : profile.score.score === null
-      ? "Assessment withheld"
+      ? "Not enough data"
       : `${profile.score.score}/100`;
   const scoreDetail = !profile.score
-    ? "No persisted Sift Score yet"
+    ? "Sift Score not available"
     : profile.score.score === null
       ? `${describeScoreConfidence(profile.score.confidence)} · insufficient evidence`
       : describeScoreConfidence(profile.score.confidence);
   const healthValue = profile.health
     ? `${isHealthStale(profile.health) ? "Stale " : ""}${profile.health.status}`
-    : "Not observed";
+    : "Not checked";
   const healthDetail = profile.health
     ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`
-    : "No endpoint observation exists";
+    : "No health check available";
   const hireable = resolveHiringCompatibility(profile) !== null;
 
   return (
@@ -160,20 +159,17 @@ export function ProfileHeader({
                     )}
                   />
                   {profile.active === null
-                    ? "Status not declared"
+                    ? "Status not listed"
                     : profile.active
-                      ? "Declared active"
-                      : "Declared inactive"}
+                      ? "Listed as active"
+                      : "Listed as inactive"}
                 </span>
               </div>
 
               <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
                 {name}
               </h1>
-              <p className="mt-3 max-w-3xl text-pretty text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-                {formatAgentDescription(profile.description)}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {profile.categories.map((category) => (
                   <span
                     key={category}
@@ -226,7 +222,7 @@ export function ProfileHeader({
                 <CircleAlert className="size-4 text-amber-300" aria-hidden="true" />
               )
             }
-            label="Metadata"
+            label="Profile"
             value={formatMetadataStatus(profile.metadataStatus)}
             detail={`Verified ${formatProfileTimestamp(profile.metadataVerifiedAt)}`}
           />
@@ -238,18 +234,18 @@ export function ProfileHeader({
           />
           <EvidenceStat
             icon={<RadioTower className="size-4 text-sky-300" aria-hidden="true" />}
-            label="Observed health"
+            label="Health"
             value={healthValue}
             detail={healthDetail}
           />
           <EvidenceStat
             icon={<ServerCog className="size-4 text-violet-300" aria-hidden="true" />}
-            label="Declared services"
+            label="Services"
             value={profile.services.length.toString()}
             detail={
               profile.services.length === 1
-                ? "1 indexed service declaration"
-                : `${profile.services.length} indexed service declarations`
+                ? "1 service listed"
+                : `${profile.services.length} services listed`
             }
           />
         </dl>
@@ -268,17 +264,17 @@ export function ProfileHeader({
             </p>
           </div>
           <p className="shrink-0 text-xs opacity-75">
-            Indexed {formatProfileTimestamp(profile.lastSyncedAt)}
+            Updated {formatProfileTimestamp(profile.lastSyncedAt)}
           </p>
         </div>
 
         <div className="mt-4 rounded-xl border border-border bg-background/55 px-4 py-3 text-xs leading-5 text-muted-foreground">
-          <span className="font-semibold text-foreground">Activation availability: </span>
+          <span className="font-semibold text-foreground">Hiring availability: </span>
           {hireable
-            ? "This BSC Testnet identity declares a compatible ERC-8183 service and can enter Sift’s guarded hiring flow."
+            ? "Available to hire through ERC-8183 on BSC Testnet."
             : profile.chainId === 56
-              ? "Discovery and comparison are available on BSC Mainnet. Mainnet hiring is intentionally disabled; Sift currently activates only compatible BSC Testnet ERC-8183 agents."
-              : "This identity is discoverable, but it does not currently meet every validated ERC-8183 hiring requirement. No activation capability is implied."}
+              ? "Mainnet agents can be discovered and compared. Hiring is currently limited to BSC Testnet."
+              : "This agent does not meet the current ERC-8183 hiring requirements."}
         </div>
       </div>
     </header>

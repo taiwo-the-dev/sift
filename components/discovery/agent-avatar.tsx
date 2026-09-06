@@ -23,7 +23,7 @@ function AgentArtworkFallback({
     <div
       role="img"
       aria-label={`${name} has no registered image`}
-      title="No image was supplied in this agent's indexed metadata"
+      title="No profile image available"
       className={cn(
         "relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-brand/25 bg-secondary",
         size === "profile"

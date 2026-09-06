@@ -12,10 +12,10 @@ export default function DiscoverError({ error, retry }: DiscoverErrorProps) {
     <RouteErrorState
       backHref="/"
       backLabel="Return home"
-      description="The database connection may be temporarily unavailable. No agent data has been substituted or simulated."
+      description="The agent directory is temporarily unavailable. Try again shortly."
       error={error}
       retry={retry}
-      title="We couldn’t load the indexed catalogue"
+      title="We couldn’t load the agent directory"
     />
   );
 }
