@@ -22,6 +22,10 @@ and completing the hosted browser matrix.
 M15's compatibility, recovery, tooling, and evidence foundation is implemented,
 but the milestone remains blocked until genuine category representatives and a
 human-approved testnet activation are recorded.
+The chain-aware BSC Mainnet hiring extension is implemented locally with
+verified APEX addresses and real-funds safeguards. It remains unavailable in
+the hosted app until migration `20260908110000_enable_mainnet_hiring.sql` is
+deployed and the release is validated without automated mainnet writes.
 
 **Live application:** not deployed or recorded yet. Do not replace this status
 with a URL until the exact Vercel deployment passes the
@@ -54,8 +58,8 @@ claim that the app is already deployed.
   insufficient rather than manufactured.
 - URL-backed side-by-side comparison that keeps missing evidence distinct from
   poor evidence.
-- User-controlled BSC Testnet wallet connection and a fail-closed ERC-8183/APEX
-  hiring path for currently compatible services.
+- User-controlled BSC Mainnet and BSC Testnet wallet connection with
+  fail-closed, chain-isolated ERC-8183/APEX hiring for compatible services.
 - A signed-challenge dashboard that exposes only the connected wallet's
   persisted job and on-chain evidence.
 
@@ -72,8 +76,8 @@ flowchart LR
   metadata --> assessment
   browser["Browser"] <--> app["Next.js\nVercel"]
   app <--> db
-  browser <--> wallet["Disposable\ntestnet wallet"]
-  wallet --> apex["BSC Testnet\nERC-8183 / APEX"]
+  browser <--> wallet["User-controlled\nwallet"]
+  wallet --> apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
   apex --> rpc
   rpc --> app
 ```
@@ -118,6 +122,8 @@ an honest recovery state and never substitutes demo agents.
 | `SIFT_SITE_URL` | Production recommendation | Canonical HTTPS origin |
 | `BNB_NETWORK` | Single indexer run | `bsc-testnet` locally or `bsc-mainnet` for an intentional mainnet run |
 | `BNB_RPC_PRIMARY`, `BNB_RPC_FALLBACK_1`, `BNB_RPC_FALLBACK_2` | Optional | Server/indexer RPC overrides; secrets when token-bearing |
+| `BNB_MAINNET_RPC_PRIMARY`, `BNB_MAINNET_RPC_FALLBACK_1`, `BNB_MAINNET_RPC_FALLBACK_2` | Recommended for mainnet hiring/indexing | Server-only chain-56 RPC overrides |
+| `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, `BNB_TESTNET_RPC_FALLBACK_2` | Optional | Server-only chain-97 RPC overrides |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
 | `NEXT_PUBLIC_BNB_TESTNET_RPC_URL`, `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC overrides |
 | `SIFT_8004SCAN_API_KEY` | Optional for core discovery; required for the intended Pro-tier validation run | Server-only external cross-check credential |
@@ -160,6 +166,7 @@ npm run enrich:categories   # bounded cached 8004scan cross-check
 npm run report:categories   # timestamped per-category evidence coverage
 npm run studio:scan         # read-only Agent Studio project detection
 npm run verify:activation   # real category/Studio/live-service readiness proof
+npm run verify:hiring-deployments # read-only chain-56/chain-97 APEX checks
 ```
 
 Production scheduling uses `.github/workflows/sync-agents.yml` every two hours
@@ -212,14 +219,15 @@ The full evidence-bound list is maintained in
   does not claim that an agent delivered work merely because escrow was funded.
 - M10 still needs hosted two-wallet verification to prove job isolation across
   real browser sessions.
-- ERC-8183/APEX support is BSC Testnet-only, bound to the reviewed deployment,
-  and intentionally fails closed when an agent service or contract relationship
-  is incompatible.
+- ERC-8183/APEX hiring is bound to separate reviewed BSC Mainnet and BSC
+  Testnet deployments and fails closed when an agent service, network, or
+  contract relationship is incompatible.
 - M14 category coverage passes, but the forward shortlist-function safety fix
   still needs to reach hosted Supabase and the full score refresh currently
   times out while selecting candidates at catalogue scale.
-- Mainnet hiring, custody, unlimited token approvals, disputes, refunds,
-  pause/revoke writes, and invented fallback transactions are not implemented.
+- Mainnet hiring code requires the new hosted migration and human validation.
+  Custody, unlimited token approvals, disputes, refunds, pause/revoke writes,
+  and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;
   invalid, unreachable, stale, and insufficient-evidence states remain visible.
 - Public/free RPCs and free-tier schedulers can rate-limit or delay freshness;

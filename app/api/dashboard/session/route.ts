@@ -8,6 +8,7 @@ import {
   DASHBOARD_SESSION_COOKIE,
   DASHBOARD_SESSION_TTL_SECONDS,
 } from "@/features/dashboard/session";
+import { isHiringChainId } from "@/features/hiring/protocol";
 import { getHiringPublicClient } from "@/lib/blockchain/hiring-client";
 import {
   createDashboardChallenge,
@@ -58,13 +59,20 @@ function clearCookie(
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const rawAddress = url.searchParams.get("address")?.trim();
+  const rawChainId = Number(url.searchParams.get("chainId"));
 
-  if (!safeSameOrigin(request) || !rawAddress || !isAddress(rawAddress)) {
+  if (
+    !safeSameOrigin(request) ||
+    !rawAddress ||
+    !isAddress(rawAddress) ||
+    !isHiringChainId(rawChainId)
+  ) {
     return json({ error: "Connect a valid wallet before authorizing the dashboard." }, 400);
   }
 
   try {
     const stored = await createDashboardChallenge({
+      chainId: rawChainId,
       origin: url.origin,
       walletAddress: getAddress(rawAddress),
     });
@@ -104,7 +112,7 @@ export async function POST(request: Request): Promise<Response> {
       return json({ error: "The wallet verification request expired. Try again." }, 401);
     }
 
-    const verified = await getHiringPublicClient().verifyMessage({
+    const verified = await getHiringPublicClient(challenge.chainId).verifyMessage({
       address: challenge.walletAddress,
       message: challenge.message,
       signature: signature as Hex,

@@ -7,8 +7,8 @@ import type {
   HiringIntentSnapshot,
 } from "@/features/hiring/model";
 import {
-  buildTestnetTransactionHref,
-  HIRING_NETWORK_NAME,
+  buildHiringTransactionHref,
+  getErc8183Deployment,
 } from "@/features/hiring/protocol";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ export function ConfirmationStep({
   agent: HiringAgentSummary;
   intent: HiringIntentSnapshot;
 }>) {
+  const deployment = getErc8183Deployment(agent.chainId);
   const hash = intent.transactionHash;
 
   return (
@@ -33,7 +34,7 @@ export function ConfirmationStep({
         ERC-8183 job #{intent.onchainJobId} is funded.
       </h2>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-        {agent.name} is the named provider for this ERC-8183 job on {HIRING_NETWORK_NAME}.
+        {agent.name} is the named provider for this ERC-8183 job on {deployment.networkName}.
         This confirms escrow funding, not delivery or successful completion.
       </p>
 
@@ -52,7 +53,9 @@ export function ConfirmationStep({
         </div>
         <div className="grid gap-1 border-b border-border px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
           <dt className="text-xs text-muted-foreground">Network</dt>
-          <dd className="text-sm text-foreground">{HIRING_NETWORK_NAME} · chain 97</dd>
+          <dd className="text-sm text-foreground">
+            {deployment.networkName} · chain {deployment.chainId}
+          </dd>
         </div>
         <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
           <dt className="text-xs text-muted-foreground">Funding transaction</dt>
@@ -60,7 +63,7 @@ export function ConfirmationStep({
             {hash ? (
               <a
                 className="inline-flex max-w-full items-center gap-1.5 break-all underline decoration-border underline-offset-4 hover:text-brand"
-                href={buildTestnetTransactionHref(hash)}
+                href={buildHiringTransactionHref(deployment.chainId, hash)}
                 rel="noreferrer noopener"
                 target="_blank"
               >

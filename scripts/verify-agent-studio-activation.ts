@@ -8,11 +8,12 @@ import { getAddress } from "viem";
 
 import { categorySlugs, type CategorySlug } from "@/features/categories/taxonomy";
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
-import { erc8183Deployment } from "@/features/hiring/protocol";
+import { getErc8183Deployment } from "@/features/hiring/protocol";
 import { parseAgentCommerceStatus } from "@/features/hiring/quote";
 import { fetchSafeAgentJson } from "@/features/hiring/remote";
 
 type Candidate = Readonly<{ agentId: string; category: CategorySlug }>;
+const testnetDeployment = getErc8183Deployment(97);
 
 function packageVersion(packageName: string): string {
   const manifestPath = join(process.cwd(), "node_modules", ...packageName.split("/"), "package.json");
@@ -87,15 +88,15 @@ function verifySdkDeployment(): Readonly<{
   ok: boolean;
   paymentTokenAllowlisted: boolean;
 }> {
-  const addresses = getSdkDeployment(erc8183Deployment.chainId);
+  const addresses = getSdkDeployment(testnetDeployment.chainId);
   const paymentTokenAllowlisted = knownPaymentTokens().has(
-    `${erc8183Deployment.chainId}:${erc8183Deployment.paymentToken}`,
+    `${testnetDeployment.chainId}:${testnetDeployment.paymentToken}`,
   );
   const ok =
-    getAddress(addresses.commerceProxy) === erc8183Deployment.commerce &&
-    getAddress(addresses.routerProxy) === erc8183Deployment.router &&
-    getAddress(addresses.policy) === erc8183Deployment.policy &&
-    getAddress(addresses.paymentToken) === erc8183Deployment.paymentToken &&
+    getAddress(addresses.commerceProxy) === testnetDeployment.commerce &&
+    getAddress(addresses.routerProxy) === testnetDeployment.router &&
+    getAddress(addresses.policy) === testnetDeployment.policy &&
+    getAddress(addresses.paymentToken) === testnetDeployment.paymentToken &&
     paymentTokenAllowlisted;
 
   return { addresses, ok, paymentTokenAllowlisted };
@@ -133,7 +134,7 @@ async function main(): Promise<void> {
   const { getHiringPublicClient, verifyErc8183Runtime } = await import(
     "@/lib/blockchain/hiring-client"
   );
-  const publicClient = getHiringPublicClient();
+  const publicClient = getHiringPublicClient(97);
   let runtimeVerified = false;
 
   if (candidates.length === 0) {
@@ -177,7 +178,7 @@ async function main(): Promise<void> {
 
   if (candidates.length > 0 && sdkCheck.ok) {
     try {
-      await verifyErc8183Runtime(publicClient);
+      await verifyErc8183Runtime(97, publicClient);
       runtimeVerified = true;
     } catch (error) {
       blockers.push(
@@ -214,7 +215,11 @@ async function main(): Promise<void> {
           staticAssessment.compatibility.statusUrl,
           { method: "GET" },
         );
-        parseAgentCommerceStatus(statusDocument, getAddress(profile.ownerAddress));
+        parseAgentCommerceStatus(
+          statusDocument,
+          getAddress(profile.ownerAddress),
+          97,
+        );
         const cliResolution = studioProject
           ? runBag(
               ["erc8004", "resolve", candidate.agentId, "--network", "bsc-testnet"],
@@ -258,7 +263,7 @@ async function main(): Promise<void> {
     event: "agent_studio_activation_readiness",
     observedAt: new Date().toISOString(),
     runtime: {
-      chainId: erc8183Deployment.chainId,
+      chainId: testnetDeployment.chainId,
       verified: runtimeVerified,
     },
     status: blockers.length === 0 ? "ready-for-human-activation" : "blocked",

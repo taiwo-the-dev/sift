@@ -128,15 +128,29 @@ The hosted M5 and M6 migrations were validated on 2026-08-22. A bounded check pe
 
 `20260823090000_add_hiring_jobs.sql` additively creates `jobs`, `job_transactions`, and `job_activity`. They store normalized user intent, byte-exact signed job descriptions, canonical transaction steps, replacement/receipt evidence, and a minimal auditable state history. Idempotency and unique step/hash constraints prevent duplicate persistence. Browser roles have no access; the server authorizes a resumed intent through a random browser-held capability whose SHA-256 digest is the only value stored in PostgreSQL.
 
-Deploy the migration before exposing the M9 hire route. The application fails rather than fabricating a pending or confirmed job when the schema is unavailable. Full protocol and test instructions are in [ERC-8183 testnet hiring](hiring.md).
+Deploy the migration before exposing the M9 hire route. The application fails rather than fabricating a pending or confirmed job when the schema is unavailable. Full protocol and test instructions are in [ERC-8183 hiring](hiring.md).
 
 The GitHub integration deployed this migration on 2026-08-23. Read-only verification confirmed that all three hiring tables exist with zero initial rows and that `record_hiring_verification` is exposed only through the server-side database boundary. No test or fabricated job was inserted during deployment verification.
 
 ## M10 wallet-scoped dashboard sessions
 
-`20260824100000_add_dashboard_wallet_sessions.sql` creates two security-only tables. `dashboard_wallet_challenges` stores short-lived single-use challenge digests; `dashboard_sessions` stores opaque four-hour session digests scoped to one verified wallet and BSC Testnet. Raw challenge/session tokens remain in HttpOnly, SameSite cookies and are never persisted.
+`20260824100000_add_dashboard_wallet_sessions.sql` creates two security-only tables. `dashboard_wallet_challenges` stores short-lived single-use challenge digests; `dashboard_sessions` stores opaque four-hour session digests scoped to one verified wallet and network. Raw challenge/session tokens remain in HttpOnly, SameSite cookies and are never persisted.
 
 Browser database roles have no access to either table. The server verifies the signed challenge with viem before creating a session, then uses the session wallet—not a client-selected database filter—to query M9 jobs. Deploy this migration through the Supabase GitHub integration before validating `/dashboard`; until it exists, wallet authorization fails closed without exposing job records.
+
+## M19 mainnet hiring constraints
+
+`20260908110000_enable_mainnet_hiring.sql` replaces the original chain-97-only
+checks on `jobs`, `dashboard_wallet_challenges`, and `dashboard_sessions` with
+an exact `chain_id in (56, 97)` allowlist. It also adds a wallet/chain/time index
+for bounded dashboard reads. It does not insert jobs, sessions, transactions,
+agents, or any other product data, and it does not weaken Row Level Security or
+browser-role revocations.
+
+Deploy this additive migration before releasing the mainnet hiring UI. Until it
+is present, hosted PostgreSQL correctly rejects chain-56 intents. After GitHub
+deploys it, verify the constraint definitions and migration history in Supabase;
+do not create a test mainnet transaction as part of database validation.
 
 ## M13 mainnet catalogue provenance
 

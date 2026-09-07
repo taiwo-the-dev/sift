@@ -41,7 +41,7 @@ import type {
   HiringMissionInput,
   HiringQuote,
 } from "@/features/hiring/model";
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import { getErc8183Deployment } from "@/features/hiring/protocol";
 import { parseHiringMission } from "@/features/hiring/validation";
 
 const initialMission: HiringMissionInput = {
@@ -53,10 +53,14 @@ const initialMission: HiringMissionInput = {
 };
 
 export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
+  const deployment = getErc8183Deployment(agent.chainId);
   const account = useAccount();
   const switchChain = useSwitchChain();
   const [step, setStep] = useState<HiringFlowStep>("mission");
-  const [mission, setMission] = useState<HiringMissionInput>(initialMission);
+  const [mission, setMission] = useState<HiringMissionInput>(() => ({
+    ...initialMission,
+    maxSpend: deployment.isMainnet ? "0" : initialMission.maxSpend,
+  }));
   const [quote, setQuote] = useState<HiringQuote | null>(null);
   const [quoteWallet, setQuoteWallet] = useState<string | null>(null);
   const [intent, setIntent] = useState<HiringIntentSnapshot | null>(null);
@@ -129,7 +133,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     setRecoveryNotice(null);
 
     try {
-      const normalized = parseHiringMission(mission);
+      const normalized = parseHiringMission(mission, agent.chainId);
       const nextQuote = await requestHiringQuote(
         { agentId: agent.agentId, chainId: agent.chainId },
         normalized,
@@ -151,7 +155,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     }
   }
 
-  async function createIntent(): Promise<void> {
+  async function createIntent(mainnetRiskAccepted: boolean): Promise<void> {
     const connectedWallet = account.address?.toLowerCase() ?? null;
 
     if (quote && quoteRequiresRefreshForWallet(quoteWallet, connectedWallet)) {
@@ -162,7 +166,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       return;
     }
 
-    if (!quote || !account.address || account.chainId !== HIRING_CHAIN_ID) {
+    if (!quote || !account.address || account.chainId !== agent.chainId) {
       return;
     }
 
@@ -187,6 +191,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         deliverables: mission.deliverables,
         durationSeconds: mission.durationSeconds,
         idempotencyKey: saved.idempotencyKey,
+        mainnetRiskAccepted,
         maxSpend: mission.maxSpend,
         mission: mission.mission,
         qualityStandards: mission.qualityStandards,
@@ -251,7 +256,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
           Agent profile
         </Link>
         <Link
-          href="/discover?network=bsc-testnet&q=ERC-8183&metadata=valid"
+          href={`/discover?network=${deployment.network}&q=ERC-8183&metadata=valid`}
           className="ml-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           Replace agent
@@ -279,7 +284,9 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         </div>
         <div className="mt-5 flex items-start gap-2 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
           <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden="true" />
-          BSC Testnet only. Test tokens have no monetary value.
+          {deployment.isMainnet
+            ? "Mainnet hiring uses real BNB for gas and a real payment token. Every approved transaction can move assets and cannot be undone by Sift."
+            : "BSC Testnet uses test tokens with no monetary value."}
         </div>
       </aside>
 
@@ -288,6 +295,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         <div className="mt-8 border-t border-border pt-7">
           {step === "mission" ? (
             <MissionStep
+              chainId={agent.chainId}
               error={error}
               mission={mission}
               notice={recoveryNotice}
@@ -322,7 +330,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
                 setStep("permissions");
               }}
               onContinue={createIntent}
-              onSwitchNetwork={() => switchChain.switchChain({ chainId: HIRING_CHAIN_ID })}
+              onSwitchNetwork={() => switchChain.switchChain({ chainId: agent.chainId })}
               pending={pending}
               quote={quote}
               switching={switchChain.isPending}

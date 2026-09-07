@@ -1,28 +1,27 @@
-# ERC-8183 testnet hiring
+# ERC-8183 hiring
 
-M9 implements a client-side wallet checkout for real indexed agents that expose the current BNB Agent SDK ERC-8183 HTTP service. The browser signs transactions; Sift never receives signing material and does not mark a step confirmed until its server independently verifies BSC Testnet calldata, receipt, events, and confirmations.
+Sift implements a client-side wallet checkout for real indexed agents that expose the current BNB Agent SDK ERC-8183 HTTP service on BSC Mainnet or BSC Testnet. The browser signs transactions; Sift never receives signing material and does not mark a step confirmed until its server independently verifies the selected chain, calldata, receipt, events, and confirmations.
 
 ## Verified protocol selection
 
-The integration was re-verified on 2026-08-23 against the official [ERC-8183 draft](https://eips.ethereum.org/EIPS/eip-8183), [BNB Agent SDK](https://docs.bnbchain.org/developer-kit/bnbagent-sdk/), and the `main` branch of [bnb-chain/apex-contracts](https://github.com/bnb-chain/apex-contracts). ERC-8183 remains a draft standard and APEX is under active development, so Sift validates the deployment relationships at runtime instead of trusting addresses alone.
+The integration was re-verified on 2026-09-07 against the official [ERC-8183 draft](https://eips.ethereum.org/EIPS/eip-8183), [BNB Agent SDK](https://github.com/bnb-chain/bnbagent-sdk), and the `main` branch of [bnb-chain/apex-contracts](https://github.com/bnb-chain/apex-contracts). ERC-8183 remains a draft standard and APEX is under active development, so Sift validates deployment relationships at runtime instead of trusting addresses alone.
 
-Sift supports this deployment only:
+Sift supports these two reviewed deployments only:
 
-| Item | Verified BSC Testnet value |
-| --- | --- |
-| Chain | BSC Testnet, chain ID `97` |
-| AgenticCommerce | `0xa206c0517B6371C6638CD9e4a42Cc9f02A33B0DE` |
-| EvaluatorRouter | `0xd7d36d66d2f1b608a0f943f722d27e3744f66f25` |
-| OptimisticPolicy | `0xd6a4217588f6b1f5657a92a3e94e6422ad771cea` |
-| Payment token | `0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565` (`U`, 18 decimals) |
-| Confirmation policy | 2 blocks |
+| Item | BSC Mainnet (`56`) | BSC Testnet (`97`) |
+| --- | --- | --- |
+| AgenticCommerce | `0xEa4DAa3100A767e86FDed867729ae7446476EBA6` | `0xa206c0517B6371C6638CD9e4a42Cc9f02A33B0DE` |
+| EvaluatorRouter | `0x51895229E12F9876011789B04f8698af06cCD6DA` | `0xd7d36d66d2f1B608a0f943f722d27e3744f66f25` |
+| OptimisticPolicy | `0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5` | `0xd6a4217588f6b1f5657a92a3e94e6422ad771cea` |
+| Payment token | `0xcE24439F2D9C6a2289F741120FE202248B666666` (`U`, 18 decimals) | `0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565` (`U`, 18 decimals) |
+| Confirmation policy | 2 blocks | 2 blocks |
 
 The official deployment source of truth is `apex-contracts/scripts/addresses.ts`. Sift additionally reads live contract bytecode, token, router/commerce relationships, policy whitelist, pause flags, platform fee, token metadata, dispute window, and latest block time before accepting a quote.
 
-Server-side hiring reads use only `BNB_TESTNET_RPC_PRIMARY` and its numbered
-testnet fallbacks, followed by public BSC Testnet endpoints. They never reuse
-the generic `BNB_RPC_*` indexer settings, which may intentionally point to
-mainnet during catalogue operations.
+Server-side hiring reads use the selected chain's `BNB_MAINNET_RPC_*` or
+`BNB_TESTNET_RPC_*` variables, followed by public endpoints for that same
+chain. They never reuse generic `BNB_RPC_*` indexer settings, so an indexer
+configuration cannot redirect a hiring check to another network.
 
 ## Compatibility and negotiation
 
@@ -33,7 +32,7 @@ one generic message.
 
 An indexed agent is shown as hireable only when all of these are true:
 
-- it is on chain `97`, has currently valid indexed metadata, and is not declared inactive;
+- it is on BSC Mainnet (`56`) or BSC Testnet (`97`), has currently valid indexed metadata, and is not declared inactive;
 - its indexed owner is a valid EVM address;
 - it declares an `ERC-8183` service at a public HTTPS endpoint without credentials, query parameters, a private host, or a reserved placeholder hostname;
 - a declared service version is unversioned or within the reviewed `0.x`/`1.x`
@@ -53,7 +52,7 @@ The current APEX contract requires separate explicit wallet actions:
 4. `U.approve(commerce, signedPrice)` only when the live allowance is below the price;
 5. `AgenticCommerce.fund(jobId, signedPrice, 0x)`.
 
-Sift simulates each call before requesting a signature. Approvals are exact, never unlimited. The server verifies chain ID, sender, destination, zero native value, decoded arguments, receipt status, expected protocol event, two confirmations, and the final funded job state. The job expiry is compared with the mined block timestamp, not the later API verification time.
+Sift simulates each call before requesting a signature. Approvals are exact, never unlimited. The server verifies chain ID, sender, destination, zero native value, decoded arguments, receipt status, expected protocol event, two confirmations, and the final funded job state. The job expiry is compared with the mined block timestamp, not the later API verification time. Mainnet review additionally requires an explicit real-funds acknowledgement before an intent can be created.
 
 ## Persistence and resume security
 
@@ -89,13 +88,29 @@ Use a disposable test wallet. Never paste or commit its private key.
 
 For a zero-priced provider quote, no test token balance or approval is required, but the wallet still needs testnet BNB for contract gas.
 
+## Mainnet prerequisites and warning
+
+Mainnet hiring can spend real assets. Use it only with a wallet and amount you
+intend to risk. Sift requires the agent's live `/status` and signed quote to
+match the verified chain-56 contracts, displays the exact token and destination,
+requires a mainnet acknowledgement, simulates each call, and still asks for a
+separate wallet confirmation for every write. The user pays mainnet gas and any
+payment-token funding; Sift does not sponsor, custody, recover, or reverse those
+transactions.
+
+Migration `20260908110000_enable_mainnet_hiring.sql` must be deployed to hosted
+Supabase before a mainnet intent can be stored. Confirm the payment token and
+all displayed contract addresses against the official deployment source before
+approving a real transaction.
+
 ## Known limitations
 
-- ERC-8183 and BNB APEX are active-development testnet infrastructure. A deployment rotation intentionally makes Sift fail closed until its typed constants are reviewed and updated.
+- ERC-8183 and BNB APEX are active-development infrastructure. A deployment rotation intentionally makes Sift fail closed until its typed constants are reviewed and updated.
 - Only safe, exact ERC-8183 declarations are hireable; stale, local, malformed, or unreachable endpoints remain visible as declarations but cannot produce a Sift hiring flow.
 - M9 confirms job creation and escrow funding. It does not claim the provider delivered work or the evaluator accepted it.
 - M10 monitors persisted jobs and verified protocol state. Refunds, disputes, pause, and revoke controls remain omitted because the current verified Sift client does not implement those writes.
-- Mainnet hiring is deliberately blocked.
+- Sift does not implement custody, autonomous signing, delivery guarantees,
+  refunds, disputes, or pause/revoke writes.
 
 ## Validation
 
@@ -106,7 +121,8 @@ npm run lint
 npm run typecheck
 npm test
 npm run test:wallet-ui
+npm run verify:hiring-deployments
 npm run build
 ```
 
-The automated tests use clearly labelled deterministic fixtures and never write fabricated agent or chain data to the hosted catalogue. A real happy-path transaction still requires a human to approve each request in a disposable testnet wallet.
+The automated tests use clearly labelled deterministic fixtures and never write fabricated agent or chain data to the hosted catalogue. A real happy-path transaction still requires a human to approve each request. Automated validation must never send a mainnet transaction.

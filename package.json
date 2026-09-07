@@ -34,6 +34,7 @@
     "release:smoke": "node --import tsx scripts/verify-release.ts",
     "studio:scan": "bag scan",
     "verify:activation": "node --conditions=react-server --import tsx scripts/verify-agent-studio-activation.ts",
+    "verify:hiring-deployments": "node --conditions=react-server --import tsx scripts/verify-hiring-deployments.ts",
     "db:link": "supabase link",
     "db:migrations": "supabase migration list --linked",
     "db:push:dry-run": "supabase db push --linked --dry-run",

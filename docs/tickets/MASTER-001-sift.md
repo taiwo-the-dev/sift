@@ -25,6 +25,7 @@ Ready for Development
 - M16 — Not Started
 - M17 — Not Started
 - M18 — Blocked Pending Official Phase 2 Criteria
+- M19 — Implemented Locally; Hosted Migration and Human Validation Pending
 
 ## Priority
 
@@ -1598,6 +1599,26 @@ This milestone is externally blocked until BNB Chain publishes the redacted
 Phase 2 criteria. Once published, capture the official requirements verbatim,
 audit the existing product, and create the smallest approved implementation
 plan. Do not speculate or build guessed Phase 2 features.
+
+---
+
+## M19 — BSC Mainnet Hiring
+
+Deliver:
+
+- chain-aware ERC-8183 hiring on the reviewed BSC Mainnet and BSC Testnet
+  deployments;
+- separate network RPC, contract, quote, wallet, persistence, receipt, explorer,
+  and dashboard boundaries;
+- explicit real-funds acknowledgement and clear mainnet risk language;
+- exact token approvals and an individual wallet confirmation for every write;
+- an additive hosted migration allowing only chain IDs `56` and `97` in hiring
+  and dashboard records;
+- automated mainnet configuration, isolation, validation, and migration tests.
+
+Mainnet hiring must remain non-custodial and fail closed. Never automate a
+mainnet transaction, request a private key, use unlimited approval, or claim a
+successful mainnet hire without independently verified human-approved evidence.
 
 ---
 

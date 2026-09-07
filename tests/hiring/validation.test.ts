@@ -21,18 +21,23 @@ describe("hiring mission validation", () => {
     const result = parseHiringMission({
       ...validMission,
       mission: `  ${validMission.mission}\r\n`,
-    });
+    }, 97);
 
     assert.equal(result.mission, validMission.mission);
-    assert.equal(maximumSpendToBaseUnits("1.25"), 1_250_000_000_000_000_000n);
+    assert.equal(maximumSpendToBaseUnits("1.25", 97), 1_250_000_000_000_000_000n);
     assert.equal(formatTokenAmount(1_250_000_000_000_000_000n, 18), "1.25");
   });
 
   it("rejects unsupported durations, excessive spend, floats with excess precision, and control characters", () => {
-    assert.throws(() => parseHiringMission({ ...validMission, durationSeconds: 60 }));
-    assert.throws(() => parseHiringMission({ ...validMission, maxSpend: "1000.01" }));
-    assert.throws(() => parseHiringMission({ ...validMission, maxSpend: "0.0000000000000000001" }));
-    assert.throws(() => parseHiringMission({ ...validMission, mission: `${validMission.mission}\u0000` }));
+    assert.throws(() => parseHiringMission({ ...validMission, durationSeconds: 60 }, 97));
+    assert.throws(() => parseHiringMission({ ...validMission, maxSpend: "1000.01" }, 97));
+    assert.throws(() => parseHiringMission({ ...validMission, maxSpend: "0.0000000000000000001" }, 97));
+    assert.throws(() => parseHiringMission({ ...validMission, mission: `${validMission.mission}\u0000` }, 97));
+  });
+
+  it("uses the same exact amount rules for the verified mainnet token", () => {
+    assert.equal(maximumSpendToBaseUnits("1.25", 56), 1_250_000_000_000_000_000n);
+    assert.equal(parseHiringMission(validMission, 56).maxSpend, "1.25");
   });
 
   it("calculates a whole-second expiry from a deterministic clock", () => {

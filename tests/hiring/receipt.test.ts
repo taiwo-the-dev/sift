@@ -12,7 +12,7 @@ import {
 
 import {
   commerceAbi,
-  erc8183Deployment,
+  getErc8183Deployment,
 } from "../../features/hiring/protocol";
 import {
   HiringTransactionVerificationError,
@@ -25,43 +25,65 @@ const provider = "0x2222222222222222222222222222222222222222" as Address;
 const hash = `0x${"1".repeat(64)}` as Hash;
 const blockHash = `0x${"2".repeat(64)}` as Hash;
 const expiresAt = "2026-08-24T10:00:00.000Z";
+const erc8183Deployment = getErc8183Deployment(97);
 
 const job = {
   budget_base_units: "0",
+  chain_id: 97,
+  commerce_address: erc8183Deployment.commerce,
   expires_at: expiresAt,
   onchain_description: "{\"test\":true}",
   onchain_job_id: null,
+  payment_token_address: erc8183Deployment.paymentToken,
+  payment_token_decimals: erc8183Deployment.tokenDecimals,
+  payment_token_symbol: erc8183Deployment.tokenSymbol,
+  policy_address: erc8183Deployment.policy,
   provider_address: provider,
   quote_expires_at: "2026-08-23T10:15:00.000Z",
+  router_address: erc8183Deployment.router,
   wallet_address: wallet,
 } as HiringIntentRecord;
 
-function clientForCreate(overrides: Readonly<{ input?: Hash; receipt?: TransactionReceipt | null }> = {}): PublicClient {
+function clientForCreate(overrides: Readonly<{
+  input?: Hash;
+  job?: HiringIntentRecord;
+  receipt?: TransactionReceipt | null;
+}> = {}): PublicClient {
+  const currentJob = overrides.job ?? job;
+  const deployment = getErc8183Deployment(currentJob.chain_id);
   const input = overrides.input ?? encodeFunctionData({
     abi: commerceAbi,
     functionName: "createJob",
     args: [
-      provider,
-      erc8183Deployment.router,
-      BigInt(Date.parse(expiresAt) / 1_000),
-      job.onchain_description,
-      erc8183Deployment.router,
+      currentJob.provider_address as Address,
+      deployment.router,
+      BigInt(Date.parse(currentJob.expires_at) / 1_000),
+      currentJob.onchain_description,
+      deployment.router,
     ],
   });
   const topics = encodeEventTopics({
     abi: commerceAbi,
     eventName: "JobCreated",
-    args: { client: wallet, jobId: 77n, provider },
+    args: {
+      client: currentJob.wallet_address as Address,
+      jobId: 77n,
+      provider: currentJob.provider_address as Address,
+    },
   });
   const data = encodeAbiParameters(
     [{ type: "address" }, { type: "uint256" }, { type: "address" }],
-    [erc8183Deployment.router, BigInt(Date.parse(expiresAt) / 1_000), erc8183Deployment.router],
+    [
+      deployment.router,
+      BigInt(Date.parse(currentJob.expires_at) / 1_000),
+      deployment.router,
+    ],
   );
   const receipt = overrides.receipt === undefined
     ? ({
         blockHash,
         blockNumber: 100n,
-        logs: [{ address: erc8183Deployment.commerce, data, topics }],
+        logs: [{ address: deployment.commerce, data, topics }],
         status: "success",
       } as TransactionReceipt)
     : overrides.receipt;
@@ -72,11 +94,11 @@ function clientForCreate(overrides: Readonly<{ input?: Hash; receipt?: Transacti
       timestamp: 1_777_000_000n,
     }),
     getBlockNumber: async () => 101n,
-    getChainId: async () => 97,
+    getChainId: async () => currentJob.chain_id,
     getTransaction: async () => ({
-      from: wallet,
+      from: currentJob.wallet_address,
       input,
-      to: erc8183Deployment.commerce,
+      to: deployment.commerce,
       value: 0n,
     }),
     getTransactionReceipt: async () => {
@@ -111,6 +133,29 @@ describe("server hiring receipt mapping", () => {
 
     assert.equal(result.status, "submitted");
     assert.equal(result.blockNumber, null);
+  });
+
+  it("verifies a chain-56 receipt against the separate mainnet deployment", async () => {
+    const mainnet = getErc8183Deployment(56);
+    const mainnetJob = {
+      ...job,
+      chain_id: 56,
+      commerce_address: mainnet.commerce,
+      payment_token_address: mainnet.paymentToken,
+      payment_token_decimals: mainnet.tokenDecimals,
+      payment_token_symbol: mainnet.tokenSymbol,
+      policy_address: mainnet.policy,
+      router_address: mainnet.router,
+    } as HiringIntentRecord;
+    const result = await inspectHiringTransaction({
+      client: clientForCreate({ job: mainnetJob }),
+      hash,
+      job: mainnetJob,
+      step: "create_job",
+    });
+
+    assert.equal(result.status, "confirmed");
+    assert.equal(result.onchainJobId, "77");
   });
 
   it("rejects calldata that differs from the reviewed provider", async () => {

@@ -12,7 +12,9 @@ import type {
   HiringMissionInput,
   HiringQuote,
 } from "../../features/hiring/model";
-import { erc8183Deployment } from "../../features/hiring/protocol";
+import { getErc8183Deployment } from "../../features/hiring/protocol";
+
+const erc8183Deployment = getErc8183Deployment(97);
 
 const owner = "0x1111111111111111111111111111111111111111" as Address;
 const walletA = "0x2222222222222222222222222222222222222222" as Address;
@@ -113,5 +115,24 @@ describe("activation binding", () => {
     assert.equal(quoteRequiresRefreshForWallet(walletA, walletB), true);
     assert.equal(quoteRequiresRefreshForWallet(null, walletB), false);
   });
-});
 
+  it("binds a chain-56 quote to the reviewed mainnet contracts", () => {
+    const mainnet = getErc8183Deployment(56);
+    const checks = assertActivationBinding({
+      agent: { ...agent, chainId: 56 },
+      mission,
+      now,
+      quote: {
+        ...quote,
+        chainId: 56,
+        signedEnvelope: { verifying_contract: mainnet.commerce },
+        tokenAddress: mainnet.paymentToken,
+        tokenDecimals: mainnet.tokenDecimals,
+        tokenSymbol: mainnet.tokenSymbol,
+      },
+      walletAddress: walletA,
+    });
+
+    assert.equal(checks[0]?.label, "BSC Mainnet · chain 56");
+  });
+});

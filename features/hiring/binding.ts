@@ -6,8 +6,8 @@ import type {
   HiringQuote,
 } from "@/features/hiring/model";
 import {
-  erc8183Deployment,
-  HIRING_CHAIN_ID,
+  getErc8183Deployment,
+  isHiringChainId,
 } from "@/features/hiring/protocol";
 import { maximumSpendToBaseUnits } from "@/features/hiring/validation";
 
@@ -46,14 +46,21 @@ export function assertActivationBinding(input: Readonly<{
   quote: HiringQuote;
   walletAddress: Address | string;
 }>): readonly ActivationBindingCheck[] {
+  if (!isHiringChainId(input.agent.chainId)) {
+    throw new ActivationBindingError(
+      "chain",
+      "The selected agent is not on a supported BNB hiring network.",
+    );
+  }
+
+  const deployment = getErc8183Deployment(input.agent.chainId);
+
   if (
-    input.agent.chainId !== HIRING_CHAIN_ID ||
-    input.quote.chainId !== HIRING_CHAIN_ID ||
-    erc8183Deployment.chainId !== HIRING_CHAIN_ID
+    input.quote.chainId !== deployment.chainId
   ) {
     throw new ActivationBindingError(
       "chain",
-      "The price quote, agent, and hiring contract must all use BSC Testnet (chain 97).",
+      `The price quote, agent, and hiring contracts must all use ${deployment.networkName} (chain ${deployment.chainId}).`,
     );
   }
 
@@ -72,7 +79,7 @@ export function assertActivationBinding(input: Readonly<{
   if (
     typeof verifyingContract !== "string" ||
     !isAddress(verifyingContract) ||
-    getAddress(verifyingContract) !== erc8183Deployment.commerce
+    getAddress(verifyingContract) !== deployment.commerce
   ) {
     throw new ActivationBindingError(
       "contract",
@@ -81,17 +88,20 @@ export function assertActivationBinding(input: Readonly<{
   }
 
   if (
-    getAddress(input.quote.tokenAddress) !== erc8183Deployment.paymentToken ||
-    input.quote.tokenDecimals !== erc8183Deployment.tokenDecimals ||
-    input.quote.tokenSymbol !== erc8183Deployment.tokenSymbol
+    getAddress(input.quote.tokenAddress) !== deployment.paymentToken ||
+    input.quote.tokenDecimals !== deployment.tokenDecimals ||
+    input.quote.tokenSymbol !== deployment.tokenSymbol
   ) {
     throw new ActivationBindingError(
       "token",
-      "The signed quote does not use Sift's verified testnet payment token.",
+      `The signed quote does not use Sift's verified ${deployment.networkName} payment token.`,
     );
   }
 
-  const maximumSpend = maximumSpendToBaseUnits(input.mission.maxSpend);
+  const maximumSpend = maximumSpendToBaseUnits(
+    input.mission.maxSpend,
+    deployment.chainId,
+  );
   const quotedMaximum = BigInt(input.quote.maximumSpendBaseUnits);
   const budget = BigInt(input.quote.budgetBaseUnits);
 
@@ -123,10 +133,10 @@ export function assertActivationBinding(input: Readonly<{
   }
 
   return [
-    { key: "chain", label: "BSC Testnet · chain 97" },
+    { key: "chain", label: `${deployment.networkName} · chain ${deployment.chainId}` },
     { key: "owner", label: "Price quote matches the agent owner" },
     { key: "contract", label: "Verified Agentic Commerce deployment" },
-    { key: "token", label: "Verified U test token" },
+    { key: "token", label: `Verified ${deployment.tokenSymbol} payment token` },
     { key: "amount", label: "Finite budget at or below the reviewed maximum" },
     { key: "expiry", label: "Price quote is current and has an expiry time" },
     { key: "wallet", label: "Connected hiring wallet" },

@@ -38,7 +38,7 @@ valuable mainnet assets and never share its private key or seed phrase.
 | 0:50 | Open each category filter briefly | All four equal-priority guides produce real mainnet results and visibly distinguish declared from lower-confidence inferred evidence. |
 | 1:20 | Open a current shortlisted agent | Category facts, identity, owner, metadata provenance, optional 8004scan cross-check, services, health, reputation, and Sift Score show source/freshness or `Unknown`. |
 | 2:00 | Add two or three agents to comparison | The URL-backed comparison explains score/evidence differences without converting missing evidence into zero. |
-| 2:40 | Switch discovery to the clearly labelled testnet catalogue, then connect the disposable wallet | The catalogue change is explicit; the UI reports the address/network and requests an explicit switch if the wallet is not on BSC Testnet. Mainnet profiles offer no transaction path. |
+| 2:40 | Switch discovery to the clearly labelled testnet catalogue, then connect the disposable wallet | The catalogue change is explicit; the UI reports the address/network and requests an explicit switch if the wallet is not on BSC Testnet. Explain that the judged demo intentionally avoids real-funds mainnet writes. |
 | 3:00 | Open the compatible agent's hiring flow | Review mission, permissions, signed quote, contract addresses, token, price, expiry, and required transaction sequence. |
 | 3:35 | Approve each requested testnet action | Each transaction is user-approved, simulated, then independently verified. Rejections remain recoverable and are never labelled confirmed. |
 | 4:35 | Open the dashboard | Sign the read-only ownership challenge, then show the wallet-scoped job, transaction links, and provenance-labelled activity. |
@@ -52,8 +52,9 @@ valuable mainnet assets and never share its private key or seed phrase.
    [hiring.md](hiring.md). Share only the public address if a faucet requires it.
 4. For a non-zero quote, request test-only `U` from the documented faucet and
    verify the token address in the wallet before accepting an approval.
-5. Keep only the minimum disposable test funds required. Sift blocks mainnet
-   hiring, uses exact token approval amounts, and never asks for a seed phrase.
+5. Keep only the minimum disposable test funds required. Sift uses exact token
+   approval amounts and never asks for a seed phrase. Do not switch the demo to
+   mainnet or approve a real-funds transaction.
 
 ## Recovery under demo pressure
 

@@ -13,7 +13,11 @@ import {
 import { z } from "zod";
 
 import type { HiringMissionInput, HiringQuote } from "@/features/hiring/model";
-import { erc8183Deployment } from "@/features/hiring/protocol";
+import {
+  getErc8183Deployment,
+  type Erc8183Deployment,
+  type HiringChainId,
+} from "@/features/hiring/protocol";
 import {
   calculateExpiry,
   formatTokenAmount,
@@ -207,7 +211,9 @@ export function buildSignedJobDescription(
 export function parseAgentCommerceStatus(
   input: unknown,
   indexedOwner: Address,
+  chainId: HiringChainId,
 ): AgentCommerceStatus {
+  const deployment = getErc8183Deployment(chainId);
   const result = agentStatusSchema.safeParse(input);
 
   if (!result.success) {
@@ -235,17 +241,17 @@ export function parseAgentCommerceStatus(
 
   if (
     getAddress(status.agent_address) !== getAddress(indexedOwner) ||
-    getAddress(status.commerce_address) !== erc8183Deployment.commerce ||
-    getAddress(status.router_address) !== erc8183Deployment.router ||
-    getAddress(status.policy_address) !== erc8183Deployment.policy ||
-    getAddress(status.currency) !== erc8183Deployment.paymentToken ||
+    getAddress(status.commerce_address) !== deployment.commerce ||
+    getAddress(status.router_address) !== deployment.router ||
+    getAddress(status.policy_address) !== deployment.policy ||
+    getAddress(status.currency) !== deployment.paymentToken ||
     (status.decimals !== undefined &&
-      status.decimals !== erc8183Deployment.tokenDecimals) ||
-    (status.chain_id !== undefined && status.chain_id !== erc8183Deployment.chainId)
+      status.decimals !== deployment.tokenDecimals) ||
+    (status.chain_id !== undefined && status.chain_id !== deployment.chainId)
   ) {
     throw new HiringQuoteError(
       "invalid-agent-status",
-      "The live agent status does not match its registered owner or Sift's verified testnet contract.",
+      `The live agent status does not match its registered owner or Sift's verified ${deployment.networkName} contracts.`,
     );
   }
 
@@ -282,6 +288,7 @@ async function verifyEnvelopeSignature(
   envelope: ParsedNegotiationEnvelope,
   provider: Address,
   publicClient: PublicClient,
+  deployment: Erc8183Deployment,
 ): Promise<"eip191" | "erc1271"> {
   const canonical = canonicalJson(buildDescriptionContent(envelope));
   const recomputed = keccak256(toBytes(canonical));
@@ -314,7 +321,7 @@ async function verifyEnvelopeSignature(
       abi: erc1271Abi,
       functionName: "isValidSignature",
       args: [hashMessage(envelope.negotiation_hash), envelope.provider_sig as Hex],
-      account: erc8183Deployment.commerce,
+      account: deployment.commerce,
     });
 
     if (String(result).toLowerCase() === erc1271MagicValue) {
@@ -330,6 +337,7 @@ async function verifyEnvelopeSignature(
 
 export async function validateHiringQuote(
   input: Readonly<{
+    chainId: HiringChainId;
     envelope: unknown;
     disputeWindowSeconds: number;
     mission: HiringMissionInput;
@@ -339,21 +347,25 @@ export async function validateHiringQuote(
     publicClient: PublicClient;
   }>,
 ): Promise<HiringQuote> {
+  const deployment = getErc8183Deployment(input.chainId);
   const envelope = parseNegotiationEnvelope(input.envelope);
   const now = input.now ?? Date.now();
   const nowSeconds = Math.floor(now / 1_000);
-  const maximumSpend = maximumSpendToBaseUnits(input.mission.maxSpend);
+  const maximumSpend = maximumSpendToBaseUnits(
+    input.mission.maxSpend,
+    input.chainId,
+  );
   const price = parseCanonicalUint256(
     envelope.response.terms.price,
     "Quoted price",
   );
 
   if (
-    envelope.chain_id !== erc8183Deployment.chainId ||
+    envelope.chain_id !== deployment.chainId ||
     !isAddress(envelope.verifying_contract) ||
-    getAddress(envelope.verifying_contract) !== erc8183Deployment.commerce ||
+    getAddress(envelope.verifying_contract) !== deployment.commerce ||
     !isAddress(envelope.response.terms.currency) ||
-    getAddress(envelope.response.terms.currency) !== erc8183Deployment.paymentToken
+    getAddress(envelope.response.terms.currency) !== deployment.paymentToken
   ) {
     throw new HiringQuoteError(
       "invalid-quote",
@@ -394,7 +406,7 @@ export async function validateHiringQuote(
   if (price > maximumSpend) {
     throw new HiringQuoteError(
       "quote-over-budget",
-      `The agent quoted ${formatTokenAmount(price, erc8183Deployment.tokenDecimals)} U, above your maximum spend.`,
+      `The agent quoted ${formatTokenAmount(price, deployment.tokenDecimals)} ${deployment.tokenSymbol}, above your maximum spend.`,
     );
   }
 
@@ -402,6 +414,7 @@ export async function validateHiringQuote(
     envelope,
     input.provider,
     input.publicClient,
+    deployment,
   );
   const expiresAt = calculateExpiry(input.mission.durationSeconds, now);
   const expiresAtSeconds = Math.floor(expiresAt.getTime() / 1_000);
@@ -422,8 +435,8 @@ export async function validateHiringQuote(
 
   return {
     budgetBaseUnits: price.toString(),
-    budgetDisplay: formatTokenAmount(price, erc8183Deployment.tokenDecimals),
-    chainId: erc8183Deployment.chainId,
+    budgetDisplay: formatTokenAmount(price, deployment.tokenDecimals),
+    chainId: deployment.chainId,
     disputeWindowSeconds: input.disputeWindowSeconds,
     estimatedCompletionSeconds:
       envelope.response.estimated_completion_seconds ?? null,
@@ -431,7 +444,7 @@ export async function validateHiringQuote(
     maximumSpendBaseUnits: maximumSpend.toString(),
     maximumSpendDisplay: formatTokenAmount(
       maximumSpend,
-      erc8183Deployment.tokenDecimals,
+      deployment.tokenDecimals,
     ),
     negotiationHash: envelope.negotiation_hash as Hash,
     onchainDescription: buildSignedJobDescription(envelope),
@@ -442,8 +455,8 @@ export async function validateHiringQuote(
     ).toISOString(),
     signedEnvelope: envelope,
     signatureMethod,
-    tokenAddress: erc8183Deployment.paymentToken,
-    tokenDecimals: erc8183Deployment.tokenDecimals,
-    tokenSymbol: erc8183Deployment.tokenSymbol,
+    tokenAddress: deployment.paymentToken,
+    tokenDecimals: deployment.tokenDecimals,
+    tokenSymbol: deployment.tokenSymbol,
   };
 }

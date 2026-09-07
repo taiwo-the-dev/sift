@@ -110,7 +110,7 @@ Generate a read-only network eligibility snapshot from the hosted database:
 npm run report:catalogue
 ```
 
-The JSON report includes observed time, count, registry, latest agent sync, checkpoint, confirmed head, partial/stale state, and the explicit testnet-only activation policy. It does not expose agent metadata or credentials.
+The JSON report includes observed time, count, registry, latest agent sync, checkpoint, confirmed head, partial/stale state, and the explicit chain-56/chain-97 hiring policy. It does not expose agent metadata or credentials.
 
 ## BNB Agent Studio identity mapping
 

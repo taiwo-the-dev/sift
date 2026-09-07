@@ -10,7 +10,7 @@ import {
   Network,
   WalletCards,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import type {
@@ -19,10 +19,8 @@ import type {
   HiringQuote,
 } from "@/features/hiring/model";
 import {
-  buildTestnetAddressHref,
-  erc8183Deployment,
-  HIRING_CHAIN_ID,
-  HIRING_NETWORK_NAME,
+  buildHiringAddressHref,
+  getErc8183Deployment,
 } from "@/features/hiring/protocol";
 import {
   formatBasisPointPercent,
@@ -37,7 +35,7 @@ interface ReviewStepProps {
   error: string | null;
   mission: HiringMissionInput;
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (mainnetRiskAccepted: boolean) => void;
   onSwitchNetwork: () => void;
   pending: boolean;
   quote: HiringQuote;
@@ -69,8 +67,10 @@ export function ReviewStep({
   quote,
   switching,
 }: ReviewStepProps) {
+  const deployment = getErc8183Deployment(agent.chainId);
+  const [mainnetRiskAccepted, setMainnetRiskAccepted] = useState(false);
   const connected = Boolean(address);
-  const correctNetwork = chainId === HIRING_CHAIN_ID;
+  const correctNetwork = chainId === deployment.chainId;
 
   return (
     <section className="space-y-6">
@@ -91,7 +91,10 @@ export function ReviewStep({
         <ReviewRow label="Task description" value={mission.mission} />
         <ReviewRow label="Deliverable" value={mission.deliverables} />
         <ReviewRow label="Quality standard" value={mission.qualityStandards} />
-        <ReviewRow label="Network" value={`${HIRING_NETWORK_NAME} · chain 97`} />
+        <ReviewRow
+          label="Network"
+          value={`${deployment.networkName} · chain ${deployment.chainId}`}
+        />
         <ReviewRow
           label="Budget"
           value={`${quote.budgetDisplay} ${quote.tokenSymbol} (signed quote)`}
@@ -117,7 +120,7 @@ export function ReviewStep({
           value={
             <a
               className="inline-flex items-center gap-1.5 break-all underline decoration-border underline-offset-4 hover:text-brand"
-              href={buildTestnetAddressHref(quote.tokenAddress)}
+              href={buildHiringAddressHref(deployment.chainId, quote.tokenAddress)}
               rel="noreferrer noopener"
               target="_blank"
             >
@@ -131,11 +134,11 @@ export function ReviewStep({
           value={
             <a
               className="inline-flex items-center gap-1.5 break-all underline decoration-border underline-offset-4 hover:text-brand"
-              href={buildTestnetAddressHref(erc8183Deployment.commerce)}
+              href={buildHiringAddressHref(deployment.chainId, deployment.commerce)}
               rel="noreferrer noopener"
               target="_blank"
             >
-              {erc8183Deployment.commerce}
+              {deployment.commerce}
               <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
             </a>
           }
@@ -151,6 +154,25 @@ export function ReviewStep({
         budget, exact token approval when needed, and funding transactions. Sift
         simulates each call and asks for explicit wallet confirmation each time.
       </div>
+
+      {deployment.isMainnet ? (
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-4 text-sm leading-6 text-amber-50">
+          <input
+            type="checkbox"
+            checked={mainnetRiskAccepted}
+            className="mt-1 size-4 shrink-0 accent-amber-400"
+            onChange={(event) => setMainnetRiskAccepted(event.target.checked)}
+          />
+          <span>
+            <strong className="block font-semibold">
+              I understand this is BSC Mainnet.
+            </strong>
+            This hire uses real BNB for gas and can transfer real {quote.tokenSymbol}
+            tokens into the ERC-8183 job. I checked the budget, wallet, token,
+            and contract addresses above.
+          </span>
+        </label>
+      ) : null}
 
       {error ? (
         <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/8 px-4 py-3 text-sm text-red-200">
@@ -192,13 +214,20 @@ export function ReviewStep({
                   ) : (
                     <Network className="size-4" aria-hidden="true" />
                   )}
-                  {switching ? "Switching network" : "Switch to BSC Testnet"}
+                  {switching
+                    ? "Switching network"
+                    : `Switch to ${deployment.networkName}`}
                 </Button>
               );
             }
 
             return (
-              <Button type="button" size="lg" onClick={onContinue} disabled={pending}>
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => onContinue(mainnetRiskAccepted)}
+                disabled={pending || (deployment.isMainnet && !mainnetRiskAccepted)}
+              >
                 {pending ? (
                   <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
                 ) : (
@@ -214,7 +243,7 @@ export function ReviewStep({
       {!correctNetwork && connected ? (
         <p className="flex items-center justify-end gap-2 text-xs text-amber-200">
           <CircleAlert className="size-3.5" aria-hidden="true" />
-          Agent hiring is testnet-only. Mainnet transactions are blocked.
+          This agent must be hired on {deployment.networkName} (chain {deployment.chainId}).
         </p>
       ) : null}
     </section>

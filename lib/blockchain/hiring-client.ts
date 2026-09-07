@@ -10,26 +10,30 @@ import {
 
 import {
   commerceAbi,
-  erc8183Deployment,
   evaluatorRouterAbi,
+  getErc8183Deployment,
   optimisticPolicyAbi,
   paymentTokenAbi,
+  type HiringChainId,
 } from "@/features/hiring/protocol";
 import { HiringQuoteError } from "@/features/hiring/quote";
 import { resolveHiringRpcUrls } from "@/features/hiring/rpc";
 import { publicBnbChainDefinitions } from "@/lib/blockchain/chains";
 
-let cachedClient: PublicClient | undefined;
+const cachedClients = new Map<HiringChainId, PublicClient>();
 
-export function getHiringPublicClient(): PublicClient {
-  if (cachedClient) {
-    return cachedClient;
+export function getHiringPublicClient(chainId: HiringChainId): PublicClient {
+  const cached = cachedClients.get(chainId);
+
+  if (cached) {
+    return cached;
   }
 
-  const definition = publicBnbChainDefinitions["bsc-testnet"];
-  const urls = resolveHiringRpcUrls(definition.publicRpcUrls, process.env);
+  const deployment = getErc8183Deployment(chainId);
+  const definition = publicBnbChainDefinitions[deployment.network];
+  const urls = resolveHiringRpcUrls(chainId, definition.publicRpcUrls, process.env);
 
-  cachedClient = createPublicClient({
+  const client = createPublicClient({
     chain: definition.chain,
     transport: fallback(
       urls.map((url) => http(url, { retryCount: 0, timeout: 10_000 })),
@@ -37,7 +41,8 @@ export function getHiringPublicClient(): PublicClient {
     ),
   });
 
-  return cachedClient;
+  cachedClients.set(chainId, client as PublicClient);
+  return client as PublicClient;
 }
 
 export type Erc8183RuntimeState = Readonly<{
@@ -47,22 +52,24 @@ export type Erc8183RuntimeState = Readonly<{
 }>;
 
 export async function verifyErc8183Runtime(
-  client: PublicClient = getHiringPublicClient(),
+  expectedChainId: HiringChainId,
+  client: PublicClient = getHiringPublicClient(expectedChainId),
 ): Promise<Erc8183RuntimeState> {
+  const deployment = getErc8183Deployment(expectedChainId);
   const chainId = await client.getChainId();
 
-  if (chainId !== erc8183Deployment.chainId) {
+  if (chainId !== deployment.chainId) {
     throw new HiringQuoteError(
       "protocol-unavailable",
-      "The configured hiring RPC is not connected to BSC Testnet.",
+      `The configured hiring RPC is not connected to ${deployment.networkName}.`,
     );
   }
 
   const [commerceCode, routerCode, policyCode, tokenCode] = await Promise.all([
-    client.getBytecode({ address: erc8183Deployment.commerce }),
-    client.getBytecode({ address: erc8183Deployment.router }),
-    client.getBytecode({ address: erc8183Deployment.policy }),
-    client.getBytecode({ address: erc8183Deployment.paymentToken }),
+    client.getBytecode({ address: deployment.commerce }),
+    client.getBytecode({ address: deployment.router }),
+    client.getBytecode({ address: deployment.policy }),
+    client.getBytecode({ address: deployment.paymentToken }),
   ]);
 
   if (
@@ -91,58 +98,58 @@ export async function verifyErc8183Runtime(
     block,
   ] = await Promise.all([
     client.readContract({
-      address: erc8183Deployment.commerce,
+      address: deployment.commerce,
       abi: commerceAbi,
       functionName: "paymentToken",
     }),
     client.readContract({
-      address: erc8183Deployment.commerce,
+      address: deployment.commerce,
       abi: commerceAbi,
       functionName: "platformFeeBP",
     }),
     client.readContract({
-      address: erc8183Deployment.commerce,
+      address: deployment.commerce,
       abi: commerceAbi,
       functionName: "paused",
     }),
     client.readContract({
-      address: erc8183Deployment.router,
+      address: deployment.router,
       abi: evaluatorRouterAbi,
       functionName: "commerce",
     }),
     client.readContract({
-      address: erc8183Deployment.router,
+      address: deployment.router,
       abi: evaluatorRouterAbi,
       functionName: "policyWhitelist",
-      args: [erc8183Deployment.policy],
+      args: [deployment.policy],
     }),
     client.readContract({
-      address: erc8183Deployment.router,
+      address: deployment.router,
       abi: evaluatorRouterAbi,
       functionName: "paused",
     }),
     client.readContract({
-      address: erc8183Deployment.policy,
+      address: deployment.policy,
       abi: optimisticPolicyAbi,
       functionName: "commerce",
     }),
     client.readContract({
-      address: erc8183Deployment.policy,
+      address: deployment.policy,
       abi: optimisticPolicyAbi,
       functionName: "router",
     }),
     client.readContract({
-      address: erc8183Deployment.policy,
+      address: deployment.policy,
       abi: optimisticPolicyAbi,
       functionName: "disputeWindow",
     }),
     client.readContract({
-      address: erc8183Deployment.paymentToken,
+      address: deployment.paymentToken,
       abi: paymentTokenAbi,
       functionName: "decimals",
     }),
     client.readContract({
-      address: erc8183Deployment.paymentToken,
+      address: deployment.paymentToken,
       abi: paymentTokenAbi,
       functionName: "symbol",
     }),
@@ -150,15 +157,15 @@ export async function verifyErc8183Runtime(
   ]);
 
   if (
-    getAddress(paymentToken) !== erc8183Deployment.paymentToken ||
-    getAddress(routerCommerce) !== erc8183Deployment.commerce ||
-    getAddress(policyCommerce) !== erc8183Deployment.commerce ||
-    getAddress(policyRouter) !== erc8183Deployment.router ||
+    getAddress(paymentToken) !== deployment.paymentToken ||
+    getAddress(routerCommerce) !== deployment.commerce ||
+    getAddress(policyCommerce) !== deployment.commerce ||
+    getAddress(policyRouter) !== deployment.router ||
     !policyWhitelisted ||
     commercePaused ||
     routerPaused ||
-    tokenDecimals !== erc8183Deployment.tokenDecimals ||
-    tokenSymbol !== erc8183Deployment.tokenSymbol ||
+    tokenDecimals !== deployment.tokenDecimals ||
+    tokenSymbol !== deployment.tokenSymbol ||
     platformFee > 1_000n ||
     disputeWindow <= 0n ||
     disputeWindow > BigInt(Number.MAX_SAFE_INTEGER)

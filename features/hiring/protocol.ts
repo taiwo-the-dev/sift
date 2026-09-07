@@ -1,24 +1,78 @@
 import { getAddress, type Address, type Hash } from "viem";
 
-export const HIRING_CHAIN_ID = 97 as const;
-export const HIRING_NETWORK_NAME = "BSC Testnet" as const;
+export const hiringChainIds = [56, 97] as const;
+export type HiringChainId = (typeof hiringChainIds)[number];
 export const HIRING_CONFIRMATIONS = 2;
 
+export type Erc8183Deployment = Readonly<{
+  chainId: HiringChainId;
+  commerce: Address;
+  explorerBaseUrl: string;
+  isMainnet: boolean;
+  network: "bsc-mainnet" | "bsc-testnet";
+  networkName: "BSC Mainnet" | "BSC Testnet";
+  paymentToken: Address;
+  policy: Address;
+  router: Address;
+  tokenDecimals: number;
+  tokenSymbol: string;
+}>;
+
 /**
- * BNB Chain's current APEX/ERC-8183 BSC Testnet deployment.
+ * BNB Chain's current APEX/ERC-8183 deployments.
  *
- * Source of truth checked 2026-08-23:
+ * Source of truth checked 2026-09-07:
  * https://github.com/bnb-chain/apex-contracts/blob/main/scripts/addresses.ts
+ *
+ * Sift also validates bytecode, contract relationships, pause state, token
+ * metadata, policy whitelist, and dispute window at runtime before accepting a
+ * quote. A documented address alone is never enough to authorize a write.
  */
-export const erc8183Deployment = Object.freeze({
-  chainId: HIRING_CHAIN_ID,
-  commerce: getAddress("0xa206c0517b6371c6638cd9e4a42cc9f02a33b0de"),
-  paymentToken: getAddress("0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"),
-  policy: getAddress("0xd6a4217588f6b1f5657a92a3e94e6422ad771cea"),
-  router: getAddress("0xd7d36d66d2f1b608a0f943f722d27e3744f66f25"),
-  tokenDecimals: 18,
-  tokenSymbol: "U",
+export const erc8183Deployments: Readonly<
+  Record<HiringChainId, Erc8183Deployment>
+> = Object.freeze({
+  56: Object.freeze({
+    chainId: 56,
+    commerce: getAddress("0xEa4DAa3100A767e86FDed867729ae7446476EBA6"),
+    explorerBaseUrl: "https://bscscan.com",
+    isMainnet: true,
+    network: "bsc-mainnet",
+    networkName: "BSC Mainnet",
+    paymentToken: getAddress("0xcE24439F2D9C6a2289F741120FE202248B666666"),
+    policy: getAddress("0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5"),
+    router: getAddress("0x51895229E12F9876011789B04f8698af06cCD6DA"),
+    tokenDecimals: 18,
+    tokenSymbol: "U",
+  }),
+  97: Object.freeze({
+    chainId: 97,
+    commerce: getAddress("0xa206c0517b6371c6638cd9e4a42cc9f02a33b0de"),
+    explorerBaseUrl: "https://testnet.bscscan.com",
+    isMainnet: false,
+    network: "bsc-testnet",
+    networkName: "BSC Testnet",
+    paymentToken: getAddress("0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"),
+    policy: getAddress("0xd6a4217588f6b1f5657a92a3e94e6422ad771cea"),
+    router: getAddress("0xd7d36d66d2f1b608a0f943f722d27e3744f66f25"),
+    tokenDecimals: 18,
+    tokenSymbol: "U",
+  }),
 });
+
+export function isHiringChainId(value: unknown): value is HiringChainId {
+  return (
+    typeof value === "number" &&
+    hiringChainIds.some((chainId) => chainId === value)
+  );
+}
+
+export function getErc8183Deployment(chainId: number): Erc8183Deployment {
+  if (!isHiringChainId(chainId)) {
+    throw new TypeError(`Hiring is not supported on chain ${chainId}.`);
+  }
+
+  return erc8183Deployments[chainId];
+}
 
 export const emptyBytes = "0x" as const;
 
@@ -270,22 +324,33 @@ export const hiringTransactionSteps = [
   "fund_job",
 ] as const satisfies readonly HiringTransactionStep[];
 
-export function transactionDestination(step: HiringTransactionStep): Address {
+export function transactionDestination(
+  step: HiringTransactionStep,
+  chainId: HiringChainId,
+): Address {
+  const deployment = getErc8183Deployment(chainId);
+
   if (step === "register_job") {
-    return erc8183Deployment.router;
+    return deployment.router;
   }
 
   if (step === "approve_token") {
-    return erc8183Deployment.paymentToken;
+    return deployment.paymentToken;
   }
 
-  return erc8183Deployment.commerce;
+  return deployment.commerce;
 }
 
-export function buildTestnetTransactionHref(hash: Hash): string {
-  return `https://testnet.bscscan.com/tx/${hash}`;
+export function buildHiringTransactionHref(
+  chainId: HiringChainId,
+  hash: Hash,
+): string {
+  return `${getErc8183Deployment(chainId).explorerBaseUrl}/tx/${hash}`;
 }
 
-export function buildTestnetAddressHref(address: Address): string {
-  return `https://testnet.bscscan.com/address/${address}`;
+export function buildHiringAddressHref(
+  chainId: HiringChainId,
+  address: Address,
+): string {
+  return `${getErc8183Deployment(chainId).explorerBaseUrl}/address/${address}`;
 }

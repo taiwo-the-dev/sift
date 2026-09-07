@@ -288,10 +288,8 @@ export function ProfileHeader({
         <div className="mt-4 rounded-xl border border-border bg-background/55 px-4 py-3 text-xs leading-5 text-muted-foreground">
           <span className="font-semibold text-foreground">Hiring availability: </span>
           {hireable
-            ? "Available to hire through ERC-8183 on BSC Testnet."
-            : profile.chainId === 56
-              ? "Mainnet agents can be discovered and compared. Hiring is currently limited to BSC Testnet."
-              : "This agent does not meet the current ERC-8183 hiring requirements."}
+            ? `Available to hire through ERC-8183 on ${formatChainName(profile.chainId)}.`
+            : "This agent does not meet the current ERC-8183 hiring requirements."}
         </div>
       </div>
     </header>

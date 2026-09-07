@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Address } from "viem";
 
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import type { HiringChainId } from "@/features/hiring/protocol";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
@@ -25,7 +25,10 @@ export type DashboardSources = Readonly<{
   listActivities(jobIds: readonly string[]): Promise<readonly ActivityRecord[]>;
   listAgents(agentIds: readonly string[]): Promise<readonly AgentRecord[]>;
   listHealth(agentIds: readonly string[]): Promise<readonly HealthRecord[]>;
-  listJobs(walletAddress: Address): Promise<readonly JobRecord[]>;
+  listJobs(
+    walletAddress: Address,
+    chainId: HiringChainId,
+  ): Promise<readonly JobRecord[]>;
   listTransactions(jobIds: readonly string[]): Promise<readonly TransactionRecord[]>;
 }>;
 
@@ -59,11 +62,11 @@ function createSupabaseSources(): DashboardSources {
       if (error) throw new DatabaseOperationError("list dashboard health", error);
       return data;
     },
-    async listJobs(walletAddress) {
+    async listJobs(walletAddress, chainId) {
       const { data, error } = await client
         .from("jobs")
         .select("*")
-        .eq("chain_id", HIRING_CHAIN_ID)
+        .eq("chain_id", chainId)
         .eq("wallet_address", walletAddress.toLowerCase())
         .order("created_at", { ascending: false })
         .limit(100);
@@ -99,11 +102,14 @@ function groupBy<RecordType, Key extends string>(
 export function createDashboardRepository(
   sources: DashboardSources = createSupabaseSources(),
 ): Readonly<{
-  listWalletJobs(walletAddress: Address): Promise<readonly DashboardDatabaseJob[]>;
+  listWalletJobs(
+    walletAddress: Address,
+    chainId: HiringChainId,
+  ): Promise<readonly DashboardDatabaseJob[]>;
 }> {
   return {
-    async listWalletJobs(walletAddress) {
-      const jobs = await sources.listJobs(walletAddress);
+    async listWalletJobs(walletAddress, chainId) {
+      const jobs = await sources.listJobs(walletAddress, chainId);
       if (jobs.length === 0) return [];
 
       const jobIds = jobs.map((job) => job.id);
@@ -137,4 +143,3 @@ export function createDashboardRepository(
     },
   };
 }
-

@@ -2,6 +2,11 @@
 
 Audit date: 2026-08-24
 
+This is a timestamped pre-M13 audit. The current implementation state, including
+the later BSC Mainnet catalogue and mainnet hiring extension, is documented in
+the master ticket, README, and milestone tickets; historical findings below are
+not silently rewritten.
+
 ## Verdict
 
 Sift is a strong, unusually direct fit for the main-track problem, but the

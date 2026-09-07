@@ -9,7 +9,9 @@ import {
   resolveHiringCompatibility,
 } from "../../features/hiring/compatibility";
 import { parseAgentCommerceStatus } from "../../features/hiring/quote";
-import { erc8183Deployment } from "../../features/hiring/protocol";
+import { getErc8183Deployment } from "../../features/hiring/protocol";
+
+const erc8183Deployment = getErc8183Deployment(97);
 
 const service = {
   endpoint: "https://agent.test-only.dev/erc8183",
@@ -41,7 +43,7 @@ describe("ERC-8183 hiring compatibility", () => {
   it("rejects unsafe, inactive, invalid-metadata, ownerless, and wrong-chain agents", () => {
     for (const candidate of [
       { ...profile, active: false },
-      { ...profile, chainId: 56 },
+      { ...profile, chainId: 1 },
       { ...profile, metadataStatus: "invalid" as const },
       { ...profile, ownerAddress: null },
       { ...profile, services: [{ ...service, endpoint: "http://localhost:3000/erc8183" }] },
@@ -51,6 +53,13 @@ describe("ERC-8183 hiring compatibility", () => {
     ]) {
       assert.equal(resolveHiringCompatibility(candidate), null);
     }
+  });
+
+  it("accepts an otherwise compatible BSC Mainnet agent", () => {
+    assert.notEqual(
+      resolveHiringCompatibility({ ...profile, chainId: 56 }),
+      null,
+    );
   });
 
   it("returns an actionable, checkable reason for an unsupported agent", () => {
@@ -79,13 +88,41 @@ describe("ERC-8183 hiring compatibility", () => {
     };
 
     assert.equal(
-      parseAgentCommerceStatus(status, profile.ownerAddress).servicePrice,
+      parseAgentCommerceStatus(status, profile.ownerAddress, 97).servicePrice,
       0n,
     );
     assert.throws(() =>
       parseAgentCommerceStatus(
         { ...status, decimals: 6 },
         profile.ownerAddress,
+        97,
+      ),
+    );
+  });
+
+  it("binds a mainnet status document to the separate chain-56 deployment", () => {
+    const mainnet = getErc8183Deployment(56);
+    const status = {
+      agent_address: profile.ownerAddress,
+      chain_id: 56,
+      commerce_address: mainnet.commerce,
+      currency: mainnet.paymentToken,
+      decimals: mainnet.tokenDecimals,
+      policy_address: mainnet.policy,
+      router_address: mainnet.router,
+      service_price: "1",
+      status: "ok",
+    };
+
+    assert.equal(
+      parseAgentCommerceStatus(status, profile.ownerAddress, 56).servicePrice,
+      1n,
+    );
+    assert.throws(() =>
+      parseAgentCommerceStatus(
+        { ...status, commerce_address: erc8183Deployment.commerce },
+        profile.ownerAddress,
+        56,
       ),
     );
   });

@@ -14,8 +14,8 @@ import type {
   HiringQuote,
 } from "@/features/hiring/model";
 import {
-  buildTestnetAddressHref,
-  erc8183Deployment,
+  buildHiringAddressHref,
+  getErc8183Deployment,
 } from "@/features/hiring/protocol";
 import { hiringExpiryLabel } from "@/features/hiring/review";
 
@@ -57,6 +57,8 @@ export function PermissionsStep({
   onContinue,
   quote,
 }: PermissionsStepProps) {
+  const deployment = getErc8183Deployment(agent.chainId);
+
   return (
     <section className="space-y-6">
       <div>
@@ -116,10 +118,10 @@ export function PermissionsStep({
       <p className="text-xs leading-5 text-muted-foreground">
         Your maximum was {mission.maxSpend} {quote.tokenSymbol}; the agent signed
         a quote for {quote.budgetDisplay} {quote.tokenSymbol}. Transactions target
-        only the verified testnet deployment at{" "}
+        only the verified {deployment.networkName} deployment at{" "}
         <a
           className="font-medium text-foreground underline decoration-border underline-offset-4 hover:text-brand"
-          href={buildTestnetAddressHref(erc8183Deployment.commerce)}
+          href={buildHiringAddressHref(deployment.chainId, deployment.commerce)}
           rel="noreferrer noopener"
           target="_blank"
         >

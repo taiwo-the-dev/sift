@@ -18,9 +18,10 @@ These limitations are product boundaries, not placeholder claims.
 - ERC-8004 registration proves an identity event, not endpoint health,
   reputation, work quality, or ERC-8183 compatibility. Missing evidence remains
   unavailable or `Unknown`.
-- Discovery defaults to production-chain identities. Hiring remains confined
-  to the reviewed BSC Testnet ERC-8183/APEX path; mainnet profiles cannot start
-  a wallet transaction.
+- Discovery defaults to production-chain identities. Hiring supports only the
+  reviewed BSC Mainnet and BSC Testnet ERC-8183/APEX deployments. Mainnet can
+  spend real assets and remains unavailable in hosted environments until the
+  mainnet-hiring migration and release validation are complete.
 - Existing records indexed before M13 have no registration transaction hash
   until a controlled source-backed replay observes it. Sift displays that value
   as unavailable and does not reconstruct it from assumptions.

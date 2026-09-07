@@ -3,9 +3,11 @@ import { z } from "zod";
 
 import type { HiringIntentStatus } from "@/features/hiring/model";
 import {
-  paymentTokenAbi,
-  erc8183Deployment,
+  getErc8183Deployment,
   hiringTransactionSteps,
+  isHiringChainId,
+  paymentTokenAbi,
+  type HiringChainId,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
 import {
@@ -90,16 +92,18 @@ function nextStepAfter(
 async function allowanceRequiresApproval(
   walletAddress: string,
   budget: bigint,
+  chainId: HiringChainId,
 ): Promise<boolean> {
   if (budget === 0n) {
     return false;
   }
 
-  const allowance = await getHiringPublicClient().readContract({
-    address: erc8183Deployment.paymentToken,
+  const deployment = getErc8183Deployment(chainId);
+  const allowance = await getHiringPublicClient(chainId).readContract({
+    address: deployment.paymentToken,
     abi: paymentTokenAbi,
     functionName: "allowance",
-    args: [getAddress(walletAddress), erc8183Deployment.commerce],
+    args: [getAddress(walletAddress), deployment.commerce],
   });
   return allowance < budget;
 }
@@ -154,6 +158,14 @@ export async function PATCH(
     const action = actionSchema.parse(await request.json());
     const authorized = await getAuthorizedHiringIntent(id, token);
     let job = authorized.record;
+
+    if (!isHiringChainId(job.chain_id)) {
+      throw new HiringConflictError(
+        "The saved hiring request uses an unsupported network.",
+      );
+    }
+
+    const deployment = getErc8183Deployment(job.chain_id);
 
     if (action.action === "client_state") {
       const nextStatus = action.status as HiringIntentStatus;
@@ -245,6 +257,7 @@ export async function PATCH(
       const approvalRequired = await allowanceRequiresApproval(
         job.wallet_address,
         BigInt(job.budget_base_units),
+        job.chain_id,
       );
 
       if (approvalRequired && !approvalConfirmed) {
@@ -255,7 +268,7 @@ export async function PATCH(
     }
 
     const verification = await inspectHiringTransaction({
-      client: getHiringPublicClient(),
+      client: getHiringPublicClient(job.chain_id),
       hash: action.hash as Hash,
       job,
       replacedHash: action.replacedHash as Hash | null | undefined,
@@ -267,7 +280,11 @@ export async function PATCH(
     if (verification.status === "confirmed") {
       const approvalRequired =
         action.step === "set_budget"
-          ? await allowanceRequiresApproval(job.wallet_address, budget)
+          ? await allowanceRequiresApproval(
+              job.wallet_address,
+              budget,
+              job.chain_id,
+            )
           : false;
       const nextStep = nextStepAfter(action.step, approvalRequired);
       const isComplete = action.step === "fund_job";
@@ -285,7 +302,7 @@ export async function PATCH(
       jobUpdate = {
         failure_code: "transaction-reverted",
         failure_message:
-          "The BSC Testnet transaction reverted. No confirmation was recorded.",
+          `The ${deployment.networkName} transaction reverted. No confirmation was recorded.`,
         status: "failed",
       };
     } else {
@@ -322,7 +339,7 @@ export async function PATCH(
       error: error instanceof Error ? error.name : "UnknownError",
     });
     return json(
-      { error: "Sift could not verify this transaction against BSC Testnet." },
+      { error: "Sift could not verify this transaction against its saved BNB network." },
       500,
     );
   }

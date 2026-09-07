@@ -1,6 +1,9 @@
 import type { Address, Hash } from "viem";
 
-import type { HiringTransactionStep } from "@/features/hiring/protocol";
+import type {
+  HiringChainId,
+  HiringTransactionStep,
+} from "@/features/hiring/protocol";
 
 export type HiringIntentStatus =
   | "draft"
@@ -33,7 +36,7 @@ export type HiringCompatibility = Readonly<{
 
 export type HiringAgentSummary = Readonly<{
   agentId: string;
-  chainId: number;
+  chainId: HiringChainId;
   imageUrl: string | null;
   name: string;
   ownerAddress: Address;
@@ -51,7 +54,7 @@ export type HiringMissionInput = Readonly<{
 export type HiringQuote = Readonly<{
   budgetBaseUnits: string;
   budgetDisplay: string;
-  chainId: number;
+  chainId: HiringChainId;
   disputeWindowSeconds: number;
   estimatedCompletionSeconds: number | null;
   expiresAt: string;
@@ -81,7 +84,7 @@ export type HiringTransactionSnapshot = Readonly<{
 export type HiringIntentSnapshot = Readonly<{
   agentId: string;
   budgetBaseUnits: string;
-  chainId: number;
+  chainId: HiringChainId;
   confirmedAt: string | null;
   currentStep: HiringTransactionStep | null;
   deliverables: string;
@@ -104,10 +107,11 @@ export type HiringIntentSnapshot = Readonly<{
 
 export type CreateHiringIntentInput = Readonly<{
   agentId: string;
-  chainId: number;
+  chainId: HiringChainId;
   deliverables: string;
   durationSeconds: number;
   idempotencyKey: string;
+  mainnetRiskAccepted: boolean;
   maxSpend: string;
   mission: string;
   qualityStandards: string;

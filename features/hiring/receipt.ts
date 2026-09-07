@@ -12,11 +12,13 @@ import {
 import {
   commerceAbi,
   emptyBytes,
-  erc8183Deployment,
   evaluatorRouterAbi,
+  getErc8183Deployment,
   HIRING_CONFIRMATIONS,
+  isHiringChainId,
   paymentTokenAbi,
   transactionDestination,
+  type Erc8183Deployment,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
 import type { HiringIntentRecord } from "@/lib/db/hiring-repository";
@@ -72,11 +74,35 @@ function expectArgs(
   }
 }
 
+function deploymentForJob(job: HiringIntentRecord): Erc8183Deployment {
+  if (!isHiringChainId(job.chain_id)) {
+    throw new HiringTransactionVerificationError(
+      "chain-unavailable",
+      "The saved hiring request uses an unsupported network.",
+    );
+  }
+
+  const deployment = getErc8183Deployment(job.chain_id);
+
+  expectArgs(
+    getAddress(job.commerce_address) === deployment.commerce &&
+      getAddress(job.router_address) === deployment.router &&
+      getAddress(job.policy_address) === deployment.policy &&
+      getAddress(job.payment_token_address) === deployment.paymentToken &&
+      job.payment_token_decimals === deployment.tokenDecimals &&
+      job.payment_token_symbol === deployment.tokenSymbol,
+    "The saved hiring deployment no longer matches Sift's verified network configuration.",
+  );
+
+  return deployment;
+}
+
 function verifyTransactionInput(
   job: HiringIntentRecord,
   step: HiringTransactionStep,
   input: Hex,
 ): void {
+  const deployment = deploymentForJob(job);
   const budget = BigInt(job.budget_base_units);
   const onchainJobId = job.onchain_job_id
     ? BigInt(job.onchain_job_id)
@@ -90,10 +116,10 @@ function verifyTransactionInput(
       decoded.functionName === "createJob" &&
         args?.length === 5 &&
         getAddress(String(args[0])) === getAddress(job.provider_address) &&
-        getAddress(String(args[1])) === erc8183Deployment.router &&
+        getAddress(String(args[1])) === deployment.router &&
         args[2] === unixSeconds(job.expires_at) &&
         args[3] === job.onchain_description &&
-        getAddress(String(args[4])) === erc8183Deployment.router,
+        getAddress(String(args[4])) === deployment.router,
     );
     return;
   }
@@ -105,7 +131,7 @@ function verifyTransactionInput(
     expectArgs(
       decoded.functionName === "registerJob" &&
         decoded.args?.[0] === onchainJobId &&
-        getAddress(String(decoded.args[1])) === erc8183Deployment.policy,
+        getAddress(String(decoded.args[1])) === deployment.policy,
     );
     return;
   }
@@ -115,7 +141,7 @@ function verifyTransactionInput(
     expectArgs(
       budget > 0n &&
         decoded.functionName === "approve" &&
-        getAddress(String(decoded.args?.[0])) === erc8183Deployment.commerce &&
+        getAddress(String(decoded.args?.[0])) === deployment.commerce &&
         decoded.args?.[1] === budget,
     );
     return;
@@ -145,8 +171,10 @@ function findCreatedJobId(
   receipt: TransactionReceipt,
   job: HiringIntentRecord,
 ): bigint {
+  const deployment = deploymentForJob(job);
+
   for (const log of receipt.logs) {
-    if (getAddress(log.address) !== erc8183Deployment.commerce) {
+    if (getAddress(log.address) !== deployment.commerce) {
       continue;
     }
 
@@ -161,8 +189,8 @@ function findCreatedJobId(
         decoded.eventName === "JobCreated" &&
         getAddress(decoded.args.client) === getAddress(job.wallet_address) &&
         getAddress(decoded.args.provider) === getAddress(job.provider_address) &&
-        getAddress(decoded.args.evaluator) === erc8183Deployment.router &&
-        getAddress(decoded.args.hook) === erc8183Deployment.router &&
+        getAddress(decoded.args.evaluator) === deployment.router &&
+        getAddress(decoded.args.hook) === deployment.router &&
         decoded.args.expiredAt === unixSeconds(job.expires_at)
       ) {
         return decoded.args.jobId;
@@ -183,7 +211,8 @@ function verifyStepEvent(
   job: HiringIntentRecord,
   step: Exclude<HiringTransactionStep, "create_job">,
 ): void {
-  const expectedAddress = transactionDestination(step);
+  const deployment = deploymentForJob(job);
+  const expectedAddress = transactionDestination(step, deployment.chainId);
   const expectedJobId = job.onchain_job_id ? BigInt(job.onchain_job_id) : null;
   const budget = BigInt(job.budget_base_units);
 
@@ -203,7 +232,7 @@ function verifyStepEvent(
         if (
           decoded.eventName === "JobRegistered" &&
           decoded.args.jobId === expectedJobId &&
-          getAddress(decoded.args.policy) === erc8183Deployment.policy &&
+          getAddress(decoded.args.policy) === deployment.policy &&
           getAddress(decoded.args.client) === getAddress(job.wallet_address)
         ) {
           return;
@@ -218,7 +247,7 @@ function verifyStepEvent(
         if (
           decoded.eventName === "Approval" &&
           getAddress(decoded.args.owner) === getAddress(job.wallet_address) &&
-          getAddress(decoded.args.spender) === erc8183Deployment.commerce &&
+          getAddress(decoded.args.spender) === deployment.commerce &&
           decoded.args.value === budget
         ) {
           return;
@@ -266,6 +295,8 @@ async function verifyFundedJob(
   job: HiringIntentRecord,
   blockNumber: bigint,
 ): Promise<void> {
+  const deployment = deploymentForJob(job);
+
   if (!job.onchain_job_id) {
     throw new HiringTransactionVerificationError(
       "invalid-transaction",
@@ -274,7 +305,7 @@ async function verifyFundedJob(
   }
 
   const onchain = await client.readContract({
-    address: erc8183Deployment.commerce,
+    address: deployment.commerce,
     abi: commerceAbi,
     functionName: "getJob",
     args: [BigInt(job.onchain_job_id)],
@@ -286,11 +317,11 @@ async function verifyFundedJob(
     onchain.id === BigInt(job.onchain_job_id) &&
       getAddress(onchain.client) === getAddress(job.wallet_address) &&
       getAddress(onchain.provider) === getAddress(job.provider_address) &&
-      getAddress(onchain.evaluator) === erc8183Deployment.router &&
+      getAddress(onchain.evaluator) === deployment.router &&
       onchain.description === job.onchain_description &&
       onchain.budget === BigInt(job.budget_base_units) &&
       onchain.expiredAt === unixSeconds(job.expires_at) &&
-      getAddress(onchain.hook) === erc8183Deployment.router &&
+      getAddress(onchain.hook) === deployment.router &&
       status === 1,
     "The verified receipt does not map to the reviewed ERC-8183 job state.",
   );
@@ -305,12 +336,13 @@ export async function inspectHiringTransaction(
     step: HiringTransactionStep;
   }>,
 ): Promise<VerifiedHiringTransaction> {
+  const deployment = deploymentForJob(input.job);
   const chainId = await input.client.getChainId();
 
-  if (chainId !== erc8183Deployment.chainId) {
+  if (chainId !== deployment.chainId) {
     throw new HiringTransactionVerificationError(
       "chain-unavailable",
-      "The receipt verifier is not connected to BSC Testnet.",
+      `The receipt verifier is not connected to ${deployment.networkName}.`,
     );
   }
 
@@ -319,7 +351,8 @@ export async function inspectHiringTransaction(
   expectArgs(
     transaction.to !== null &&
       getAddress(transaction.from) === getAddress(input.job.wallet_address) &&
-      getAddress(transaction.to) === transactionDestination(input.step) &&
+      getAddress(transaction.to) ===
+        transactionDestination(input.step, deployment.chainId) &&
       transaction.value === 0n,
   );
   verifyTransactionInput(input.job, input.step, transaction.input);

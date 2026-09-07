@@ -23,7 +23,10 @@ import {
   requestDashboardChallenge,
 } from "@/features/dashboard/client-api";
 import { shouldPollDashboard } from "@/features/dashboard/derive";
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import {
+  getErc8183Deployment,
+  isHiringChainId,
+} from "@/features/hiring/protocol";
 import { mapWalletError } from "@/features/wallet/presentation";
 import { defaultWalletChain } from "@/lib/blockchain/chains";
 
@@ -82,6 +85,9 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
   const signMessage = useSignMessage();
   const switchChain = useSwitchChain();
   const address = account.address;
+  const activeChainId = isHiringChainId(account.chainId)
+    ? account.chainId
+    : null;
   const actionContext = address ?? "disconnected";
   const [action, setAction] = useState<ActionState>({
     address: actionContext,
@@ -95,11 +101,17 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
     mounted &&
     account.status === "connected" &&
     Boolean(address) &&
-    account.chainId === HIRING_CHAIN_ID;
+    activeChainId !== null;
   const dashboardQuery = useQuery({
     enabled: canLoad,
-    queryFn: () => loadDashboard(address!),
-    queryKey: ["wallet-dashboard", address, HIRING_CHAIN_ID],
+    queryFn: () => {
+      if (!address || activeChainId === null) {
+        throw new DashboardApiError("Connect a supported BNB network.", 400);
+      }
+
+      return loadDashboard(address, activeChainId);
+    },
+    queryKey: ["wallet-dashboard", address, activeChainId],
     refetchInterval(query) {
       const dashboard = query.state.data?.dashboard;
       return dashboard && shouldPollDashboard(dashboard.jobs) ? 15_000 : false;
@@ -113,13 +125,16 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
   });
 
   async function verifyWallet(): Promise<void> {
-    if (!address || account.chainId !== HIRING_CHAIN_ID) return;
+    if (!address || activeChainId === null) return;
     setAction({ address, error: null, pending: true });
 
     try {
-      const challenge = await requestDashboardChallenge(address);
+      const challenge = await requestDashboardChallenge(address, activeChainId);
       if (challenge.walletAddress.toLowerCase() !== address.toLowerCase()) {
         throw new Error("The dashboard challenge does not match the connected wallet.");
+      }
+      if (challenge.chainId !== activeChainId) {
+        throw new Error("The dashboard challenge does not match the connected network.");
       }
       const signature = await signMessage.signMessageAsync({
         message: challenge.message,
@@ -127,6 +142,9 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
       const session = await authorizeDashboard(signature);
       if (session.walletAddress.toLowerCase() !== address.toLowerCase()) {
         throw new Error("The verified dashboard session does not match the connected wallet.");
+      }
+      if (session.chainId !== activeChainId) {
+        throw new Error("The verified dashboard session does not match the connected network.");
       }
       setAction({ address, error: null, pending: false });
       await dashboardQuery.refetch();
@@ -164,7 +182,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
     );
   }
 
-  if (account.chainId !== HIRING_CHAIN_ID) {
+  if (activeChainId === null) {
     const networkError = switchChain.error
       ? mapWalletError(switchChain.error)
       : null;
@@ -172,8 +190,8 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
     return (
       <DashboardStateCard
         icon={Network}
-        title="Switch to BSC Testnet"
-        description="Agent hiring and task records are currently available on BSC Testnet."
+        title="Switch to a supported BNB network"
+        description="Agent hiring and task records are available on BSC Mainnet and BSC Testnet."
       >
         <div className="flex w-full flex-col items-center gap-3">
           <Button
@@ -207,6 +225,8 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
 
   if (dashboardQuery.isPending) return <DashboardLoadingState />;
 
+  const networkName = getErc8183Deployment(activeChainId).networkName;
+
   if (
     dashboardQuery.error instanceof DashboardApiError &&
     dashboardQuery.error.status === 401
@@ -215,7 +235,7 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
       <DashboardStateCard
         icon={ShieldCheck}
         title="Verify wallet ownership"
-        description="Sign a read-only message to view this wallet’s task history. This does not grant transaction or spending permission."
+        description={`Sign a read-only message to view this wallet’s ${networkName} task history. This does not grant transaction or spending permission.`}
       >
         <Button type="button" variant="brand" size="lg" disabled={actionState.pending} aria-live="polite" onClick={verifyWallet}>
           {actionState.pending ? (

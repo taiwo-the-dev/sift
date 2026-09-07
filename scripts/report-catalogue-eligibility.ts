@@ -13,8 +13,8 @@ async function main(): Promise<void> {
       {
         event: "catalogue_eligibility_report",
         hiringPolicy: {
-          mainnetWritesEnabled: false,
-          supportedActivationChainId: 97,
+          mainnetWritesEnabled: true,
+          supportedHiringChainIds: [56, 97],
         },
         networks,
         observedAt: observedAt.toISOString(),

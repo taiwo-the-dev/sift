@@ -3,6 +3,7 @@ import type {
   DashboardChallenge,
   DashboardSessionIdentity,
 } from "@/features/dashboard/session";
+import type { HiringChainId } from "@/features/hiring/protocol";
 
 export class DashboardApiError extends Error {
   constructor(
@@ -31,9 +32,10 @@ async function readResponse<T>(response: Response): Promise<T> {
 
 export async function requestDashboardChallenge(
   address: string,
+  chainId: HiringChainId,
 ): Promise<DashboardChallenge> {
   const response = await fetch(
-    `/api/dashboard/session?address=${encodeURIComponent(address)}`,
+    `/api/dashboard/session?address=${encodeURIComponent(address)}&chainId=${chainId}`,
     { cache: "no-store" },
   );
   return (
@@ -54,13 +56,19 @@ export async function authorizeDashboard(
   ).session;
 }
 
-export async function loadDashboard(walletAddress: string): Promise<Readonly<{
+export async function loadDashboard(
+  walletAddress: string,
+  chainId: HiringChainId,
+): Promise<Readonly<{
   dashboard: DashboardSnapshot;
   session: DashboardSessionIdentity;
 }>> {
   const response = await fetch("/api/dashboard", {
     cache: "no-store",
-    headers: { "x-sift-wallet-address": walletAddress },
+    headers: {
+      "x-sift-chain-id": String(chainId),
+      "x-sift-wallet-address": walletAddress,
+    },
   });
   return readResponse(response);
 }

@@ -5,7 +5,10 @@ import { Suspense } from "react";
 import { HiringAgentContent } from "@/components/hiring/hiring-agent-content";
 import { HiringAgentLoading } from "@/components/hiring/hiring-agent-loading";
 import { parseAgentProfileIdentity } from "@/features/agents/route";
-import { HIRING_NETWORK_NAME } from "@/features/hiring/protocol";
+import {
+  getErc8183Deployment,
+  isHiringChainId,
+} from "@/features/hiring/protocol";
 import { createPageMetadata } from "@/lib/metadata";
 
 interface HirePageProps {
@@ -20,11 +23,15 @@ export async function generateMetadata({
   const path = identity
     ? (`/hire/${identity.chainId}/${identity.agentId}` as const)
     : "/discover";
+  const networkName =
+    identity && isHiringChainId(identity.chainId)
+      ? getErc8183Deployment(identity.chainId).networkName
+      : "a supported BNB network";
 
   return createPageMetadata({
     title: "Hire an AI agent",
     description:
-      "Create an ERC-8183 job with spending and time limits on BSC Testnet.",
+      `Create an ERC-8183 job with spending and time limits on ${networkName}.`,
     noIndex: true,
     path,
   });
@@ -36,19 +43,23 @@ export default async function HirePage({ params }: HirePageProps) {
 
   if (!identity) notFound();
 
+  const deployment = isHiringChainId(identity.chainId)
+    ? getErc8183Deployment(identity.chainId)
+    : null;
+
   return (
     <div className="flex-1 bg-background">
       <div className="border-b border-border bg-card/45">
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-            BSC Testnet hiring
+            {deployment ? `${deployment.networkName} hiring` : "Agent hiring"}
           </p>
           <h1 className="mt-2 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
             Set up an ERC-8183 task with clear limits.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Request a signed agent-provider quote, review the enforceable
-            execution terms, and explicitly confirm each {HIRING_NETWORK_NAME}{" "}
+            execution terms, and explicitly confirm each {deployment?.networkName ?? "BNB network"}{" "}
             transaction.
           </p>
         </div>

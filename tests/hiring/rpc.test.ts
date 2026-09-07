@@ -12,7 +12,7 @@ const publicFallbacks = [
 describe("hiring RPC isolation", () => {
   it("uses only valid testnet-specific overrides", () => {
     assert.deepEqual(
-      resolveHiringRpcUrls(publicFallbacks, {
+      resolveHiringRpcUrls(97, publicFallbacks, {
         BNB_TESTNET_RPC_FALLBACK_1: "http://unsafe.example.org",
         BNB_TESTNET_RPC_PRIMARY: "https://testnet-provider.example.org/key",
       }),
@@ -30,7 +30,20 @@ describe("hiring RPC isolation", () => {
       BNB_RPC_PRIMARY: "https://mainnet-provider.example.org/key",
     };
 
-    assert.deepEqual(resolveHiringRpcUrls(publicFallbacks, environment), publicFallbacks);
+    assert.deepEqual(resolveHiringRpcUrls(97, publicFallbacks, environment), publicFallbacks);
+  });
+
+  it("uses only mainnet-specific overrides for chain 56", () => {
+    assert.deepEqual(
+      resolveHiringRpcUrls(56, publicFallbacks, {
+        BNB_MAINNET_RPC_PRIMARY: "https://mainnet-provider.example.org/key",
+        BNB_TESTNET_RPC_PRIMARY: "https://testnet-provider.example.org/key",
+      }),
+      [
+        "https://mainnet-provider.example.org/key",
+        publicFallbacks[1],
+        publicFallbacks[2],
+      ],
+    );
   });
 });
-

@@ -11,7 +11,10 @@ import {
   type DashboardChallenge,
   type DashboardSessionIdentity,
 } from "@/features/dashboard/session";
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import {
+  isHiringChainId,
+  type HiringChainId,
+} from "@/features/hiring/protocol";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { TableInsert } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
@@ -34,6 +37,7 @@ export type StoredDashboardChallenge = Readonly<{
 }>;
 
 export async function createDashboardChallenge(input: Readonly<{
+  chainId: HiringChainId;
   now?: Date;
   origin: string;
   walletAddress: Address;
@@ -44,7 +48,7 @@ export async function createDashboardChallenge(input: Readonly<{
   const expiresAt = addSeconds(now, DASHBOARD_CHALLENGE_TTL_SECONDS);
   const walletAddress = getAddress(input.walletAddress);
   const insert: TableInsert<"dashboard_wallet_challenges"> = {
-    chain_id: HIRING_CHAIN_ID,
+    chain_id: input.chainId,
     expires_at: expiresAt,
     issued_at: issuedAt,
     request_origin: input.origin,
@@ -70,6 +74,7 @@ export async function createDashboardChallenge(input: Readonly<{
     .from("dashboard_wallet_challenges")
     .update({ consumed_at: issuedAt })
     .eq("wallet_address", walletAddress.toLowerCase())
+    .eq("chain_id", input.chainId)
     .is("consumed_at", null);
   if (superseded.error) {
     throw new DatabaseOperationError(
@@ -88,9 +93,10 @@ export async function createDashboardChallenge(input: Readonly<{
 
   return {
     challenge: {
+      chainId: input.chainId,
       expiresAt,
       message: buildDashboardChallengeMessage({
-        chainId: HIRING_CHAIN_ID,
+        chainId: input.chainId,
         expiresAt,
         issuedAt,
         nonce: token,
@@ -108,6 +114,7 @@ export async function loadDashboardChallenge(
   now: Date = new Date(),
 ): Promise<Readonly<{
   id: string;
+  chainId: HiringChainId;
   message: string;
   walletAddress: Address;
 }> | null> {
@@ -127,7 +134,10 @@ export async function loadDashboardChallenge(
 
   if (!data) return null;
 
+  if (!isHiringChainId(data.chain_id)) return null;
+
   return {
+    chainId: data.chain_id,
     id: data.id,
     message: buildDashboardChallengeMessage({
       chainId: data.chain_id,
@@ -154,7 +164,7 @@ export async function exchangeDashboardChallenge(input: Readonly<{
     .eq("id", input.challengeId)
     .is("consumed_at", null)
     .gt("expires_at", now.toISOString())
-    .select("id")
+    .select("id, chain_id")
     .maybeSingle();
 
   if (consumed.error) {
@@ -163,11 +173,13 @@ export async function exchangeDashboardChallenge(input: Readonly<{
 
   if (!consumed.data) return null;
 
+  if (!isHiringChainId(consumed.data.chain_id)) return null;
+
   const token = opaqueToken();
   const expiresAt = addSeconds(now, DASHBOARD_SESSION_TTL_SECONDS);
   const walletAddress = getAddress(input.walletAddress);
   const insert: TableInsert<"dashboard_sessions"> = {
-    chain_id: HIRING_CHAIN_ID,
+    chain_id: consumed.data.chain_id,
     expires_at: expiresAt,
     last_used_at: now.toISOString(),
     token_hash: hashToken(token),
@@ -180,7 +192,7 @@ export async function exchangeDashboardChallenge(input: Readonly<{
   }
 
   return {
-    identity: { chainId: HIRING_CHAIN_ID, expiresAt, walletAddress },
+    identity: { chainId: consumed.data.chain_id, expiresAt, walletAddress },
     token,
   };
 }
@@ -203,7 +215,7 @@ export async function getDashboardSession(
     throw new DatabaseOperationError("load dashboard wallet session", result.error);
   }
 
-  if (!result.data || result.data.chain_id !== HIRING_CHAIN_ID) return null;
+  if (!result.data || !isHiringChainId(result.data.chain_id)) return null;
 
   const touched = await client
     .from("dashboard_sessions")
@@ -215,7 +227,7 @@ export async function getDashboardSession(
   }
 
   return {
-    chainId: HIRING_CHAIN_ID,
+    chainId: result.data.chain_id,
     expiresAt: result.data.expires_at,
     walletAddress: getAddress(result.data.wallet_address),
   };

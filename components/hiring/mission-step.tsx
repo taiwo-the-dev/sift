@@ -5,10 +5,15 @@ import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { HiringMissionInput } from "@/features/hiring/model";
+import {
+  getErc8183Deployment,
+  type HiringChainId,
+} from "@/features/hiring/protocol";
 import { hiringDurations } from "@/features/hiring/validation";
 import { formatDuration } from "@/features/hiring/review";
 
 interface MissionStepProps {
+  chainId: HiringChainId;
   error: string | null;
   mission: HiringMissionInput;
   notice?: string | null;
@@ -21,6 +26,7 @@ const fieldClassName =
   "mt-2 w-full rounded-xl border border-border bg-background px-3.5 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/65 focus:border-brand focus:ring-3 focus:ring-brand/10";
 
 export function MissionStep({
+  chainId,
   error,
   mission,
   notice,
@@ -28,6 +34,8 @@ export function MissionStep({
   onSubmit,
   pending,
 }: MissionStepProps) {
+  const deployment = getErc8183Deployment(chainId);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit();
@@ -56,7 +64,7 @@ export function MissionStep({
           minLength={20}
           name="mission"
           onChange={(event) => onChange({ ...mission, mission: event.target.value })}
-          placeholder="Monitor the health factor for this public BSC testnet position and report material liquidation risk."
+          placeholder="Monitor this public BNB Chain position and report material liquidation risk."
           required
           value={mission.mission}
         />
@@ -98,7 +106,7 @@ export function MissionStep({
 
       <div className="grid gap-5 md:grid-cols-2">
         <label className="block text-sm font-semibold text-foreground">
-          Maximum spend (U test token)
+          Maximum spend ({deployment.tokenSymbol})
           <input
             className={fieldClassName}
             inputMode="decimal"
@@ -109,6 +117,7 @@ export function MissionStep({
           />
           <span className="mt-1.5 block text-xs font-normal text-muted-foreground">
             The signed agent quote must be at or below this cap.
+            {deployment.isMainnet ? " Mainnet tokens can have real value." : " Testnet tokens have no monetary value."}
           </span>
         </label>
         <label className="block text-sm font-semibold text-foreground">

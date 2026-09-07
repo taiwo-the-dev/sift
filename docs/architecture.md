@@ -1,6 +1,6 @@
 # Sift architecture
 
-Sift is an evidence-led discovery, comparison, testnet hiring, and monitoring
+Sift is an evidence-led discovery, comparison, BNB Chain hiring, and monitoring
 layer for AI agents on BNB Chain. The catalogue and evidence shown to users are
 source-backed; unavailable inputs remain visibly unavailable.
 
@@ -17,8 +17,8 @@ flowchart LR
   db[("Supabase PostgreSQL\nRLS + server-only access")]
   app["Next.js App Router\nVercel"]
   browser["Judge browser"]
-  wallet["Disposable testnet wallet"]
-  apex["BSC Testnet\nERC-8183 / APEX"]
+  wallet["User-controlled wallet"]
+  apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
 
   mainnet --> rpc --> indexer
   testnet --> rpc --> indexer
@@ -54,7 +54,7 @@ flowchart LR
   remain server-side. Sift discovery never depends on that service.
 - Next.js Server Components and server route handlers read through typed,
   server-only repositories. `SUPABASE_SECRET_KEY` never enters the browser.
-- The browser owns wallet interaction. Sift requests each BSC Testnet action
+- The browser owns wallet interaction. Sift requests each mainnet or testnet action
   explicitly and never receives a private key or seed phrase.
 - After a transaction, the server independently checks the sender, chain,
   destination, calldata, receipt, event, confirmations, and protocol state
@@ -70,13 +70,15 @@ flowchart LR
 | Data | Hosted Supabase free tier | PostgreSQL catalogue, evidence, jobs, activity, wallet sessions |
 | Scheduled operations | GitHub Actions | Two-hour incremental indexing and six-hour health/scoring batches |
 | Chain reads | Public/free BNB RPC fallbacks | ERC-8004 ingestion and ERC-8183 verification |
-| Wallet writes | User-controlled wallet | Explicit BSC Testnet ERC-8183/APEX transactions only |
+| Wallet writes | User-controlled wallet | Explicit chain-bound BSC Mainnet or Testnet ERC-8183/APEX transactions only |
 
 The detailed database, indexer, scoring, hiring, dashboard, and security
 contracts are documented in their focused files under `docs/`. This diagram
 must be updated if a deployment boundary changes.
 
 Discovery is BSC-mainnet-first for the judge journey, with an explicit testnet
-or combined catalogue selection. This read-path default does not change the
-write boundary: ERC-8183 hiring remains limited to the reviewed BSC Testnet
-deployment and mainnet profiles cannot produce a transaction request.
+or combined catalogue selection. ERC-8183 hiring supports only the separately
+reviewed chain-56 and chain-97 deployments. Quotes, RPC reads, wallet clients,
+stored jobs, receipt verification, and explorer links remain bound to the
+agent's chain. Mainnet requires a real-funds acknowledgement and every write
+still requires explicit wallet confirmation.

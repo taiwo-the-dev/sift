@@ -102,8 +102,8 @@ describe("dashboard browser-facing states", () => {
         refreshing: false,
       }),
     );
-    assert.match(html, /No jobs for this wallet yet/);
-    assert.match(html, /will not populate this dashboard with sample jobs/);
+    assert.match(html, /No agent tasks for this wallet yet/);
+    assert.match(html, /Hire a compatible agent to create your first ERC-8183 task/);
   });
 
   it("renders failed status, provenance, details, and mobile-safe filtering without unsupported actions", () => {

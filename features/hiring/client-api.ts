@@ -59,6 +59,7 @@ export async function createRemoteHiringIntent(
       deliverables: input.deliverables,
       durationSeconds: input.durationSeconds,
       idempotencyKey: input.idempotencyKey,
+      mainnetRiskAccepted: input.mainnetRiskAccepted,
       maxSpend: input.maxSpend,
       mission: input.mission,
       qualityStandards: input.qualityStandards,

@@ -1,6 +1,6 @@
 import { getAddress, type Address } from "viem";
 
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import type { HiringChainId } from "@/features/hiring/protocol";
 
 export const DASHBOARD_CHALLENGE_TTL_SECONDS = 5 * 60;
 export const DASHBOARD_SESSION_TTL_SECONDS = 4 * 60 * 60;
@@ -8,12 +8,13 @@ export const DASHBOARD_CHALLENGE_COOKIE = "sift_dashboard_challenge";
 export const DASHBOARD_SESSION_COOKIE = "sift_dashboard_session";
 
 export type DashboardSessionIdentity = Readonly<{
-  chainId: typeof HIRING_CHAIN_ID;
+  chainId: HiringChainId;
   expiresAt: string;
   walletAddress: Address;
 }>;
 
 export type DashboardChallenge = Readonly<{
+  chainId: HiringChainId;
   expiresAt: string;
   message: string;
   walletAddress: Address;

@@ -19,7 +19,8 @@ import type {
 import { buildAgentProfileHref } from "@/features/agents/route";
 import {
   commerceAbi,
-  HIRING_NETWORK_NAME,
+  getErc8183Deployment,
+  type HiringChainId,
 } from "@/features/hiring/protocol";
 import { formatTokenAmount } from "@/features/hiring/validation";
 import { getHiringPublicClient } from "@/lib/blockchain/hiring-client";
@@ -47,7 +48,11 @@ function detailStep(details: Json): string | null {
   return null;
 }
 
-function activityPresentation(type: string, details: Json): Readonly<{
+function activityPresentation(
+  type: string,
+  details: Json,
+  networkName: string,
+): Readonly<{
   description: string;
   source: DashboardActivitySource;
   title: string;
@@ -69,7 +74,7 @@ function activityPresentation(type: string, details: Json): Readonly<{
       title: "Job funding confirmed",
     },
     transaction_confirmed: {
-      description: `${step ?? "Hiring"} transaction receipt was verified on BSC Testnet.`,
+      description: `${step ?? "Hiring"} transaction receipt was verified on ${networkName}.`,
       source: "onchain",
       title: "Transaction confirmed",
     },
@@ -107,8 +112,15 @@ function activityPresentation(type: string, details: Json): Readonly<{
   };
 }
 
-function mapActivity(record: DashboardDatabaseJob["activities"][number]): DashboardActivity {
-  const presentation = activityPresentation(record.activity_type, record.details);
+function mapActivity(
+  record: DashboardDatabaseJob["activities"][number],
+  networkName: string,
+): DashboardActivity {
+  const presentation = activityPresentation(
+    record.activity_type,
+    record.details,
+    networkName,
+  );
   return {
     description: presentation.description,
     id: String(record.id),
@@ -127,7 +139,9 @@ async function observeProtocolJob(
     return { observedAt, status: "unknown", verified: false };
   }
 
-  const onchain = await getHiringPublicClient().readContract({
+  const deployment = getErc8183Deployment(record.job.chain_id);
+
+  const onchain = await getHiringPublicClient(deployment.chainId).readContract({
     abi: commerceAbi,
     address: getAddress(record.job.commerce_address),
     args: [BigInt(record.job.onchain_job_id)],
@@ -151,8 +165,13 @@ async function observeProtocolJob(
 
 export async function getWalletDashboard(
   walletAddress: Address,
+  chainId: HiringChainId,
 ): Promise<DashboardSnapshot> {
-  const records = await createDashboardRepository().listWalletJobs(walletAddress);
+  const deployment = getErc8183Deployment(chainId);
+  const records = await createDashboardRepository().listWalletJobs(
+    walletAddress,
+    chainId,
+  );
   const observedAt = new Date().toISOString();
   const observations = await Promise.allSettled(
     records.map((record) => observeProtocolJob(record, observedAt)),
@@ -179,7 +198,11 @@ export async function getWalletDashboard(
         : "unknown";
 
     return {
-      activities: orderDashboardActivity(record.activities.map(mapActivity)),
+      activities: orderDashboardActivity(
+        record.activities.map((activity) =>
+          mapActivity(activity, deployment.networkName),
+        ),
+      ),
       agent: {
         agentId: record.job.agent_id,
         chainId: record.job.chain_id,
@@ -208,7 +231,7 @@ export async function getWalletDashboard(
         record.job.payment_token_decimals,
       ),
       mission: record.job.mission,
-      networkName: HIRING_NETWORK_NAME,
+      networkName: deployment.networkName,
       onchainJobId: record.job.onchain_job_id,
       paymentTokenSymbol: record.job.payment_token_symbol,
       protocolObservedAt: observation.verified ? observation.observedAt : null,

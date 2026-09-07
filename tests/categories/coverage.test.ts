@@ -32,7 +32,8 @@ describe("M14 coverage report", () => {
 
     assert.equal(report.status, "pass");
     assert.equal(report.categories.length, 4);
-    assert.equal(report.activationPolicy.mainnetWritesEnabled, false);
+    assert.equal(report.activationPolicy.mainnetWritesEnabled, true);
+    assert.deepEqual(report.activationPolicy.supportedHiringChainIds, [56, 97]);
   });
 
   it("reports real gaps instead of filling missing categories", () => {

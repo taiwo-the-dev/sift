@@ -49,9 +49,9 @@ export function buildCategoryCoverageReport(
 
   return {
     activationPolicy: {
-      mainnetWritesEnabled: false,
-      note: "BSC Mainnet agents can be searched and compared. ERC-8183 hiring is currently available only on BSC Testnet.",
-      supportedActivationChainId: 97,
+      mainnetWritesEnabled: true,
+      note: "ERC-8183 hiring is available only through the separately verified BSC Mainnet and BSC Testnet deployments.",
+      supportedHiringChainIds: [56, 97] as const,
     },
     categories,
     chainId: 56,

@@ -36,13 +36,12 @@ import type {
 import {
   commerceAbi,
   emptyBytes,
-  erc8183Deployment,
   evaluatorRouterAbi,
-  HIRING_CHAIN_ID,
+  getErc8183Deployment,
   HIRING_CONFIRMATIONS,
   paymentTokenAbi,
-  buildTestnetAddressHref,
-  buildTestnetTransactionHref,
+  buildHiringAddressHref,
+  buildHiringTransactionHref,
   transactionDestination,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
@@ -71,7 +70,12 @@ const orderedSteps: readonly HiringTransactionStep[] = [
   "fund_job",
 ];
 
-function safeWalletFailure(error: unknown): string {
+function safeWalletFailure(
+  error: unknown,
+  networkName: string,
+  tokenSymbol: string,
+  isMainnet: boolean,
+): string {
   if (error && typeof error === "object") {
     const candidate = error as Readonly<{
       code?: unknown;
@@ -95,15 +99,15 @@ function safeWalletFailure(error: unknown): string {
     }
 
     if (normalized.includes("insufficient funds")) {
-      return "The wallet does not have enough testnet BNB to pay transaction gas.";
+      return `The wallet does not have enough BNB to pay ${networkName} transaction gas.`;
     }
 
-    if (normalized.includes("insufficient u test token")) {
-      return "The wallet does not have enough U test tokens to fund the signed budget.";
+    if (normalized.includes("insufficient payment token balance")) {
+      return `The wallet does not have enough ${tokenSymbol} to fund the signed budget.`;
     }
   }
 
-  return "The transaction could not be simulated or submitted. Check the wallet network, balances, and agent quote, then try again.";
+  return `The ${isMainnet ? "mainnet " : ""}transaction could not be simulated or submitted. Check the wallet network, balances, and agent quote, then try again.`;
 }
 
 function unixSeconds(timestamp: string): bigint {
@@ -117,9 +121,10 @@ export function WalletStep({
   onRestart,
   resume,
 }: WalletStepProps) {
+  const deployment = getErc8183Deployment(agent.chainId);
   const account = useAccount();
-  const publicClient = usePublicClient({ chainId: HIRING_CHAIN_ID });
-  const walletClient = useWalletClient({ chainId: HIRING_CHAIN_ID });
+  const publicClient = usePublicClient({ chainId: deployment.chainId });
+  const walletClient = useWalletClient({ chainId: deployment.chainId });
   const switchChain = useSwitchChain();
   const [busy, setBusy] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
@@ -139,7 +144,7 @@ export function WalletStep({
   );
   const walletMatches =
     account.address?.toLowerCase() === intent.walletAddress.toLowerCase();
-  const correctNetwork = account.chainId === HIRING_CHAIN_ID;
+  const correctNetwork = account.chainId === deployment.chainId;
   const restartAllowed = canRestartHiringIntent(intent);
   const pendingHash =
     currentTransaction?.status === "submitted" ||
@@ -158,15 +163,15 @@ export function WalletStep({
     if (step === "create_job") {
       const simulation = await publicClient.simulateContract({
         account: accountAddress,
-        address: erc8183Deployment.commerce,
+        address: deployment.commerce,
         abi: commerceAbi,
         functionName: "createJob",
         args: [
           intent.providerAddress,
-          erc8183Deployment.router,
+          deployment.router,
           unixSeconds(intent.expiresAt),
           intent.onchainDescription,
-          erc8183Deployment.router,
+          deployment.router,
         ],
       });
       return walletClient.data.writeContract(simulation.request);
@@ -181,10 +186,10 @@ export function WalletStep({
     if (step === "register_job") {
       const simulation = await publicClient.simulateContract({
         account: accountAddress,
-        address: erc8183Deployment.router,
+        address: deployment.router,
         abi: evaluatorRouterAbi,
         functionName: "registerJob",
-        args: [jobId, erc8183Deployment.policy],
+        args: [jobId, deployment.policy],
       });
       return walletClient.data.writeContract(simulation.request);
     }
@@ -192,7 +197,7 @@ export function WalletStep({
     if (step === "set_budget") {
       const simulation = await publicClient.simulateContract({
         account: accountAddress,
-        address: erc8183Deployment.commerce,
+        address: deployment.commerce,
         abi: commerceAbi,
         functionName: "setBudget",
         args: [jobId, budget, emptyBytes],
@@ -203,30 +208,30 @@ export function WalletStep({
     if (step === "approve_token") {
       const simulation = await publicClient.simulateContract({
         account: accountAddress,
-        address: erc8183Deployment.paymentToken,
+        address: deployment.paymentToken,
         abi: paymentTokenAbi,
         functionName: "approve",
-        args: [erc8183Deployment.commerce, budget],
+        args: [deployment.commerce, budget],
       });
       return walletClient.data.writeContract(simulation.request);
     }
 
     if (budget > 0n) {
       const balance = await publicClient.readContract({
-        address: erc8183Deployment.paymentToken,
+        address: deployment.paymentToken,
         abi: paymentTokenAbi,
         functionName: "balanceOf",
         args: [accountAddress],
       });
 
       if (balance < budget) {
-        throw new Error("Insufficient U test token balance");
+        throw new Error("Insufficient payment token balance");
       }
     }
 
     const simulation = await publicClient.simulateContract({
       account: accountAddress,
-      address: erc8183Deployment.commerce,
+      address: deployment.commerce,
       abi: commerceAbi,
       functionName: "fund",
       args: [jobId, budget, emptyBytes],
@@ -238,7 +243,7 @@ export function WalletStep({
     if (!currentStep) return;
 
     setBusy(true);
-    setNotice("Checking BSC Testnet for the saved transaction and required confirmations…");
+    setNotice(`Checking ${deployment.networkName} for the saved transaction and required confirmations…`);
 
     try {
       const refreshed = await recordRemoteHiringTransaction(
@@ -249,7 +254,7 @@ export function WalletStep({
       onIntentChange(refreshed);
       setNotice(
         refreshed.status === "confirmed"
-          ? "Funding confirmed on BSC Testnet."
+          ? `Funding confirmed on ${deployment.networkName}.`
           : refreshed.currentStep !== currentStep
             ? "Transaction confirmed. The next wallet step is ready."
             : "The transaction is still pending or waiting for confirmations.",
@@ -283,7 +288,7 @@ export function WalletStep({
       let finalHash = originalHash;
       let replacedHash: Hash | null = null;
 
-      setNotice("Transaction submitted. Waiting for two BSC Testnet confirmations…");
+      setNotice(`Transaction submitted. Waiting for two ${deployment.networkName} confirmations…`);
 
       try {
         const submitted = await recordRemoteHiringTransaction(
@@ -324,7 +329,12 @@ export function WalletStep({
           : "Transaction confirmed. Review the next exact wallet action.",
       );
     } catch (error) {
-      const message = safeWalletFailure(error);
+      const message = safeWalletFailure(
+        error,
+        deployment.networkName,
+        deployment.tokenSymbol,
+        deployment.isMainnet,
+      );
       setNotice(message);
 
       if (message.startsWith("Wallet request cancelled")) {
@@ -399,6 +409,20 @@ export function WalletStep({
         </p>
       </div>
 
+      {deployment.isMainnet ? (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-4 text-sm leading-6 text-amber-50"
+        >
+          <CircleAlert className="mt-1 size-4 shrink-0" aria-hidden="true" />
+          <p>
+            <strong className="block font-semibold">BSC Mainnet transaction</strong>
+            This step uses real BNB for gas and may move real {deployment.tokenSymbol}
+            tokens. Check the wallet action and destination before every approval.
+          </p>
+        </div>
+      ) : null}
+
       <ol className="grid gap-2 sm:grid-cols-5">
         {orderedSteps.map((step, index) => {
           const skipped = step === "approve_token" &&
@@ -442,12 +466,12 @@ export function WalletStep({
               {currentStep ? describeTransactionStep(currentStep) : "Waiting for final verification"}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Connected wallet must remain {shortenWalletAddress(intent.walletAddress)} on BSC Testnet.
+              Connected wallet must remain {shortenWalletAddress(intent.walletAddress)} on {deployment.networkName}.
             </p>
             {currentStep ? (
               <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
                 {describeTransactionEffect(currentStep)} Your wallet will show
-                the testnet BNB gas estimate before you approve it.
+                the BNB gas estimate before you approve it.
               </p>
             ) : null}
           </div>
@@ -460,7 +484,7 @@ export function WalletStep({
         {currentTransaction ? (
           <a
             className="mt-4 inline-flex max-w-full items-center gap-1.5 break-all text-xs text-foreground underline decoration-border underline-offset-4 hover:text-brand"
-            href={buildTestnetTransactionHref(currentTransaction.hash)}
+            href={buildHiringTransactionHref(deployment.chainId, currentTransaction.hash)}
             rel="noreferrer noopener"
             target="_blank"
           >
@@ -473,11 +497,14 @@ export function WalletStep({
             Contract: {" "}
             <a
               className="break-all text-foreground underline decoration-border underline-offset-4 hover:text-brand"
-              href={buildTestnetAddressHref(transactionDestination(currentStep))}
+              href={buildHiringAddressHref(
+                deployment.chainId,
+                transactionDestination(currentStep, deployment.chainId),
+              )}
               rel="noreferrer noopener"
               target="_blank"
             >
-              {transactionDestination(currentStep)}
+              {transactionDestination(currentStep, deployment.chainId)}
             </a>
           </p>
         ) : null}
@@ -630,10 +657,10 @@ export function WalletStep({
                   type="button"
                   size="lg"
                   disabled={switchChain.isPending || !walletMatches}
-                  onClick={() => switchChain.switchChain({ chainId: HIRING_CHAIN_ID })}
+                  onClick={() => switchChain.switchChain({ chainId: deployment.chainId })}
                 >
                   <Network className="size-4" aria-hidden="true" />
-                  Switch to BSC Testnet
+                  Switch to {deployment.networkName}
                 </Button>
               );
             }

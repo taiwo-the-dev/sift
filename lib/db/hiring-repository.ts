@@ -12,7 +12,8 @@ import type {
   HiringTransactionStatus,
 } from "@/features/hiring/model";
 import {
-  erc8183Deployment,
+  getErc8183Deployment,
+  isHiringChainId,
   transactionDestination,
   type HiringTransactionStep,
 } from "@/features/hiring/protocol";
@@ -122,6 +123,17 @@ function mapTransactionStep(value: string): HiringTransactionStep {
   return step;
 }
 
+function mapHiringChainId(value: number) {
+  if (!isHiringChainId(value)) {
+    throw new DatabaseOperationError(
+      "map hiring network",
+      new TypeError("The database returned an unsupported hiring network."),
+    );
+  }
+
+  return value;
+}
+
 function toTransactionSnapshot(
   record: JobTransactionRecord,
 ): HiringTransactionSnapshot {
@@ -159,7 +171,7 @@ export function toHiringIntentSnapshot(
   return {
     agentId: record.agent_id,
     budgetBaseUnits: record.budget_base_units,
-    chainId: record.chain_id,
+    chainId: mapHiringChainId(record.chain_id),
     confirmedAt: record.confirmed_at,
     currentStep: record.current_step
       ? mapTransactionStep(record.current_step)
@@ -220,6 +232,11 @@ export type CreateIntentResult = Readonly<{
 export async function createHiringIntent(
   input: CreateHiringIntentInput,
 ): Promise<CreateIntentResult> {
+  if (!isHiringChainId(input.chainId)) {
+    throw new HiringConflictError("The selected network does not support hiring.");
+  }
+
+  const deployment = getErc8183Deployment(input.chainId);
   const client = getSupabaseServerClient();
   const { data: agent, error: agentError } = await client
     .from("agents")
@@ -272,7 +289,7 @@ export async function createHiringIntent(
     agent_id: input.agentId,
     budget_base_units: input.quote.budgetBaseUnits,
     chain_id: input.chainId,
-    commerce_address: erc8183Deployment.commerce.toLowerCase(),
+    commerce_address: deployment.commerce.toLowerCase(),
     current_step: "create_job",
     deliverables: input.deliverables,
     expires_at: input.quote.expiresAt,
@@ -281,16 +298,16 @@ export async function createHiringIntent(
     mission: input.mission,
     negotiation_hash: input.quote.negotiationHash.toLowerCase(),
     onchain_description: input.quote.onchainDescription,
-    payment_token_address: erc8183Deployment.paymentToken.toLowerCase(),
-    payment_token_decimals: erc8183Deployment.tokenDecimals,
-    payment_token_symbol: erc8183Deployment.tokenSymbol,
-    policy_address: erc8183Deployment.policy.toLowerCase(),
+    payment_token_address: deployment.paymentToken.toLowerCase(),
+    payment_token_decimals: deployment.tokenDecimals,
+    payment_token_symbol: deployment.tokenSymbol,
+    policy_address: deployment.policy.toLowerCase(),
     provider_address: input.quote.providerAddress.toLowerCase(),
     quality_standards: input.qualityStandards,
     quote_expires_at: input.quote.quoteExpiresAt,
     registry_address: agent.registry_address,
     resume_token_hash: resumeTokenHash(input.resumeToken),
-    router_address: erc8183Deployment.router.toLowerCase(),
+    router_address: deployment.router.toLowerCase(),
     status: "awaiting_wallet",
     wallet_address: input.walletAddress.toLowerCase(),
   };
@@ -379,6 +396,10 @@ export async function persistVerifiedHiringTransaction(
   transaction: VerifiedTransactionWrite,
   jobUpdate: TableUpdate<"jobs">,
 ): Promise<HiringIntentSnapshot> {
+  if (!isHiringChainId(job.chain_id)) {
+    throw new HiringConflictError("The saved hiring network is unsupported.");
+  }
+
   const client = getSupabaseServerClient();
   const result = await client.rpc("record_hiring_verification", {
     p_block_hash: transaction.blockHash?.toLowerCase() ?? null,
@@ -419,7 +440,10 @@ export async function persistVerifiedHiringTransaction(
     p_replaced_transaction_hash:
       transaction.replacedHash?.toLowerCase() ?? null,
     p_step: transaction.step,
-    p_to_address: transactionDestination(transaction.step).toLowerCase(),
+    p_to_address: transactionDestination(
+      transaction.step,
+      job.chain_id,
+    ).toLowerCase(),
     p_transaction_confirmed_at: transaction.confirmedAt,
     p_transaction_hash: transaction.hash.toLowerCase(),
     p_transaction_status: transaction.status,

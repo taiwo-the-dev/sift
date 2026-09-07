@@ -10,6 +10,7 @@ import {
   isHiringResumeToken,
 } from "@/features/hiring/idempotency";
 import { HiringQuoteError, validateHiringQuote } from "@/features/hiring/quote";
+import { isHiringChainId } from "@/features/hiring/protocol";
 import { parseHiringMission } from "@/features/hiring/validation";
 import {
   getHiringPublicClient,
@@ -28,6 +29,7 @@ const requestSchema = z.object({
   deliverables: z.string(),
   durationSeconds: z.number(),
   idempotencyKey: z.string(),
+  mainnetRiskAccepted: z.boolean(),
   maxSpend: z.string(),
   mission: z.string(),
   qualityStandards: z.string(),
@@ -66,6 +68,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (
       !identity ||
+      !isHiringChainId(identity.chainId) ||
       !isHiringIdempotencyKey(raw.idempotencyKey) ||
       !isHiringResumeToken(raw.resumeToken)
     ) {
@@ -80,7 +83,14 @@ export async function POST(request: Request): Promise<Response> {
       return json({ error: "Connect a valid wallet before continuing." }, 400);
     }
 
-    const mission = parseHiringMission(raw);
+    const mission = parseHiringMission(raw, identity.chainId);
+
+    if (identity.chainId === 56 && !raw.mainnetRiskAccepted) {
+      return json(
+        { error: "Confirm the BSC Mainnet funds warning before continuing." },
+        400,
+      );
+    }
     const profile = await getAgentProfile(identity.chainId, identity.agentId);
 
     if (
@@ -90,9 +100,13 @@ export async function POST(request: Request): Promise<Response> {
       return json({ error: "The selected agent is not currently available to hire." }, 409);
     }
 
-    const publicClient = getHiringPublicClient();
-    const runtimeState = await verifyErc8183Runtime(publicClient);
+    const publicClient = getHiringPublicClient(identity.chainId);
+    const runtimeState = await verifyErc8183Runtime(
+      identity.chainId,
+      publicClient,
+    );
     const quote = await validateHiringQuote({
+      chainId: identity.chainId,
       disputeWindowSeconds: runtimeState.disputeWindowSeconds,
       envelope: raw.signedEnvelope,
       mission,
@@ -117,6 +131,7 @@ export async function POST(request: Request): Promise<Response> {
       deliverables: mission.deliverables,
       durationSeconds: mission.durationSeconds,
       idempotencyKey: raw.idempotencyKey,
+      mainnetRiskAccepted: raw.mainnetRiskAccepted,
       maxSpend: mission.maxSpend,
       mission: mission.mission,
       qualityStandards: mission.qualityStandards,

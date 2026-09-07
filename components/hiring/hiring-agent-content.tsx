@@ -10,6 +10,10 @@ import {
   assessHiringCompatibility,
   toHiringAgentSummary,
 } from "@/features/hiring/compatibility";
+import {
+  getErc8183Deployment,
+  isHiringChainId,
+} from "@/features/hiring/protocol";
 import { cn } from "@/lib/utils";
 
 export async function HiringAgentContent({
@@ -22,7 +26,9 @@ export async function HiringAgentContent({
   const compatibility = assessHiringCompatibility(profile);
   const alternativeParams = new URLSearchParams({
     metadata: "valid",
-    network: "bsc-testnet",
+    network: isHiringChainId(profile.chainId)
+      ? getErc8183Deployment(profile.chainId).network
+      : "all",
     q: "ERC-8183",
   });
   const firstCategory = profile.categories[0];

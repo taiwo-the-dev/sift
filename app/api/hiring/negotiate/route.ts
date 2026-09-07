@@ -5,6 +5,10 @@ import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
 import { resolveHiringCompatibility } from "@/features/hiring/compatibility";
 import {
+  getErc8183Deployment,
+  isHiringChainId,
+} from "@/features/hiring/protocol";
+import {
   HiringQuoteError,
   parseAgentCommerceStatus,
   validateHiringQuote,
@@ -65,11 +69,12 @@ export async function POST(request: Request): Promise<Response> {
       raw.agentId,
     );
 
-    if (!identity) {
+    if (!identity || !isHiringChainId(identity.chainId)) {
       return json({ error: "Invalid agent ID or network." }, 400);
     }
 
-    const mission = parseHiringMission(raw);
+    const deployment = getErc8183Deployment(identity.chainId);
+    const mission = parseHiringMission(raw, identity.chainId);
     const profile = await getAgentProfile(identity.chainId, identity.agentId);
 
     if (!profile || !profile.ownerAddress) {
@@ -82,20 +87,24 @@ export async function POST(request: Request): Promise<Response> {
       return json(
         {
           error:
-            "This agent does not provide a safe ERC-8183 price service on BSC Testnet.",
+            `This agent does not provide a safe ERC-8183 price service on ${deployment.networkName}.`,
         },
         409,
       );
     }
 
-    const publicClient = getHiringPublicClient();
-    const runtimeState = await verifyErc8183Runtime(publicClient);
+    const publicClient = getHiringPublicClient(identity.chainId);
+    const runtimeState = await verifyErc8183Runtime(
+      identity.chainId,
+      publicClient,
+    );
     const statusDocument = await fetchSafeAgentJson(compatibility.statusUrl, {
       method: "GET",
     });
     const status = parseAgentCommerceStatus(
       statusDocument,
       getAddress(profile.ownerAddress),
+      identity.chainId,
     );
     const envelope = await fetchSafeAgentJson(compatibility.negotiateUrl, {
       body: JSON.stringify({
@@ -109,6 +118,7 @@ export async function POST(request: Request): Promise<Response> {
       timeoutMs: 12_000,
     });
     const quote = await validateHiringQuote({
+      chainId: identity.chainId,
       disputeWindowSeconds: runtimeState.disputeWindowSeconds,
       envelope,
       mission,

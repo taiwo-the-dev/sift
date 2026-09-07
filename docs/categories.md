@@ -124,9 +124,10 @@ three validated shortlist rows, and three recorded cross-check outcomes. The
 same read-only report is exposed at `/api/reports/category-coverage` and is
 required by `release:data` and the deployed release smoke test.
 
-Mainnet activation coverage is intentionally zero. Mainnet profiles support
-discovery and comparison; only compatible BSC Testnet ERC-8183 identities may
-enter the guarded existing hiring flow.
+Mainnet hiring eligibility is limited to identities whose source-backed profile
+declares a supported ERC-8183 service. That catalogue signal is not a promise
+that hiring will succeed: Sift still checks the live service, provider signature,
+chain-56 deployment, quote, and wallet transaction before recording a job.
 
 ## Latest hosted coverage evidence
 

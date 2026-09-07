@@ -5,7 +5,10 @@ import type {
   HiringAgentSummary,
   HiringCompatibility,
 } from "@/features/hiring/model";
-import { HIRING_CHAIN_ID } from "@/features/hiring/protocol";
+import {
+  getErc8183Deployment,
+  isHiringChainId,
+} from "@/features/hiring/protocol";
 import { formatAgentName } from "@/features/discovery/format";
 
 const reservedHostnameSuffixes = [
@@ -128,7 +131,7 @@ function compatibilityAssessment(
 }
 
 /**
- * Static eligibility gate for Sift's one supported activation path. Passing
+ * Static eligibility gate for Sift's supported hiring paths. Passing
  * this gate never bypasses the live status, quote, deployment, allowance, and
  * receipt checks performed later in the flow.
  */
@@ -137,16 +140,17 @@ export function assessHiringCompatibility(
 ): HiringCompatibilityAssessment {
   const checks: HiringCompatibilityCheck[] = [];
 
-  if (profile.chainId !== HIRING_CHAIN_ID) {
-    checks.push(compatibilityCheck("network", "BSC Testnet", "fail", `Found chain ${profile.chainId}; hiring requires chain 97.`));
+  if (!isHiringChainId(profile.chainId)) {
+    checks.push(compatibilityCheck("network", "Supported BNB network", "fail", `Found chain ${profile.chainId}; hiring requires BSC Mainnet (56) or BSC Testnet (97).`));
     return compatibilityAssessment(
       "unsupported-network",
-      "Hiring is testnet-only",
-      "This agent is not registered on BSC Testnet, the network Sift currently supports for hiring.",
+      "Hiring is unavailable on this network",
+      "This agent is not registered on a BNB network supported by Sift hiring.",
       checks,
     );
   }
-  checks.push(compatibilityCheck("network", "BSC Testnet", "pass", "Registered on BSC Testnet (chain 97)."));
+  const deployment = getErc8183Deployment(profile.chainId);
+  checks.push(compatibilityCheck("network", deployment.networkName, "pass", `Registered on ${deployment.networkName} (chain ${deployment.chainId}).`));
 
   if (profile.metadataStatus !== "valid") {
     checks.push(compatibilityCheck("metadata", "Verified profile", "fail", `Profile status: ${profile.metadataStatus}.`));
@@ -247,6 +251,10 @@ export function hasErc8183Declaration(
 }
 
 export function toHiringAgentSummary(profile: AgentProfile): HiringAgentSummary {
+  if (!isHiringChainId(profile.chainId)) {
+    throw new TypeError("A hireable agent must use a supported BNB network.");
+  }
+
   if (!profile.ownerAddress || !isAddress(profile.ownerAddress)) {
     throw new TypeError("An activatable agent must have a valid owner wallet address.");
   }

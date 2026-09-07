@@ -2,7 +2,10 @@ import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { z } from "zod";
 
 import type { HiringMissionInput } from "@/features/hiring/model";
-import { erc8183Deployment } from "@/features/hiring/protocol";
+import {
+  getErc8183Deployment,
+  type HiringChainId,
+} from "@/features/hiring/protocol";
 
 export const hiringDurations = [7_200, 86_400, 604_800, 2_592_000] as const;
 export type HiringDuration = (typeof hiringDurations)[number];
@@ -10,10 +13,6 @@ export type HiringDuration = (typeof hiringDurations)[number];
 const canonicalUint256Pattern = /^(0|[1-9][0-9]{0,77})$/;
 const canonicalDecimalPattern = /^(0|[1-9][0-9]*)(?:\.([0-9]+))?$/;
 const maximumUint256 = (1n << 256n) - 1n;
-const maximumSpendBaseUnits = parseUnits(
-  "1000",
-  erc8183Deployment.tokenDecimals,
-);
 
 const normalizedText = (minimum: number, maximum: number, label: string) =>
   z
@@ -30,62 +29,70 @@ const normalizedText = (minimum: number, maximum: number, label: string) =>
         ),
     );
 
-export const hiringMissionSchema = z.object({
-  deliverables: normalizedText(10, 700, "Deliverables"),
-  durationSeconds: z
-    .number()
-    .int()
-    .refine(
-      (value): value is HiringDuration =>
-        hiringDurations.some((duration) => duration === value),
-      "Choose a supported job duration.",
-    ),
-  maxSpend: z.string().transform((value, context) => {
-    const normalized = value.trim();
-    const match = canonicalDecimalPattern.exec(normalized);
+export function createHiringMissionSchema(chainId: HiringChainId) {
+  const deployment = getErc8183Deployment(chainId);
+  const maximumSpendBaseUnits = parseUnits("1000", deployment.tokenDecimals);
 
-    if (!match || (match[1]?.length ?? 0) > 60) {
-      context.addIssue({
-        code: "custom",
-        message: "Maximum spend must be a non-negative decimal amount.",
-      });
-      return z.NEVER;
-    }
+  return z.object({
+    deliverables: normalizedText(10, 700, "Deliverables"),
+    durationSeconds: z
+      .number()
+      .int()
+      .refine(
+        (value): value is HiringDuration =>
+          hiringDurations.some((duration) => duration === value),
+        "Choose a supported job duration.",
+      ),
+    maxSpend: z.string().transform((value, context) => {
+      const normalized = value.trim();
+      const match = canonicalDecimalPattern.exec(normalized);
 
-    if ((match[2]?.length ?? 0) > erc8183Deployment.tokenDecimals) {
-      context.addIssue({
-        code: "custom",
-        message: `Maximum spend supports up to ${erc8183Deployment.tokenDecimals} decimal places.`,
-      });
-      return z.NEVER;
-    }
-
-    try {
-      const amount = parseUnits(normalized, erc8183Deployment.tokenDecimals);
-
-      if (amount > maximumSpendBaseUnits) {
+      if (!match || (match[1]?.length ?? 0) > 60) {
         context.addIssue({
           code: "custom",
-          message: "Maximum spend cannot exceed 1,000 U on testnet.",
+          message: "Maximum spend must be a non-negative decimal amount.",
         });
         return z.NEVER;
       }
 
-      return normalized;
-    } catch {
-      context.addIssue({
-        code: "custom",
-        message: "Maximum spend is outside the supported range.",
-      });
-      return z.NEVER;
-    }
-  }),
-  mission: normalizedText(20, 1_500, "Task description"),
-  qualityStandards: normalizedText(10, 700, "Quality standards"),
-});
+      if ((match[2]?.length ?? 0) > deployment.tokenDecimals) {
+        context.addIssue({
+          code: "custom",
+          message: `Maximum spend supports up to ${deployment.tokenDecimals} decimal places.`,
+        });
+        return z.NEVER;
+      }
 
-export function parseHiringMission(input: unknown): HiringMissionInput {
-  return hiringMissionSchema.parse(input);
+      try {
+        const amount = parseUnits(normalized, deployment.tokenDecimals);
+
+        if (amount > maximumSpendBaseUnits) {
+          context.addIssue({
+            code: "custom",
+            message: `Maximum spend cannot exceed 1,000 ${deployment.tokenSymbol}.`,
+          });
+          return z.NEVER;
+        }
+
+        return normalized;
+      } catch {
+        context.addIssue({
+          code: "custom",
+          message: "Maximum spend is outside the supported range.",
+        });
+        return z.NEVER;
+      }
+    }),
+    mission: normalizedText(20, 1_500, "Task description"),
+    qualityStandards: normalizedText(10, 700, "Quality standards"),
+  });
+}
+
+export function parseHiringMission(
+  input: unknown,
+  chainId: HiringChainId,
+): HiringMissionInput {
+  return createHiringMissionSchema(chainId).parse(input);
 }
 
 export function parseCanonicalUint256(value: unknown, label: string): bigint {
@@ -102,9 +109,13 @@ export function parseCanonicalUint256(value: unknown, label: string): bigint {
   return parsed;
 }
 
-export function maximumSpendToBaseUnits(value: string): bigint {
-  const parsed = hiringMissionSchema.shape.maxSpend.parse(value);
-  return parseUnits(parsed, erc8183Deployment.tokenDecimals);
+export function maximumSpendToBaseUnits(
+  value: string,
+  chainId: HiringChainId,
+): bigint {
+  const deployment = getErc8183Deployment(chainId);
+  const parsed = createHiringMissionSchema(chainId).shape.maxSpend.parse(value);
+  return parseUnits(parsed, deployment.tokenDecimals);
 }
 
 export function formatTokenAmount(value: bigint, decimals: number): string {
