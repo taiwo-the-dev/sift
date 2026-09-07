@@ -16,6 +16,7 @@ import Link from "next/link";
 
 import {
   discoveryCategories,
+  discoveryHealthStatuses,
   discoveryMetadataStatuses,
   discoveryNetworkOptions,
   type DiscoveryCategory,
@@ -24,6 +25,7 @@ import {
 } from "@/features/discovery/model";
 import { buildDiscoveryHref } from "@/features/discovery/query";
 import type { MetadataStatus } from "@/lib/db/validation";
+import type { HealthStatus } from "@/features/health/model";
 import { cn } from "@/lib/utils";
 
 interface FilterPanelProps {
@@ -62,6 +64,27 @@ const metadataStyles = {
   },
 } as const satisfies Readonly<
   Record<MetadataStatus, Readonly<{ active: string; dot: string }>>
+>;
+
+const healthStyles = {
+  degraded: {
+    active: "border-amber-400/35 bg-amber-400/10 text-amber-100",
+    dot: "bg-amber-300",
+  },
+  offline: {
+    active: "border-red-400/35 bg-red-400/10 text-red-100",
+    dot: "bg-red-300",
+  },
+  online: {
+    active: "border-emerald-400/35 bg-emerald-400/10 text-emerald-100",
+    dot: "bg-emerald-300",
+  },
+  unknown: {
+    active: "border-zinc-400/30 bg-zinc-400/10 text-zinc-200",
+    dot: "bg-zinc-400",
+  },
+} as const satisfies Readonly<
+  Record<HealthStatus, Readonly<{ active: string; dot: string }>>
 >;
 
 function FilterOptions({ query }: FilterPanelProps) {
@@ -142,7 +165,7 @@ function FilterOptions({ query }: FilterPanelProps) {
               : "Any"}
           </span>
         </legend>
-        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
+        <div className="mt-3 flex flex-wrap items-stretch gap-2">
           {discoveryCategories.map((category) => {
             const selected = query.categories.includes(category.slug);
             const Icon = categoryIcons[category.slug];
@@ -161,7 +184,7 @@ function FilterOptions({ query }: FilterPanelProps) {
                 role="checkbox"
                 aria-checked={selected}
                 className={cn(
-                  "group flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  "group inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
                     ? "border-brand/35 bg-brand/8 text-foreground"
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
@@ -174,9 +197,7 @@ function FilterOptions({ query }: FilterPanelProps) {
                   )}
                   aria-hidden="true"
                 />
-                <span className="min-w-0 flex-1 leading-5">
-                  {category.label}
-                </span>
+                <span>{category.label}</span>
                 <span
                   className={cn(
                     "grid size-4 shrink-0 place-items-center rounded border",
@@ -202,7 +223,7 @@ function FilterOptions({ query }: FilterPanelProps) {
               : "Any"}
           </span>
         </legend>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-stretch gap-2">
           {discoveryMetadataStatuses.map((status) => {
             const selected = query.metadataStatuses.includes(status.value);
             const nextStatuses = selected
@@ -223,7 +244,7 @@ function FilterOptions({ query }: FilterPanelProps) {
                 role="checkbox"
                 aria-checked={selected}
                 className={cn(
-                  "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
                     ? style.active
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
@@ -237,6 +258,54 @@ function FilterOptions({ query }: FilterPanelProps) {
                   aria-hidden="true"
                 />
                 {status.label.replace(" metadata", "")}
+              </Link>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="border-t border-border pt-5">
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Health status
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            {query.healthStatuses.length > 0
+              ? `${query.healthStatuses.length} selected`
+              : "Any"}
+          </span>
+        </legend>
+        <div className="mt-3 flex flex-wrap items-stretch gap-2">
+          {discoveryHealthStatuses.map((status) => {
+            const selected = query.healthStatuses.includes(status.value);
+            const nextStatuses = selected
+              ? query.healthStatuses.filter((value) => value !== status.value)
+              : [...query.healthStatuses, status.value];
+            const style = healthStyles[status.value];
+
+            return (
+              <Link
+                key={status.value}
+                href={buildDiscoveryHref(query, {
+                  healthStatuses: nextStatuses,
+                  page: 1,
+                })}
+                prefetch={false}
+                role="checkbox"
+                aria-checked={selected}
+                className={cn(
+                  "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  selected
+                    ? style.active
+                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                )}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    selected ? style.dot : "bg-muted-foreground/45",
+                  )}
+                  aria-hidden="true"
+                />
+                {status.label}
               </Link>
             );
           })}
@@ -258,6 +327,7 @@ function FilterOptions({ query }: FilterPanelProps) {
 export function FilterPanel({ query }: FilterPanelProps) {
   const activeCount =
     query.categories.length +
+    query.healthStatuses.length +
     query.metadataStatuses.length +
     (query.network === "bsc-mainnet" ? 0 : 1);
 

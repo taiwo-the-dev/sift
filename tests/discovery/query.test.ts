@@ -44,6 +44,7 @@ describe("discovery query parsing", () => {
   it("validates combined filters, page size, sorting and pagination", () => {
     const query = parseDiscoverySearchParams({
       category: ["grid-trading", "not-a-category", "grid-trading"],
+      health: ["online", "offline", "invented", "online"],
       metadata: ["valid", "invalid", "invented"],
       network: "bsc-testnet",
       page: "7",
@@ -56,6 +57,7 @@ describe("discovery query parsing", () => {
     assert.deepEqual(query.categories, ["grid-trading"]);
     assert.deepEqual(query.effectiveCategories, ["grid-trading"]);
     assert.deepEqual(query.metadataStatuses, ["valid", "invalid"]);
+    assert.deepEqual(query.healthStatuses, ["online", "offline"]);
     assert.equal(query.network, "bsc-testnet");
     assert.deepEqual(query.networkChainIds, [97]);
     assert.equal(query.page, 7);
@@ -106,6 +108,7 @@ describe("discovery query parsing", () => {
     const query = parseDiscoverySearchParams({
       category: ["yield-optimisation", "grid-trading"],
       metadata: "valid",
+      health: ["degraded", "unknown"],
       network: "all",
       q: "yield",
       size: "24",
@@ -120,6 +123,10 @@ describe("discovery query parsing", () => {
       "grid-trading",
     ]);
     assert.deepEqual(url.searchParams.getAll("metadata"), ["valid"]);
+    assert.deepEqual(url.searchParams.getAll("health"), [
+      "degraded",
+      "unknown",
+    ]);
     assert.equal(url.searchParams.get("network"), "all");
     assert.equal(url.searchParams.get("sort"), "recent");
     assert.equal(url.searchParams.get("size"), "24");
@@ -131,6 +138,7 @@ describe("discovery query parsing", () => {
 
     assert.equal(query.network, "bsc-mainnet");
     assert.deepEqual(query.networkChainIds, [56]);
+    assert.deepEqual(query.healthStatuses, []);
     assert.equal(buildDiscoveryHref(query), "/discover");
   });
 });

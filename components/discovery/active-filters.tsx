@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import {
   formatCategory,
+  formatHealthStatus,
   formatMetadataStatus,
 } from "@/features/discovery/format";
 import type { DiscoveryQuery } from "@/features/discovery/model";
@@ -16,6 +17,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
   const hasFilters =
     query.query.length > 0 ||
     query.categories.length > 0 ||
+    query.healthStatuses.length > 0 ||
     query.metadataStatuses.length > 0 ||
     query.network !== "bsc-mainnet";
 
@@ -78,6 +80,23 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           aria-label={`Remove ${formatMetadataStatus(status)} filter`}
         >
           {formatMetadataStatus(status)}
+          <X className="size-3" aria-hidden="true" />
+        </Link>
+      ))}
+
+      {query.healthStatuses.map((status) => (
+        <Link
+          key={status}
+          href={buildDiscoveryHref(query, {
+            healthStatuses: query.healthStatuses.filter(
+              (value) => value !== status,
+            ),
+            page: 1,
+          })}
+          className="inline-flex items-center gap-1.5 rounded-full border border-input bg-secondary px-3 py-1.5 text-xs font-medium text-foreground outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
+          aria-label={`Remove ${formatHealthStatus(status)} filter`}
+        >
+          {formatHealthStatus(status)}
           <X className="size-3" aria-hidden="true" />
         </Link>
       ))}

@@ -27,7 +27,7 @@ import {
 } from "@/lib/db/validation";
 
 type SearchAgentRow =
-  Database["public"]["Functions"]["search_agents"]["Returns"][number];
+  Database["public"]["Functions"]["search_agents_with_health"]["Returns"][number];
 
 type RecentAgentRow = Pick<
   TableRow<"agents">,
@@ -389,12 +389,17 @@ export function createDiscoveryRepository(
     if (
       query.sort === "recent" &&
       query.effectiveCategories.length === 0 &&
+      query.healthStatuses.length === 0 &&
       query.searchTerms.length === 0
     ) {
       return searchRecentAgents(query);
     }
 
-    const { data, error } = await client.rpc("search_agents", {
+    const functionName =
+      query.healthStatuses.length > 0
+        ? "search_agents_with_health"
+        : "search_agents";
+    const sharedParameters = {
       p_categories: [...query.effectiveCategories],
       p_chain_ids: [...query.networkChainIds],
       p_metadata_statuses: [...query.metadataStatuses],
@@ -402,7 +407,14 @@ export function createDiscoveryRepository(
       p_page_size: query.pageSize,
       p_search_terms: [...query.searchTerms],
       p_sort: query.sort,
-    });
+    };
+    const { data, error } =
+      functionName === "search_agents_with_health"
+        ? await client.rpc(functionName, {
+            ...sharedParameters,
+            p_health_statuses: [...query.healthStatuses],
+          })
+        : await client.rpc(functionName, sharedParameters);
 
     if (error) {
       throw new DatabaseOperationError("search indexed agents", error);
@@ -426,6 +438,7 @@ export function createDiscoveryRepository(
       return search({
         categories: [],
         effectiveCategories: [],
+        healthStatuses: [],
         inferredCategory: null,
         metadataStatuses: [],
         network: "bsc-mainnet",

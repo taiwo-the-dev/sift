@@ -1,8 +1,10 @@
 import {
   discoveryCategories,
+  discoveryHealthStatuses,
   discoveryMetadataStatuses,
 } from "@/features/discovery/model";
 import type { MetadataStatus } from "@/lib/db/validation";
+import type { HealthStatus } from "@/features/health/model";
 
 const registrationDateFormatter = new Intl.DateTimeFormat("en", {
   day: "numeric",
@@ -32,6 +34,13 @@ export function formatMetadataStatus(status: MetadataStatus): string {
   return (
     discoveryMetadataStatuses.find((option) => option.value === status)?.label ??
     "Unknown profile status"
+  );
+}
+
+export function formatHealthStatus(status: HealthStatus): string {
+  return (
+    discoveryHealthStatuses.find((option) => option.value === status)?.label ??
+    "Unknown health status"
   );
 }
 

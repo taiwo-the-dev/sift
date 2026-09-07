@@ -26,6 +26,9 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
         {query.metadataStatuses.map((status) => (
           <input key={status} type="hidden" name="metadata" value={status} />
         ))}
+        {query.healthStatuses.map((status) => (
+          <input key={status} type="hidden" name="health" value={status} />
+        ))}
         {query.pageSize !== 12 ? (
           <input type="hidden" name="size" value={query.pageSize} />
         ) : null}

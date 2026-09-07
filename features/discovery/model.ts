@@ -1,5 +1,8 @@
 import type { MetadataStatus } from "@/lib/db/validation";
-import type { HealthSnapshot } from "@/features/health/model";
+import type {
+  HealthSnapshot,
+  HealthStatus,
+} from "@/features/health/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
 import type {
   CategoryEvidence,
@@ -47,6 +50,16 @@ export const discoveryMetadataStatuses = [
 ] as const satisfies readonly Readonly<{
   label: string;
   value: MetadataStatus;
+}>[];
+
+export const discoveryHealthStatuses = [
+  { label: "Online", value: "online" },
+  { label: "Degraded", value: "degraded" },
+  { label: "Offline", value: "offline" },
+  { label: "Unknown / not checked", value: "unknown" },
+] as const satisfies readonly Readonly<{
+  label: string;
+  value: HealthStatus;
 }>[];
 
 export const discoverySortOptions = [
@@ -129,6 +142,7 @@ export type DiscoveryAgent = Readonly<{
 export type DiscoveryQuery = Readonly<{
   categories: readonly DiscoveryCategory[];
   effectiveCategories: readonly DiscoveryCategory[];
+  healthStatuses: readonly HealthStatus[];
   inferredCategory: DiscoveryCategory | null;
   metadataStatuses: readonly MetadataStatus[];
   network: DiscoveryNetworkScope;

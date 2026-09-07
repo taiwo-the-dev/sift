@@ -869,6 +869,41 @@ export type Database = {
           x402_supported: boolean | null;
         }[];
       };
+      search_agents_with_health: {
+        Args: {
+          p_categories?: string[];
+          p_chain_ids?: number[];
+          p_health_statuses?: string[];
+          p_metadata_statuses?: string[];
+          p_page?: number;
+          p_page_size?: number;
+          p_search_terms?: string[];
+          p_sort?: string;
+        };
+        Returns: {
+          active: boolean | null;
+          agent_db_id: string;
+          agent_id: string;
+          category_evidence: Json;
+          category_source: string | null;
+          chain_id: number;
+          description: string | null;
+          has_more: boolean;
+          image_url: string | null;
+          last_synced_at: string | null;
+          metadata_status: string;
+          name: string | null;
+          owner_address: string | null;
+          registered_at: string | null;
+          registered_block: number | null;
+          registry_address: string;
+          relevance: number;
+          resolved_categories: string[];
+          result_page: number;
+          services: Json;
+          x402_supported: boolean | null;
+        }[];
+      };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

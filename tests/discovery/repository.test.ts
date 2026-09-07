@@ -198,6 +198,38 @@ describe("discovery repository integration boundary", () => {
     assert.equal(result.page, 2);
   });
 
+  it("uses the health-aware database function when health is filtered", async () => {
+    const calls: unknown[] = [];
+    const client = {
+      async rpc(name: string, parameters: unknown) {
+        calls.push({ name, parameters });
+        return { data: fixtureRows, error: null };
+      },
+    } as unknown as SupabaseClient<Database>;
+    const query = parseDiscoverySearchParams({
+      health: ["online", "unknown", "unsupported"],
+      metadata: "valid",
+    });
+
+    await createDiscoveryRepository(client, noEvidence).search(query);
+
+    assert.deepEqual(calls, [
+      {
+        name: "search_agents_with_health",
+        parameters: {
+          p_categories: [],
+          p_chain_ids: [56],
+          p_health_statuses: ["online", "unknown"],
+          p_metadata_statuses: ["valid"],
+          p_page: 1,
+          p_page_size: 12,
+          p_search_terms: [],
+          p_sort: "recent",
+        },
+      },
+    ]);
+  });
+
   it("preserves stable database order and maps service/category fixtures", async () => {
     const client = {
       async rpc() {

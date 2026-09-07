@@ -1,5 +1,6 @@
 import {
   discoveryCategorySlugs,
+  discoveryHealthStatuses,
   discoveryMetadataStatuses,
   discoveryNetworkOptions,
   discoveryPageSizes,
@@ -11,6 +12,7 @@ import {
   type DiscoveryQuery,
   type DiscoverySort,
 } from "@/features/discovery/model";
+import type { HealthStatus } from "@/features/health/model";
 import type { MetadataStatus } from "@/lib/db/validation";
 
 export type DiscoverySearchParams = Readonly<
@@ -226,6 +228,10 @@ export function parseDiscoverySearchParams(
     values(params.metadata),
     discoveryMetadataStatuses.map((status) => status.value),
   ) as readonly MetadataStatus[];
+  const healthStatuses = uniqueSupported(
+    values(params.health),
+    discoveryHealthStatuses.map((status) => status.value),
+  ) as readonly HealthStatus[];
   const inferredCategory = inferDiscoveryCategory(query);
   const network = parseNetwork(firstValue(params.network));
 
@@ -237,6 +243,7 @@ export function parseDiscoverySearchParams(
         : inferredCategory
           ? [inferredCategory]
           : [],
+    healthStatuses,
     inferredCategory,
     metadataStatuses,
     network,
@@ -251,6 +258,7 @@ export function parseDiscoverySearchParams(
 
 export type DiscoveryQueryOverrides = Readonly<{
   categories?: readonly DiscoveryCategory[];
+  healthStatuses?: readonly HealthStatus[];
   metadataStatuses?: readonly MetadataStatus[];
   network?: DiscoveryNetworkScope;
   page?: number;
@@ -265,6 +273,7 @@ export function buildDiscoveryHref(
 ): string {
   const nextQuery = overrides.query ?? query.query;
   const nextCategories = overrides.categories ?? query.categories;
+  const nextHealthStatuses = overrides.healthStatuses ?? query.healthStatuses;
   const nextStatuses = overrides.metadataStatuses ?? query.metadataStatuses;
   const nextNetwork = overrides.network ?? query.network;
   const nextPage = overrides.page ?? query.page;
@@ -282,6 +291,10 @@ export function buildDiscoveryHref(
 
   for (const status of nextStatuses) {
     params.append("metadata", status);
+  }
+
+  for (const status of nextHealthStatuses) {
+    params.append("health", status);
   }
 
   if (nextNetwork !== defaultDiscoveryNetwork) {
