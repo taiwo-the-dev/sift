@@ -13,6 +13,7 @@ import {
 import { DiscoverySearchForm } from "@/components/discovery/discovery-search-form";
 import { FilterPanel } from "@/components/discovery/filter-panel";
 import {
+  buildDiscoveryHref,
   parseDiscoverySearchParams,
   type DiscoverySearchParams,
 } from "@/features/discovery/query";
@@ -71,7 +72,10 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <FilterPanel query={query} />
 
           <div className="min-w-0">
-            <Suspense fallback={<DiscoveryResultsLoading />}>
+            <Suspense
+              key={buildDiscoveryHref(query)}
+              fallback={<DiscoveryResultsLoading />}
+            >
               <DiscoveryResults query={query} />
             </Suspense>
           </div>

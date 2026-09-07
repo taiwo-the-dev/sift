@@ -38,6 +38,9 @@ jobs:
           cache: npm
           node-version: 22
 
+      - name: Use repository npm version
+        run: npm install --global npm@11.6.1
+
       - name: Install dependencies
         run: npm ci
 

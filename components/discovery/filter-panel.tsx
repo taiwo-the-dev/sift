@@ -24,8 +24,6 @@ import {
   type DiscoveryQuery,
 } from "@/features/discovery/model";
 import { buildDiscoveryHref } from "@/features/discovery/query";
-import type { MetadataStatus } from "@/lib/db/validation";
-import type { HealthStatus } from "@/features/health/model";
 import { cn } from "@/lib/utils";
 
 interface FilterPanelProps {
@@ -44,48 +42,6 @@ const categoryIcons = {
   "liquidity-rebalancing": RefreshCw,
   "yield-optimisation": TrendingUp,
 } as const satisfies Readonly<Record<DiscoveryCategory, LucideIcon>>;
-
-const metadataStyles = {
-  invalid: {
-    active: "border-amber-400/35 bg-amber-400/10 text-amber-100",
-    dot: "bg-amber-300",
-  },
-  pending: {
-    active: "border-sky-400/35 bg-sky-400/10 text-sky-100",
-    dot: "bg-sky-300",
-  },
-  unavailable: {
-    active: "border-zinc-400/30 bg-zinc-400/10 text-zinc-200",
-    dot: "bg-zinc-400",
-  },
-  valid: {
-    active: "border-emerald-400/35 bg-emerald-400/10 text-emerald-100",
-    dot: "bg-emerald-300",
-  },
-} as const satisfies Readonly<
-  Record<MetadataStatus, Readonly<{ active: string; dot: string }>>
->;
-
-const healthStyles = {
-  degraded: {
-    active: "border-amber-400/35 bg-amber-400/10 text-amber-100",
-    dot: "bg-amber-300",
-  },
-  offline: {
-    active: "border-red-400/35 bg-red-400/10 text-red-100",
-    dot: "bg-red-300",
-  },
-  online: {
-    active: "border-emerald-400/35 bg-emerald-400/10 text-emerald-100",
-    dot: "bg-emerald-300",
-  },
-  unknown: {
-    active: "border-zinc-400/30 bg-zinc-400/10 text-zinc-200",
-    dot: "bg-zinc-400",
-  },
-} as const satisfies Readonly<
-  Record<HealthStatus, Readonly<{ active: string; dot: string }>>
->;
 
 function FilterOptions({ query }: FilterPanelProps) {
   return (
@@ -165,7 +121,7 @@ function FilterOptions({ query }: FilterPanelProps) {
               : "Any"}
           </span>
         </legend>
-        <div className="mt-3 flex flex-wrap items-stretch gap-2">
+        <div className="mt-3 grid gap-2">
           {discoveryCategories.map((category) => {
             const selected = query.categories.includes(category.slug);
             const Icon = categoryIcons[category.slug];
@@ -184,7 +140,7 @@ function FilterOptions({ query }: FilterPanelProps) {
                 role="checkbox"
                 aria-checked={selected}
                 className={cn(
-                  "group inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  "group flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
                     ? "border-brand/35 bg-brand/8 text-foreground"
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
@@ -197,7 +153,9 @@ function FilterOptions({ query }: FilterPanelProps) {
                   )}
                   aria-hidden="true"
                 />
-                <span>{category.label}</span>
+                <span className="min-w-0 flex-1 leading-5">
+                  {category.label}
+                </span>
                 <span
                   className={cn(
                     "grid size-4 shrink-0 place-items-center rounded border",
@@ -216,10 +174,10 @@ function FilterOptions({ query }: FilterPanelProps) {
 
       <fieldset className="border-t border-border pt-5">
         <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Profile status
+          Agent status
           <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
-            {query.metadataStatuses.length > 0
-              ? `${query.metadataStatuses.length} selected`
+            {query.metadataStatuses.length + query.healthStatuses.length > 0
+              ? `${query.metadataStatuses.length + query.healthStatuses.length} selected`
               : "Any"}
           </span>
         </legend>
@@ -231,8 +189,6 @@ function FilterOptions({ query }: FilterPanelProps) {
                   (value) => value !== status.value,
                 )
               : [...query.metadataStatuses, status.value];
-            const style = metadataStyles[status.value];
-
             return (
               <Link
                 key={status.value}
@@ -246,14 +202,14 @@ function FilterOptions({ query }: FilterPanelProps) {
                 className={cn(
                   "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
-                    ? style.active
+                    ? "border-brand/40 bg-brand/12 text-brand"
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
                 )}
               >
                 <span
                   className={cn(
-                    "size-1.5 rounded-full",
-                    selected ? style.dot : "bg-muted-foreground/45",
+                    "size-1.5 shrink-0 rounded-full",
+                    selected ? "bg-brand" : "bg-muted-foreground/45",
                   )}
                   aria-hidden="true"
                 />
@@ -261,26 +217,11 @@ function FilterOptions({ query }: FilterPanelProps) {
               </Link>
             );
           })}
-        </div>
-      </fieldset>
-
-      <fieldset className="border-t border-border pt-5">
-        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Health status
-          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
-            {query.healthStatuses.length > 0
-              ? `${query.healthStatuses.length} selected`
-              : "Any"}
-          </span>
-        </legend>
-        <div className="mt-3 flex flex-wrap items-stretch gap-2">
           {discoveryHealthStatuses.map((status) => {
             const selected = query.healthStatuses.includes(status.value);
             const nextStatuses = selected
               ? query.healthStatuses.filter((value) => value !== status.value)
               : [...query.healthStatuses, status.value];
-            const style = healthStyles[status.value];
-
             return (
               <Link
                 key={status.value}
@@ -294,14 +235,14 @@ function FilterOptions({ query }: FilterPanelProps) {
                 className={cn(
                   "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
-                    ? style.active
+                    ? "border-brand/40 bg-brand/12 text-brand"
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
                 )}
               >
                 <span
                   className={cn(
-                    "size-1.5 rounded-full",
-                    selected ? style.dot : "bg-muted-foreground/45",
+                    "size-1.5 shrink-0 rounded-full",
+                    selected ? "bg-brand" : "bg-muted-foreground/45",
                   )}
                   aria-hidden="true"
                 />
