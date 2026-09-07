@@ -62,7 +62,7 @@ export function formatRegistrationDate(value: string | null): string {
 
   return Number.isNaN(date.getTime())
     ? "Registration time unavailable"
-    : `Registered ${registrationDateFormatter.format(date)}`;
+    : registrationDateFormatter.format(date);
 }
 
 export function formatChainName(chainId: number): string {

@@ -35,7 +35,7 @@ const steps = [
 export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="scroll-mt-24 bg-background py-20 sm:py-24">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             How Sift works
@@ -55,12 +55,15 @@ export function HowItWorksSection() {
             return (
               <li
                 key={step.title}
-                className="relative border-t border-dashed border-input pt-8 lg:px-5 lg:first:pl-0 lg:last:pr-0"
+                className="sift-card-reveal group relative border-t border-dashed border-input pt-8 lg:px-5 lg:first:pl-0 lg:last:pr-0"
               >
-                <span className="absolute left-0 top-0 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-input bg-background text-sm font-semibold text-brand lg:left-5 lg:first:left-0">
+                <span className="absolute left-0 top-0 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-input bg-background text-sm font-semibold text-brand transition-[border-color,box-shadow] duration-300 group-hover:border-brand/45 group-hover:shadow-[0_0_24px_rgba(240,185,11,0.14)] lg:left-5 lg:first:left-0">
                   {index + 1}
                 </span>
-                <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
+                <Icon
+                  className="size-5 text-muted-foreground transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:text-brand motion-reduce:transform-none"
+                  aria-hidden="true"
+                />
                 <h3 className="mt-5 text-lg font-semibold tracking-[-0.02em] text-foreground">
                   {step.title}
                 </h3>

@@ -5,7 +5,7 @@ export function HeroBackground() {
       aria-hidden="true"
     >
       <svg
-        className="absolute inset-0 h-full w-full"
+        className="sift-hero-ambient absolute inset-0 h-full w-full"
         viewBox="0 0 1440 760"
         preserveAspectRatio="xMidYMid slice"
         fill="none"
@@ -74,10 +74,12 @@ export function HeroBackground() {
           mask="url(#hero-dot-mask)"
         />
 
-        <g fill="#F0B90B" opacity="0.13" transform="translate(1160 198)">
-          <rect width="116" height="10" rx="2" />
-          <rect x="28" y="28" width="88" height="10" rx="2" />
-          <rect x="58" y="56" width="58" height="10" rx="2" />
+        <g transform="translate(1160 198)">
+          <g className="sift-hero-bars" fill="#F0B90B" opacity="0.13">
+            <rect width="116" height="10" rx="2" />
+            <rect x="28" y="28" width="88" height="10" rx="2" />
+            <rect x="58" y="56" width="58" height="10" rx="2" />
+          </g>
         </g>
       </svg>
 

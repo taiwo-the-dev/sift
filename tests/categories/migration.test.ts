@@ -6,6 +6,10 @@ const migrationUrl = new URL(
   "../../supabase/migrations/20260903090000_add_category_evidence.sql",
   import.meta.url,
 );
+const shortlistFixMigrationUrl = new URL(
+  "../../supabase/migrations/20260907120000_fix_category_shortlist_replacement.sql",
+  import.meta.url,
+);
 
 describe("M14 category evidence migration", () => {
   it("creates protected evidence stores and server-only report functions", async () => {
@@ -41,5 +45,26 @@ describe("M14 category evidence migration", () => {
     assert.match(sql, /page_rows as \(\s*select\s+a\.\*,/);
     assert.doesNotMatch(sql, /filtered as \(\s*select\s+a\.\*,/);
     assert.doesNotMatch(sql, /result_bounds as/);
+  });
+
+  it("keeps shortlist replacement atomic and compatible with safe updates", async () => {
+    const sql = await readFile(shortlistFixMigrationUrl, "utf8");
+
+    assert.match(
+      sql,
+      /create or replace function public\.replace_agent_category_shortlist/,
+    );
+    assert.match(
+      sql,
+      /delete from public\.agent_category_shortlist\s+where category in/,
+    );
+    assert.match(
+      sql,
+      /revoke execute on function public\.replace_agent_category_shortlist\(jsonb\)/,
+    );
+    assert.match(
+      sql,
+      /grant execute on function public\.replace_agent_category_shortlist\(jsonb\)\s+to service_role/,
+    );
   });
 });

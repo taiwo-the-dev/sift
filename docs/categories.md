@@ -105,3 +105,34 @@ required by `release:data` and the deployed release smoke test.
 Mainnet activation coverage is intentionally zero. Mainnet profiles support
 discovery and comparison; only compatible BSC Testnet ERC-8183 identities may
 enter the guarded existing hiring flow.
+
+## Latest hosted coverage evidence
+
+The historical mainnet classification completed on 2026-09-07 after examining
+282,581 valid metadata records and storing 63 source-backed category matches.
+The curated shortlist contains three real agents per category. The anonymous
+8004scan boundary successfully recorded an `available` response for all 12
+shortlisted agents; no API credential was required for this bounded run.
+
+The report observed at `2026-09-07T03:51:44.042Z` passed with no coverage
+issues:
+
+| Category | Inventory | Shortlist | 8004scan checks | Endpoint | Health | Score | Reputation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Yield Optimisation | 30 | 3 | 3 | 28 | 1 | 1 | 0 |
+| Grid Trading | 9 | 3 | 3 | 9 | 5 | 5 | 0 |
+| Health Factor Monitoring | 15 | 3 | 3 | 15 | 3 | 4 | 0 |
+| Liquidity Rebalancing | 9 | 3 | 3 | 9 | 5 | 5 | 0 |
+
+Zero reputation rows are an honest unsupported-source state, not a negative
+rating. A bounded health refresh completed with six reachable observations and
+14 Unknown results across its full queue. The subsequent score refresh did not
+complete because the existing catalogue-wide score candidate query timed out;
+existing scores remain visible with their original timestamps and missing
+scores remain Unknown.
+
+The forward migration
+`20260907120000_fix_category_shortlist_replacement.sql` corrects the legacy
+shortlist replacement function for future reruns and must still be deployed to
+the hosted project. The initial hosted shortlist was safely bootstrapped only
+because the destination table was empty.

@@ -6,9 +6,13 @@ These limitations are product boundaries, not placeholder claims.
   identities and checkpoint/confirmed head `119684064`. That is a timestamped
   observation, not a promise that the catalogue stays current without the
   incremental workflow.
-- The M14 migration, category backfill, validated shortlist, stored 8004scan
-  sample, and hosted coverage report are not deployed yet. The current local
-  Supabase CLI identity lacks permission to link the active hosted project.
+- M14 category classification, its 12-agent validated shortlist, 12 bounded
+  8004scan checks, and the hosted coverage report are populated and passing.
+  The forward shortlist-function safety migration still needs hosted deployment.
+- The latest bounded health refresh completed, but the catalogue-wide score
+  candidate query timed out at current scale. Existing source-backed scores
+  remain visible and missing scores remain `Unknown`; no replacement values are
+  inferred.
 - 8004scan may omit fields, disagree, rate-limit, or become unavailable. It is
   optional validation only; Sift's own indexed identity remains the core.
 - ERC-8004 registration proves an identity event, not endpoint health,

@@ -17,6 +17,8 @@ import type { NormalizedService } from "@/lib/indexer/metadata/normalize";
 
 type CategoryEvidenceRecord = TableRow<"agent_category_evidence">;
 
+const categoryServiceQueryBatchSize = 100;
+
 export type CategoryCandidate = Readonly<{
   agentDbId: string;
   agentId: string;
@@ -74,24 +76,28 @@ function isRecord(value: Json): value is Readonly<Record<string, Json | undefine
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function mapService(value: Json): NormalizedService | null {
-  if (!isRecord(value) || typeof value.serviceType !== "string") return null;
-
+function mapStoredService(
+  service: Pick<
+    TableRow<"agent_services">,
+    "endpoint" | "metadata" | "service_type" | "version"
+  >,
+): NormalizedService {
   return {
-    endpoint: typeof value.endpoint === "string" ? value.endpoint : null,
-    metadata: value.metadata ?? null,
-    serviceType: value.serviceType,
-    version: typeof value.version === "string" ? value.version : null,
+    endpoint: service.endpoint,
+    metadata: service.metadata,
+    serviceType: service.service_type,
+    version: service.version,
   };
 }
 
-function mapServices(value: Json): readonly NormalizedService[] {
-  return Array.isArray(value)
-    ? value.flatMap((service) => {
-        const mapped = mapService(service);
-        return mapped ? [mapped] : [];
-      })
-    : [];
+function chunkValues<T>(values: readonly T[], size: number): readonly T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+
+  return chunks;
 }
 
 function toEvidenceInsert(
@@ -201,24 +207,69 @@ export function createCategoryRepository(
       return data;
     },
     async listCandidatePage(chainId, after, limit) {
-      const { data, error } = await client.rpc("category_classification_candidates", {
-        p_after: after,
-        p_chain_id: chainId,
-        p_limit: limit,
-      });
+      const resolvedChainId = chainId === 97 ? 97 : 56;
+      const resolvedLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+      let candidateQuery = client
+        .from("agents")
+        .select(
+          "id,agent_id,category,name,description,metadata_verified_at,last_synced_at,updated_at",
+        )
+        .eq("chain_id", resolvedChainId)
+        .eq("metadata_status", "valid");
+
+      if (after) {
+        candidateQuery = candidateQuery.gt("id", after);
+      }
+
+      const { data, error } = await candidateQuery
+        .order("id", { ascending: true })
+        .limit(resolvedLimit);
 
       if (error) {
         throw new DatabaseOperationError("list category candidates", error);
       }
 
+      if (data.length === 0) return [];
+
+      const agentDbIds = data.map((row) => row.id);
+      const serviceResults = await Promise.all(
+        chunkValues(agentDbIds, categoryServiceQueryBatchSize).map((batch) =>
+          client
+            .from("agent_services")
+            .select(
+              "agent_db_id,endpoint,metadata,service_type,version,created_at,id",
+            )
+            .in("agent_db_id", batch)
+            .order("created_at", { ascending: true })
+            .order("id", { ascending: true }),
+        ),
+      );
+      const servicesByAgent = new Map<string, NormalizedService[]>();
+
+      for (const result of serviceResults) {
+        if (result.error) {
+          throw new DatabaseOperationError(
+            "list category candidate services",
+            result.error,
+          );
+        }
+
+        for (const service of result.data) {
+          const current = servicesByAgent.get(service.agent_db_id) ?? [];
+          current.push(mapStoredService(service));
+          servicesByAgent.set(service.agent_db_id, current);
+        }
+      }
+
       return data.map((row) => ({
-        agentDbId: row.agent_db_id,
+        agentDbId: row.id,
         agentId: row.agent_id,
-        declaredCategory: row.declared_category,
+        declaredCategory: row.category,
         description: row.description,
-        sourceObservedAt: row.source_observed_at,
+        sourceObservedAt:
+          row.metadata_verified_at ?? row.last_synced_at ?? row.updated_at,
         name: row.name,
-        services: mapServices(row.services),
+        services: servicesByAgent.get(row.id) ?? [],
       }));
     },
     async listCoverage(chainId = 56) {
@@ -298,9 +349,41 @@ export function createCategoryRepository(
         p_records: [...records] as Json,
       });
 
-      if (error) {
-        throw new DatabaseOperationError("persist category shortlist", error);
+      if (!error) return;
+
+      // Older hosted projects may still have the first M14 function, whose
+      // unfiltered DELETE is rejected by Supabase's safe-update guard. Bootstrap
+      // an empty table once; non-empty replacements continue to fail closed
+      // until the forward migration is applied so stale rows are never hidden.
+      if (error.code === "21000") {
+        const { count, error: countError } = await client
+          .from("agent_category_shortlist")
+          .select("category", { count: "exact", head: true });
+
+        if (countError) {
+          throw new DatabaseOperationError(
+            "inspect category shortlist",
+            countError,
+          );
+        }
+
+        if (count === 0) {
+          const { error: insertError } = await client
+            .from("agent_category_shortlist")
+            .insert([...records]);
+
+          if (insertError) {
+            throw new DatabaseOperationError(
+              "bootstrap category shortlist",
+              insertError,
+            );
+          }
+
+          return;
+        }
       }
+
+      throw new DatabaseOperationError("persist category shortlist", error);
     },
   };
 }

@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AgentSelectionActions } from "@/components/comparison/comparison-actions";
 import { formatProfileTimestamp } from "@/features/agents/format";
@@ -503,6 +504,7 @@ function AgentColumnHeader({
             : `${agent.score.score}/100`}
         </span>
       </div>
+      <BookmarkToggle agent={agent} variant="compact" className="mt-3" />
       <AgentSelectionActions
         goal={goal}
         reference={{ agentId: agent.agentId, chainId: agent.chainId }}

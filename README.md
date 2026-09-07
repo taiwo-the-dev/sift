@@ -14,9 +14,11 @@ M10 is ready for two-wallet hosted isolation validation, and M11 is ready for a
 final keyboard pass. The M12 release package is implemented locally but remains
 blocked on those checks and a production deployment. M13 is operational: the
 BSC Mainnet catalogue reached confirmed head `119684064` with 331,747 real
-indexed identities on 2026-09-03. M14's repository implementation is complete
-but remains blocked on deploying its hosted migration, running the historical
-category backfill, and recording the hosted coverage/8004scan report.
+indexed identities on 2026-09-03. M14 category coverage now passes against the
+hosted catalogue: the historical backfill, 12-agent shortlist, and 12 recorded
+8004scan checks completed on 2026-09-07. M14 remains blocked on deploying its
+forward shortlist-function fix, resolving the score-candidate query timeout,
+and completing the hosted browser matrix.
 M15's compatibility, recovery, tooling, and evidence foundation is implemented,
 but the milestone remains blocked until genuine category representatives and a
 human-approved testnet activation are recorded.
@@ -213,8 +215,9 @@ The full evidence-bound list is maintained in
 - ERC-8183/APEX support is BSC Testnet-only, bound to the reviewed deployment,
   and intentionally fails closed when an agent service or contract relationship
   is incompatible.
-- The M14 hosted schema/backfill and category coverage report have not yet run;
-  the local Supabase CLI account cannot deploy to the active project.
+- M14 category coverage passes, but the forward shortlist-function safety fix
+  still needs to reach hosted Supabase and the full score refresh currently
+  times out while selecting candidates at catalogue scale.
 - Mainnet hiring, custody, unlimited token approvals, disputes, refunds,
   pause/revoke writes, and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;

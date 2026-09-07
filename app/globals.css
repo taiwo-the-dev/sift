@@ -88,6 +88,72 @@
 }
 
 @layer components {
+  .sift-page-enter {
+    animation: sift-page-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .sift-data-arrival {
+    animation: sift-data-arrival 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .sift-hero-enter {
+    animation: sift-hero-enter 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .sift-hero-enter-delay-1 {
+    animation-delay: 80ms;
+  }
+
+  .sift-hero-enter-delay-2 {
+    animation-delay: 160ms;
+  }
+
+  .sift-hero-enter-delay-3 {
+    animation-delay: 240ms;
+  }
+
+  .sift-hero-enter-delay-4 {
+    animation-delay: 320ms;
+  }
+
+  .sift-hero-ambient {
+    animation: sift-ambient-drift 18s ease-in-out infinite alternate;
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .sift-hero-bars {
+    animation: sift-bars-float 7s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .sift-hero-glow {
+    animation: sift-glow-breathe 4.5s ease-in-out infinite;
+  }
+
+  .sift-cta-mark {
+    animation: sift-cta-mark-float 9s ease-in-out infinite alternate;
+    transform: rotate(45deg);
+    transform-origin: center;
+  }
+
+  .sift-search-shell {
+    transition:
+      border-color 240ms ease,
+      box-shadow 240ms ease,
+      transform 240ms ease;
+  }
+
+  .sift-search-shell:hover,
+  .sift-search-shell:focus-within {
+    border-color: rgb(240 185 11 / 58%);
+    box-shadow:
+      0 28px 100px rgb(0 0 0 / 48%),
+      0 0 55px rgb(240 185 11 / 10%);
+    transform: translateY(-2px);
+  }
+
   .sift-hero-field::before {
     position: absolute;
     inset: 0;
@@ -114,6 +180,128 @@
     background-position: center;
     background-size: 12px 12px;
   }
+
+  @supports (animation-timeline: view()) {
+    .sift-scroll-reveal {
+      animation: sift-scroll-reveal 1ms linear both;
+      animation-range: entry 4% cover 28%;
+      animation-timeline: view(block);
+    }
+
+    .sift-card-reveal {
+      animation: sift-card-reveal 1ms linear both;
+      animation-range: entry 2% cover 22%;
+      animation-timeline: view(block);
+    }
+  }
+}
+
+@keyframes sift-page-enter {
+  from {
+    opacity: 0;
+    translate: 0 7px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes sift-data-arrival {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes sift-hero-enter {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes sift-ambient-drift {
+  0% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: scale(1.06) translate3d(-1.2%, 0.8%, 0);
+  }
+}
+
+@keyframes sift-bars-float {
+  0%,
+  100% {
+    opacity: 0.13;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 0.28;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes sift-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sift-cta-mark-float {
+  from {
+    transform: rotate(45deg) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: rotate(49deg) translate3d(-10px, 10px, 0);
+  }
+}
+
+@keyframes sift-scroll-reveal {
+  from {
+    opacity: 0;
+    scale: 0.99;
+    translate: 0 30px;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes sift-card-reveal {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -128,5 +316,25 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .sift-page-enter,
+  .sift-data-arrival,
+  .sift-hero-enter,
+  .sift-hero-ambient,
+  .sift-hero-bars,
+  .sift-hero-glow,
+  .sift-cta-mark,
+  .sift-scroll-reveal,
+  .sift-card-reveal {
+    animation: none !important;
+    opacity: 1;
+    scale: 1;
+    translate: none;
+  }
+
+  .sift-search-shell:hover,
+  .sift-search-shell:focus-within {
+    transform: none;
   }
 }

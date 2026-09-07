@@ -60,7 +60,7 @@ export function TrustSection() {
       id="trust"
       className="relative scroll-mt-24 overflow-hidden border-b border-border bg-background py-20 sm:py-24"
     >
-      <div className="relative mx-auto grid w-full max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-20 lg:px-8">
+      <div className="sift-scroll-reveal relative mx-auto grid w-full max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-20 lg:px-8">
         <div className="lg:py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">
             Trust and transparency
@@ -115,17 +115,17 @@ export function TrustSection() {
                   key={signal.title}
                   className={
                     index % 2 === 0
-                      ? "relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 sm:grid-cols-[3rem_minmax(0,1fr)] lg:mr-10"
-                      : "relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 sm:grid-cols-[3rem_minmax(0,1fr)] lg:ml-10"
+                      ? "sift-card-reveal group relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 sm:grid-cols-[3rem_minmax(0,1fr)] lg:mr-10"
+                      : "sift-card-reveal group relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 sm:grid-cols-[3rem_minmax(0,1fr)] lg:ml-10"
                   }
                 >
-                  <span className="relative z-10 grid size-10 place-items-center rounded-full border border-brand/30 bg-background text-brand shadow-[0_0_0_6px_rgba(11,14,17,0.9)] sm:size-12">
+                  <span className="relative z-10 grid size-10 place-items-center rounded-full border border-brand/30 bg-background text-brand shadow-[0_0_0_6px_rgba(11,14,17,0.9)] transition-[background-color,box-shadow,transform] duration-300 group-hover:scale-105 group-hover:bg-brand group-hover:text-brand-foreground group-hover:shadow-[0_0_0_6px_rgba(11,14,17,0.9),0_0_28px_rgba(240,185,11,0.18)] motion-reduce:transform-none sm:size-12">
                     <Icon
                       className="size-4 sm:size-[1.125rem]"
                       aria-hidden="true"
                     />
                   </span>
-                  <div className="rounded-xl border border-border bg-background/75 px-5 py-5 backdrop-blur-sm transition-colors hover:border-brand/25 sm:px-6 sm:py-6">
+                  <div className="rounded-xl border border-border bg-background/75 px-5 py-5 backdrop-blur-sm transition-[border-color,box-shadow,transform] duration-300 group-hover:translate-x-1 group-hover:border-brand/25 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] motion-reduce:transform-none sm:px-6 sm:py-6">
                     <div className="flex items-center justify-between gap-4">
                       <h3 className="text-base font-semibold text-foreground sm:text-lg">
                         {signal.title}

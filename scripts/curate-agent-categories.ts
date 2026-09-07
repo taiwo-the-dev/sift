@@ -77,6 +77,15 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : "Unknown curation failure.";
-  process.stderr.write(`[FAIL] ${message}\n`);
+  const cause =
+    error instanceof Error && "cause" in error &&
+    typeof error.cause === "object" && error.cause !== null
+      ? error.cause as Readonly<Record<string, unknown>>
+      : null;
+  const code = typeof cause?.code === "string" ? cause.code : null;
+  const causeMessage =
+    typeof cause?.message === "string" ? cause.message : null;
+  const context = [code, causeMessage].filter(Boolean).join(": ");
+  process.stderr.write(`[FAIL] ${message}${context ? ` (${context})` : ""}\n`);
   process.exitCode = 1;
 });

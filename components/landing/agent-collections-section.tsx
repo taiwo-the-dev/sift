@@ -4,11 +4,14 @@ import {
   BadgeCheck,
   CalendarDays,
   CircleAlert,
+  LoaderCircle,
 } from "lucide-react";
 import Link from "next/link";
 
+import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AgentCarousel } from "@/components/landing/agent-carousel";
+import { Skeleton } from "@/components/ui/skeleton";
 import { buildAgentProfileHref } from "@/features/agents/route";
 import {
   formatAgentDescription,
@@ -61,7 +64,7 @@ function RecentAgentCard({
   ].slice(0, 2);
 
   return (
-    <article className="group flex h-full min-h-[25rem] flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)]">
+    <article className="sift-card-reveal group flex h-full min-h-[25rem] flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] motion-reduce:transform-none">
       <div
         className={cn(
           "relative overflow-hidden border-b border-white/6 p-5",
@@ -168,14 +171,17 @@ function RecentAgentCard({
               {formatRegistrationDate(agent.registeredAt)}
             </span>
           </div>
-          <Link
-            href={href}
-            prefetch={false}
-            aria-label={`Open ${name}`}
-            className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground outline-none transition-colors hover:border-brand/35 hover:bg-brand hover:text-brand-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <ArrowUpRight className="size-3.5" aria-hidden="true" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <BookmarkToggle agent={agent} variant="icon" />
+            <Link
+              href={href}
+              prefetch={false}
+              aria-label={`Open ${name}`}
+              className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-card text-foreground outline-none transition-colors hover:border-brand/35 hover:bg-brand hover:text-brand-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
     </article>
@@ -195,9 +201,9 @@ export function AgentCollectionsSection({
   return (
     <section
       id="agent-collections"
-      className="scroll-mt-24 border-b border-border bg-card/45 py-16 sm:py-20"
+      className="sift-data-arrival scroll-mt-24 border-b border-border bg-card/45 py-16 sm:py-20"
     >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
@@ -252,6 +258,66 @@ export function AgentCollectionsSection({
             </p>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+export function AgentCollectionsLoading() {
+  return (
+    <section
+      id="agent-collections"
+      aria-busy="true"
+      aria-label="Loading latest agents"
+      className="scroll-mt-24 border-b border-border bg-card/45 py-16 sm:py-20"
+    >
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+              Latest registrations
+            </p>
+            <h2 className="mt-3 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+              Newly registered AI agents.
+            </h2>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              The latest ERC-8004 agents registered on BNB Chain.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Skeleton className="h-8 w-28 rounded-full" />
+            <Link
+              href="/discover"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-colors hover:bg-brand"
+            >
+              Browse all
+              <ArrowRight
+                className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-9 flex items-center gap-3 border-b border-border pb-3">
+          <p className="text-sm font-semibold text-foreground">Latest registrations</p>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-brand">
+            <LoaderCircle
+              className="size-3.5 animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            Loading agents…
+          </span>
+        </div>
+        <div className="-mx-4 mt-5 flex gap-4 overflow-hidden px-4 pb-4 sm:mx-0 sm:px-0">
+          {Array.from({ length: 4 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="h-[25rem] w-[86%] shrink-0 rounded-2xl border border-border sm:w-[20rem] lg:w-[22rem] xl:w-[calc((100%-3rem)/4)]"
+            />
+          ))}
+        </div>
+        <span className="sr-only">Loading the latest registered agents…</span>
       </div>
     </section>
   );

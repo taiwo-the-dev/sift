@@ -13,13 +13,13 @@ local result is not evidence that a production wallet transaction succeeded.
 | M12 release commit | Not recorded; current M12 work is uncommitted |
 | Vercel production URL | Not deployed / not recorded |
 | Vercel deployment ID | Not recorded |
-| Production Supabase schema check | M0–M13 schema is live; the three M14 evidence tables are pending migration deployment |
+| Production Supabase schema check | M14 evidence tables are live; forward shortlist-function safety migration is pending deployment |
 | Latest successful indexer run | BSC Mainnet bootstrap completed on 2026-09-03; scheduled incremental health still needs confirmation |
 | Latest successful assessment run | Not current; scheduled run `#8` failed during dependency installation on 2026-08-24 |
 | Stored index checkpoint | BSC Mainnet block/head `119684064`, reported 2026-09-03; BSC Testnet block/head `127211325` was stale at the same observation |
 | Mainnet catalogue | 331,747 real indexed chain-56 identities at the completed checkpoint |
-| M14 category evidence | Repository implementation complete; hosted migration/backfill/report pending |
-| Latest stored health / score evidence | 2026-08-22 20:38:19 UTC / 2026-08-22 20:38:22 UTC |
+| M14 category evidence | Coverage PASS on 2026-09-07: 63 matches, 12 shortlisted agents, and 12 recorded 8004scan checks |
+| Latest stored health / score evidence | Bounded health refresh completed 2026-09-07; score refresh blocked by candidate-query timeout |
 | Live RPC smoke | Passed at confirmed BSC Testnet head `126972263` on 2026-08-24 |
 | BSC Testnet demo transaction | Not recorded |
 | M15 activation proof | Blocked; category representatives and human-approved job are not recorded |
@@ -42,8 +42,8 @@ candidate is committed, pushed, and both scheduled jobs pass.
       1 high) through the existing shadcn tooling and wallet dependency trees;
       M14 adds no package dependency. Review upgrades separately without forcing
       a breaking wagmi migration into this milestone.
-- [ ] `npm run release:data` verifies every hosted table and source freshness (blocked until the M14 migration/report is live).
-- [ ] `npm run release:smoke -- http://127.0.0.1:3102` passes against the local production build (the new M14 report gate currently returns 503 until migration deployment).
+- [ ] `npm run release:data` verifies every hosted table and source freshness (category coverage passes; other freshness gates still require validation).
+- [ ] `npm run release:smoke -- http://127.0.0.1:3102` passes against the local production build.
 - [ ] `npm run release:smoke -- https://<production-origin>` passes.
 
 ## Production services
@@ -56,8 +56,9 @@ candidate is committed, pushed, and both scheduled jobs pass.
 - [ ] The latest scheduled health/score run succeeds with honest bounded output.
 - [ ] RPC primary/fallback behavior succeeds without exposing provider credentials.
 - [ ] Data freshness visible in Sift agrees with the latest persisted observations.
-- [ ] M14 migration, category backfill, 12-agent shortlist, and 8004scan cross-check are persisted.
-- [ ] `npm run report:categories` and the public read-only report pass for all four categories.
+- [ ] The forward M14 shortlist-function safety migration is present in hosted migration history.
+- [x] M14 category backfill, 12-agent shortlist, and 8004scan cross-check are persisted.
+- [x] `npm run report:categories` passes for all four categories locally against hosted data; the public deployed report remains part of production smoke.
 
 ## Clean-browser product path
 

@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { ActiveFilters } from "@/components/discovery/active-filters";
-import { AgentCard } from "@/components/discovery/agent-card";
+import {
+  CatalogueStatusData,
+  DiscoveryResults,
+} from "@/components/discovery/discovery-data";
+import {
+  DiscoveryResultsLoading,
+  NetworkStatusLoading,
+} from "@/components/discovery/discovery-loading";
 import { DiscoverySearchForm } from "@/components/discovery/discovery-search-form";
-import { EmptyState } from "@/components/discovery/empty-state";
 import { FilterPanel } from "@/components/discovery/filter-panel";
-import { Pagination } from "@/components/discovery/pagination";
-import { NetworkStatus } from "@/components/discovery/network-status";
-import { ResultToolbar } from "@/components/discovery/result-toolbar";
-import { CategoryContext } from "@/components/categories/category-context";
 import {
   parseDiscoverySearchParams,
   type DiscoverySearchParams,
 } from "@/features/discovery/query";
-import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
-import { createCatalogueStatusRepository } from "@/lib/db/catalogue-status-repository";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
@@ -28,24 +29,8 @@ interface DiscoverPageProps {
   searchParams: Promise<DiscoverySearchParams>;
 }
 
-async function loadCatalogueStatuses() {
-  try {
-    return await createCatalogueStatusRepository().list();
-  } catch (error) {
-    console.error(
-      "Sift could not load the agent directory status.",
-      error instanceof Error ? error.message : "Unknown database error.",
-    );
-    return null;
-  }
-}
-
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
   const query = parseDiscoverySearchParams(await searchParams);
-  const [result, networkStatuses] = await Promise.all([
-    createDiscoveryRepository().search(query),
-    loadCatalogueStatuses(),
-  ]);
 
   return (
     <div className="flex-1 bg-background">
@@ -77,45 +62,18 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-        {query.effectiveCategories.length === 1 ? (
-          <CategoryContext category={query.effectiveCategories[0]} />
-        ) : null}
-        <NetworkStatus query={query} statuses={networkStatuses} />
+        <Suspense fallback={<NetworkStatusLoading />}>
+          <CatalogueStatusData query={query} />
+        </Suspense>
         <ActiveFilters query={query} />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:gap-8">
           <FilterPanel query={query} />
 
           <div className="min-w-0">
-            <ResultToolbar
-              hasMoreResults={result.hasNextPage}
-              query={query}
-              resultCount={result.agents.length}
-              totalCount={result.totalCount}
-            />
-
-            {result.agents.length > 0 ? (
-              <>
-                <div className="mt-6 grid grid-cols-1 gap-3">
-                  {result.agents.map((agent) => (
-                    <AgentCard
-                      key={agent.agentDbId}
-                      agent={agent}
-                      comparisonGoal={query.query}
-                    />
-                  ))}
-                </div>
-                <Pagination
-                  currentPage={result.page}
-                  hasNextPage={result.hasNextPage}
-                  query={query}
-                />
-              </>
-            ) : (
-              <div className="mt-6">
-                <EmptyState />
-              </div>
-            )}
+            <Suspense fallback={<DiscoveryResultsLoading />}>
+              <DiscoveryResults query={query} />
+            </Suspense>
           </div>
         </div>
       </section>

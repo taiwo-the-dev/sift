@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export function FinalCtaSection() {
   return (
     <section className="sift-dot-footer border-y border-border bg-card py-16 sm:py-20">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-2xl bg-brand px-6 py-8 text-brand-foreground sm:px-9 sm:py-10 lg:flex lg:items-center lg:justify-between lg:gap-12">
           <div className="relative z-10">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-foreground/70">
@@ -44,7 +44,7 @@ export function FinalCtaSection() {
             </Link>
           </div>
           <span
-            className="absolute -right-10 -top-20 size-64 rotate-45 border-[3rem] border-white/10"
+            className="sift-cta-mark absolute -right-10 -top-20 size-64 border-[3rem] border-white/10"
             aria-hidden="true"
           />
         </div>

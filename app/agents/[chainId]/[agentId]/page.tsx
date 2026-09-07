@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
-import { ProfileActivity } from "@/components/agents/profile-activity";
-import { ProfileCapabilities } from "@/components/agents/profile-capabilities";
-import { ProfileEvidence } from "@/components/agents/profile-evidence";
-import { ProfileHeader } from "@/components/agents/profile-header";
-import { ProfileNavigation } from "@/components/agents/profile-navigation";
-import { ProfileOverview } from "@/components/agents/profile-overview";
-import { ProfileTechnical } from "@/components/agents/profile-technical";
+import { AgentProfileContent } from "@/components/agents/agent-profile-content";
+import { AgentProfileLoading } from "@/components/agents/agent-profile-loading";
 import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
 import { parseAgentProfileTab } from "@/features/agents/tabs";
@@ -86,33 +82,17 @@ export default async function AgentProfilePage({
   const activeTab = parseAgentProfileTab(query.tab);
   const identity = parseAgentProfileIdentity(chainId, agentId);
 
-  if (!identity) {
-    notFound();
-  }
-
-  const profile = await getAgentProfile(identity.chainId, identity.agentId);
-
-  if (!profile) {
-    notFound();
-  }
+  if (!identity) notFound();
 
   return (
     <div className="flex-1 bg-background">
-      <ProfileHeader comparisonGoal={comparisonGoal} profile={profile} />
-      <ProfileNavigation
-        activeTab={activeTab}
-        comparisonGoal={comparisonGoal}
-        profile={profile}
-      />
-      <div className="mx-auto min-h-[34rem] w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        {activeTab === "overview" ? <ProfileOverview profile={profile} /> : null}
-        {activeTab === "services" ? (
-          <ProfileCapabilities profile={profile} />
-        ) : null}
-        {activeTab === "trust" ? <ProfileEvidence profile={profile} /> : null}
-        {activeTab === "activity" ? <ProfileActivity profile={profile} /> : null}
-        {activeTab === "metadata" ? <ProfileTechnical profile={profile} /> : null}
-      </div>
+      <Suspense fallback={<AgentProfileLoading agentId={identity.agentId} />}>
+        <AgentProfileContent
+          activeTab={activeTab}
+          comparisonGoal={comparisonGoal}
+          identity={identity}
+        />
+      </Suspense>
     </div>
   );
 }

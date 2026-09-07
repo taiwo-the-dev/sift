@@ -2,9 +2,9 @@
 
 ## Status
 
-Blocked — repository implementation complete; awaiting hosted migration,
-historical backfill, 8004scan Pro credential/run, bounded health/score refresh,
-hosted browser validation, and the recorded coverage report
+Blocked — category coverage passes; awaiting deployment of the forward
+shortlist-function fix, correction of the score-candidate query timeout, and
+hosted browser validation
 
 ## Depends On
 
@@ -121,8 +121,8 @@ counts.
 ## Acceptance Criteria
 
 - [x] The four-category taxonomy and mapping rules are documented and tested.
-- [ ] A timestamped report measures inventory and evidence coverage per category.
-- [ ] At least three source-backed mainnet candidates per category meet the
+- [x] A timestamped report measures inventory and evidence coverage per category.
+- [x] At least three source-backed mainnet candidates per category meet the
       documented shortlist bar, or the ticket is honestly BLOCKED with evidence.
 - [x] Every category has equivalent discovery, profile, comparison, and honest
       activation-availability treatment.
@@ -133,7 +133,7 @@ counts.
 - [x] Score version, confidence, coverage, and observation time remain visible.
 - [x] 8004scan enrichment is implemented, source-labelled, cached, rate-limited,
       and independently removable without breaking core discovery.
-- [ ] A real sample in every required category has a recorded cross-check result
+- [x] A real sample in every required category has a recorded cross-check result
       or an honest API-field-unavailable result.
 - [x] No fabricated marketplace or performance data exists.
 
@@ -193,6 +193,21 @@ high-frequency term such as `trading` was combined with category evidence. The
 follow-up search migration preserves the general indexed query and gives this
 combined request shape a category-first, bounded plan. This changes no indexed
 agent or evidence records and requires no blockchain re-index.
+
+On 2026-09-07 the resumable historical classifier completed after processing
+282,581 valid mainnet metadata records and persisted 63 source-backed matches.
+Curation then validated and stored the documented 12-agent shortlist, and the
+anonymous 8004scan boundary recorded 12 available cross-check responses. The
+timestamped category report passed for all four categories with at least three
+inventory, shortlist, and cross-check rows each.
+
+A bounded health refresh completed without fabricating unavailable endpoint
+evidence. The following score refresh exposed a separate scale bottleneck in
+the catalogue-wide score candidate query and did not complete. The repository
+now includes an additive migration correcting the legacy shortlist replacement
+function's safe-update violation; it still needs to be deployed for future
+atomic shortlist reruns. M14 remains blocked on that deployment, the score-query
+fix, and hosted browser validation.
 
 ## Codex Completion Report
 

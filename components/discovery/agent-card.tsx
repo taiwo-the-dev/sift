@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buildAgentProfileHref } from "@/features/agents/route";
@@ -63,7 +64,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
   );
 
   return (
-    <article className="group rounded-xl border border-border bg-card p-4 transition-[border-color,background-color,transform] duration-200 hover:-translate-y-px hover:border-brand/35 hover:bg-card/95 sm:p-5">
+    <article className="sift-card-reveal group rounded-xl border border-border bg-card p-4 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:bg-card/95 hover:shadow-[0_18px_44px_rgba(0,0,0,0.2)] motion-reduce:transform-none sm:p-5">
       <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-5">
         <AgentAvatar
           agentId={agent.agentId}
@@ -133,6 +134,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
             </div>
 
             <div className="flex flex-wrap gap-2 md:justify-end">
+              <BookmarkToggle agent={agent} variant="compact" />
               <ComparisonToggle
                 reference={{ agentId: agent.agentId, chainId: agent.chainId }}
                 goal={comparisonGoal}
@@ -227,14 +229,16 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   <dd>ERC-8004</dd>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <CalendarDays
                   className="size-3.5 shrink-0 text-brand"
                   aria-hidden="true"
                 />
-                <div>
+                <div className="min-w-0">
                   <dt className="sr-only">Registration date</dt>
-                  <dd>{formatRegistrationDate(agent.registeredAt)}</dd>
+                  <dd className="truncate whitespace-nowrap">
+                    {formatRegistrationDate(agent.registeredAt)}
+                  </dd>
                 </div>
               </div>
               <div className="flex items-center gap-2">

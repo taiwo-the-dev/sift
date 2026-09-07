@@ -23,6 +23,10 @@ describe("discovery display fallbacks", () => {
   it("formats known networks and unavailable registration time", () => {
     assert.equal(formatChainName(97), "BSC Testnet");
     assert.equal(formatChainName(56), "BSC Mainnet");
+    assert.equal(
+      formatRegistrationDate("2026-09-05T12:00:00.000Z"),
+      "Sep 5, 2026",
+    );
     assert.equal(formatRegistrationDate(null), "Registration time unavailable");
   });
 });

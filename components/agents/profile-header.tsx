@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buttonVariants } from "@/components/ui/button";
@@ -183,6 +184,7 @@ export function ProfileHeader({
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+            <BookmarkToggle agent={profile} />
             {hireable ? (
               <Link
                 href={`/hire/${profile.chainId}/${profile.agentId}`}

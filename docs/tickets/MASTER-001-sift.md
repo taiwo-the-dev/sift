@@ -20,7 +20,7 @@ Ready for Development
 - M11 — Ready for Manual Validation
 - M12 — Blocked on External Release Validation
 - M13 — Complete
-- M14 — Blocked on Hosted Migration, Backfill, Pro Cross-Check, and Coverage Report
+- M14 — Coverage Pass; Blocked on Forward Migration, Score Query, and Hosted Validation
 - M15 — Blocked on Genuine Studio Agent Supply and Human Testnet Evidence
 - M16 — Not Started
 - M17 — Not Started

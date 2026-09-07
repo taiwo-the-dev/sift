@@ -36,6 +36,13 @@ type ActionState = Readonly<{
 export function DashboardLoadingState() {
   return (
     <div role="status" aria-label="Loading wallet dashboard" className="space-y-8">
+      <p className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+        <LoaderCircle
+          className="size-4 animate-spin text-brand motion-reduce:animate-none"
+          aria-hidden="true"
+        />
+        Loading agent tasks…
+      </p>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="h-36 animate-pulse rounded-xl border border-border bg-card" />
@@ -43,7 +50,6 @@ export function DashboardLoadingState() {
       </div>
       <div className="h-16 animate-pulse rounded-xl border border-border bg-card" />
       <div className="h-80 animate-pulse rounded-xl border border-border bg-card" />
-      <span className="sr-only">Loading…</span>
     </div>
   );
 }
@@ -242,12 +248,14 @@ function DashboardConnected({ mounted }: Readonly<{ mounted: boolean }>) {
   }
 
   return (
-    <DashboardView
-      dashboard={dashboardQuery.data.dashboard}
-      refreshFailed={dashboardQuery.isError}
-      refreshing={dashboardQuery.isFetching}
-      onRefresh={() => dashboardQuery.refetch()}
-    />
+    <div className="sift-data-arrival">
+      <DashboardView
+        dashboard={dashboardQuery.data.dashboard}
+        refreshFailed={dashboardQuery.isError}
+        refreshing={dashboardQuery.isFetching}
+        onRefresh={() => dashboardQuery.refetch()}
+      />
+    </div>
   );
 }
 

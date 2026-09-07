@@ -6,7 +6,7 @@ import { agentCategories } from "@/components/landing/categories";
 export function CategorySection() {
   return (
     <section id="categories" className="scroll-mt-24 border-y border-border bg-card py-20 sm:py-24">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -48,7 +48,7 @@ export function CategorySection() {
                 <Link
                   key={category.title}
                   href={`/discover?category=${category.slug}`}
-                  className="group grid min-h-52 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 rounded-xl border border-border bg-background p-5 outline-none transition-[border-color,background-color] duration-200 hover:border-input hover:bg-secondary/55 focus-visible:ring-3 focus-visible:ring-ring/30 sm:p-6"
+                  className="sift-card-reveal group grid min-h-52 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 rounded-xl border border-border bg-background p-5 outline-none transition-[border-color,background-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/30 hover:bg-secondary/55 hover:shadow-[0_18px_44px_rgba(0,0,0,0.24)] focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none sm:p-6"
                 >
                   <Icon className="mt-0.5 size-5 text-brand" aria-hidden="true" />
                   <div className="flex h-full flex-col">

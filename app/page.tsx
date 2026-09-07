@@ -1,39 +1,23 @@
-import { connection } from "next/server";
+import { Suspense } from "react";
 
-import { AgentCollectionsSection } from "@/components/landing/agent-collections-section";
+import {
+  AgentCollectionsLoading,
+} from "@/components/landing/agent-collections-section";
+import { AgentCollectionsData } from "@/components/landing/agent-collections-data";
 import { CategorySection } from "@/components/landing/category-section";
 import { FinalCtaSection } from "@/components/landing/final-cta-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { TrustSection } from "@/components/landing/trust-section";
-import type { DiscoveryAgent } from "@/features/discovery/model";
-import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
 
-export default async function HomePage() {
-  await connection();
-
-  let catalogueAvailable = true;
-  let catalogueCount: number | null = null;
-  let recentAgents: DiscoveryAgent[] = [];
-
-  try {
-    const catalogueResult =
-      await createDiscoveryRepository().listRecentlyRegistered();
-    catalogueCount = catalogueResult.totalCount;
-    recentAgents = [...catalogueResult.agents.slice(0, 10)];
-  } catch {
-    catalogueAvailable = false;
-  }
-
+export default function HomePage() {
   return (
     <>
       <HeroSection />
       <CategorySection />
-      <AgentCollectionsSection
-        catalogueAvailable={catalogueAvailable}
-        catalogueCount={catalogueCount}
-        recentAgents={recentAgents}
-      />
+      <Suspense fallback={<AgentCollectionsLoading />}>
+        <AgentCollectionsData />
+      </Suspense>
       <HowItWorksSection />
       <TrustSection />
       <FinalCtaSection />

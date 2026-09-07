@@ -7,7 +7,7 @@ import {
   classifyAgentCategories,
 } from "@/features/categories/taxonomy";
 
-const BATCH_SIZE = 250;
+const BATCH_SIZE = 500;
 const MIN_BATCH_SIZE = 25;
 const MAX_ATTEMPTS = 6;
 const CHECKPOINT_PATH = join(

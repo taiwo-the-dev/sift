@@ -7,6 +7,7 @@ const footerGroups = [
     title: "Product",
     links: [
       { label: "Discover", href: "/discover" },
+      { label: "Saved agents", href: "/saved" },
       { label: "Categories", href: "/#categories" },
     ],
   },
@@ -24,7 +25,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+      <div className="sift-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.6fr_0.7fr_0.7fr_0.8fr]">
           <div>
             <Brand />
