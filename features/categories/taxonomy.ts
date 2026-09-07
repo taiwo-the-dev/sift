@@ -189,7 +189,7 @@ const declaredCategoryFields = [
   "capabilities",
 ] as const;
 
-export function extractRawDeclaredCategoryLabels(
+function extractRawDeclaredCategoryLabels(
   metadata: Readonly<Record<string, unknown>>,
 ): readonly string[] {
   return [
@@ -211,24 +211,6 @@ export function extractDeclaredCategoryLabels(
       ),
     ),
   ];
-}
-
-/**
- * True when the agent declared at least one category-like value and none of the
- * declared values map to a supported Sift category. Used for the read-time
- * "Other" badge; it is never persisted as category evidence.
- */
-export function hasOffTaxonomyDeclaration(
-  rawLabels: readonly string[],
-): boolean {
-  const meaningful = rawLabels
-    .map((label) => label.trim())
-    .filter((label) => label.length > 0);
-
-  return (
-    meaningful.length > 0 &&
-    meaningful.every((label) => resolveDeclaredCategory(label) === null)
-  );
 }
 
 function serviceCategoryDeclarations(

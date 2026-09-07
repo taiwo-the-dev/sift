@@ -15,6 +15,7 @@ import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
 import { collectDeclaredCapabilities } from "@/features/agents/presentation";
 import { buildAgentProfileHref } from "@/features/agents/route";
+import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import type {
   AgentReference,
   ContextualMatch,
@@ -181,6 +182,19 @@ function HealthValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 }
 
 function CategoriesValue({ agent }: Readonly<{ agent: AgentProfile }>) {
+  if (shouldShowOtherCategory(agent.metadataStatus, agent.categories)) {
+    return (
+      <div>
+        <span className="rounded-full border border-border bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
+          Other
+        </span>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          This valid profile does not match a supported Sift category.
+        </p>
+      </div>
+    );
+  }
+
   return agent.categories.length > 0 ? (
     <div className="flex flex-wrap gap-1.5">
       {agent.categories.map((category) => (

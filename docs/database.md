@@ -116,8 +116,8 @@ The updated Sift Indexer writes `metadata_verified_at` after a successful valida
 
 The migration also adds three bounded `security invoker` selection functions callable only by `service_role`:
 
-- `health_check_candidates` returns due valid agents with potentially eligible declarations, prioritizing scored and recently registered identities;
-- `score_recalculation_candidates` returns missing, version-stale, changed, or newly expired assessments.
+- `health_check_candidates` returns due valid agents from the indexed safe-service subset, prioritizing curated category agents before the oldest unchecked identities;
+- `score_recalculation_candidates` prioritizes old formula versions and unassessed agents with current independent evidence, then changed or newly expired assessments.
 - `featured_agent_candidates` applies the exact current score, confidence, freshness, and successful-health qualification before ordering a bounded result.
 
 Deploy the M5 migration first, then M6. Do not run `check:agents` or `score:agents` until both appear in hosted migration history. The full evidence contract and post-deployment verification sequence are in [Agent health and Sift Score](scoring.md).

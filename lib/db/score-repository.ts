@@ -28,10 +28,6 @@ type ScoreRecord = TableRow<"agent_scores">;
 type ServiceRecord = TableRow<"agent_services">;
 
 export type ScoreRepositorySources = Readonly<{
-  listAgentIdPage(
-    after: string | null,
-    limit: number,
-  ): Promise<readonly string[]>;
   listAgentRecords(ids: readonly string[]): Promise<readonly AgentRecord[]>;
   listCandidateIds(
     limit: number,
@@ -46,10 +42,6 @@ export type ScoreRepositorySources = Readonly<{
 }>;
 
 export type ScoreRepository = Readonly<{
-  listCandidatePage(
-    after: string | null,
-    limit: number,
-  ): Promise<readonly SiftScoreInput[]>;
   listCandidates(
     limit: number,
     scoreVersion: string,
@@ -96,25 +88,6 @@ function createSupabaseSources(
   client: SupabaseClient<Database>,
 ): ScoreRepositorySources {
   return {
-    async listAgentIdPage(after, limit) {
-      let query = client
-        .from("agents")
-        .select("id")
-        .order("id", { ascending: true })
-        .limit(limit);
-
-      if (after) {
-        query = query.gt("id", after);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw new DatabaseOperationError("list score backfill agents", error);
-      }
-
-      return data.map((row) => row.id);
-    },
     async listCandidateIds(limit, scoreVersion) {
       const { data, error } = await client.rpc(
         "score_recalculation_candidates",
@@ -203,94 +176,90 @@ export function createScoreRepository(
     }
 
     const [agents, healthRecords, reputationRecords, serviceRecords] =
-        await Promise.all([
-          sources.listAgentRecords(ids),
-          sources.listHealthRecords(ids),
-          sources.listReputationRecords(ids),
-          sources.listServiceRecords(ids),
-        ]);
-      const agentById = new Map(agents.map((agent) => [agent.id, agent]));
-      const healthById = new Map(
-        healthRecords.map((health) => [
-          health.agent_db_id,
-          mapHealthRecord(health),
-        ]),
-      );
-      const reputationById = new Map(
-        reputationRecords.map((reputation) => [
-          reputation.agent_db_id,
-          reputation,
-        ]),
-      );
-      const servicesById = new Map<string, ServiceRecord[]>();
+      await Promise.all([
+        sources.listAgentRecords(ids),
+        sources.listHealthRecords(ids),
+        sources.listReputationRecords(ids),
+        sources.listServiceRecords(ids),
+      ]);
+    const agentById = new Map(agents.map((agent) => [agent.id, agent]));
+    const healthById = new Map(
+      healthRecords.map((health) => [
+        health.agent_db_id,
+        mapHealthRecord(health),
+      ]),
+    );
+    const reputationById = new Map(
+      reputationRecords.map((reputation) => [
+        reputation.agent_db_id,
+        reputation,
+      ]),
+    );
+    const servicesById = new Map<string, ServiceRecord[]>();
 
-      for (const service of serviceRecords) {
-        const services = servicesById.get(service.agent_db_id) ?? [];
-        services.push(service);
-        servicesById.set(service.agent_db_id, services);
+    for (const service of serviceRecords) {
+      const services = servicesById.get(service.agent_db_id) ?? [];
+      services.push(service);
+      servicesById.set(service.agent_db_id, services);
+    }
+
+    return ids.map((id) => {
+      const agent = agentById.get(id);
+
+      if (!agent) {
+        throw new DatabaseOperationError(
+          "compose score candidates",
+          new Error("A queued score candidate no longer exists."),
+        );
       }
 
-      return ids.map((id) => {
-        const agent = agentById.get(id);
+      const metadataStatus = metadataStatuses.find(
+        (status) => status === agent.metadata_status,
+      );
 
-        if (!agent) {
-          throw new DatabaseOperationError(
-            "compose score candidates",
-            new Error("A queued score candidate no longer exists."),
-          );
-        }
-
-        const metadataStatus = metadataStatuses.find(
-          (status) => status === agent.metadata_status,
+      if (!metadataStatus) {
+        throw new DatabaseOperationError(
+          "compose score candidates",
+          new Error("A score candidate has an unsupported metadata status."),
         );
+      }
 
-        if (!metadataStatus) {
-          throw new DatabaseOperationError(
-            "compose score candidates",
-            new Error("A score candidate has an unsupported metadata status."),
-          );
-        }
+      const reputation = reputationById.get(id);
 
-        const reputation = reputationById.get(id);
-
-        return {
-          active: agent.active,
-          agentDbId: id,
-          description: agent.description,
-          health: healthById.get(id) ?? null,
-          imageUrl: agent.image_url,
-          metadataStatus,
-          metadataVerifiedAt:
-            agent.metadata_verified_at ??
-            (metadataStatus === "valid" ? agent.last_synced_at : null),
-          name: agent.name,
-          ownerAddress: agent.owner_address,
-          reputation: reputation
-            ? {
-                failedJobs: reputation.failed_jobs,
-                feedbackCount: reputation.feedback_count,
-                reputationScore: reputation.reputation_score,
-                source: reputation.source,
-                sourceObservedAt: reputation.source_observed_at,
-                successfulJobs: reputation.successful_jobs,
-              }
-            : null,
-          services: (servicesById.get(id) ?? []).map((service) => ({
-              endpoint: service.endpoint,
-              metadata: service.metadata,
-              serviceType: service.service_type,
-              version: service.version,
-            })),
-          x402Supported: agent.x402_supported,
-        };
-      });
+      return {
+        active: agent.active,
+        agentDbId: id,
+        description: agent.description,
+        health: healthById.get(id) ?? null,
+        imageUrl: agent.image_url,
+        metadataStatus,
+        metadataVerifiedAt:
+          agent.metadata_verified_at ??
+          (metadataStatus === "valid" ? agent.last_synced_at : null),
+        name: agent.name,
+        ownerAddress: agent.owner_address,
+        reputation: reputation
+          ? {
+              failedJobs: reputation.failed_jobs,
+              feedbackCount: reputation.feedback_count,
+              reputationScore: reputation.reputation_score,
+              source: reputation.source,
+              sourceObservedAt: reputation.source_observed_at,
+              successfulJobs: reputation.successful_jobs,
+            }
+          : null,
+        services: (servicesById.get(id) ?? []).map((service) => ({
+          endpoint: service.endpoint,
+          metadata: service.metadata,
+          serviceType: service.service_type,
+          version: service.version,
+        })),
+        x402Supported: agent.x402_supported,
+      };
+    });
   }
 
   return {
-    async listCandidatePage(after, limit) {
-      const ids = await sources.listAgentIdPage(after, limit);
-      return composeInputs(ids);
-    },
     async listCandidates(limit, scoreVersion) {
       const ids = await sources.listCandidateIds(limit, scoreVersion);
       return composeInputs(ids);

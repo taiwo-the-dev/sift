@@ -13,6 +13,7 @@ import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AgentCarousel } from "@/components/landing/agent-carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildAgentProfileHref } from "@/features/agents/route";
+import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentDescription,
   formatAgentName,
@@ -55,6 +56,10 @@ function RecentAgentCard({
   const href =
     buildAgentProfileHref(agent.chainId, agent.agentId) ?? "/discover";
   const category = agent.categories[0];
+  const showOtherCategory = shouldShowOtherCategory(
+    agent.metadataStatus,
+    agent.categories,
+  );
   const services = [
     ...new Set(
       agent.services.map((service) =>
@@ -144,6 +149,10 @@ function RecentAgentCard({
               <span className="rounded-md border border-dashed border-brand/35 px-2 py-1 text-[0.65rem] font-semibold text-brand">
                 {formatCategory(category)}
               </span>
+            ) : showOtherCategory ? (
+              <span className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-semibold text-muted-foreground">
+                Other
+              </span>
             ) : null}
             {services.map((service) => (
               <span
@@ -153,7 +162,7 @@ function RecentAgentCard({
                 {service}
               </span>
             ))}
-            {!category && services.length === 0 ? (
+            {!category && !showOtherCategory && services.length === 0 ? (
               <span className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground">
                 No capabilities listed
               </span>

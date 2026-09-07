@@ -47,7 +47,6 @@ function profile(
     metadataStatus: "valid",
     metadataVerifiedAt: null,
     name: null,
-    otherCategoryDeclared: false,
     ownerAddress: null,
     registeredAt: null,
     registeredBlock: null,

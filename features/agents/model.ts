@@ -56,7 +56,6 @@ export type AgentProfile = Readonly<{
   metadataStatus: MetadataStatus;
   metadataVerifiedAt: string | null;
   name: string | null;
-  otherCategoryDeclared: boolean;
   ownerAddress: string | null;
   registeredAt: string | null;
   registeredBlock: number | null;

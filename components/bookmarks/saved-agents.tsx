@@ -13,6 +13,7 @@ import { useBookmarks } from "@/components/bookmarks/use-bookmarks";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { buildAgentProfileHref } from "@/features/agents/route";
+import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentDescription,
   formatAgentName,
@@ -92,6 +93,10 @@ export function SavedAgents() {
         {bookmarks.agents.map((agent) => {
           const name = formatAgentName(agent.name, agent.agentId);
           const href = buildAgentProfileHref(agent.chainId, agent.agentId);
+          const showOtherCategory = shouldShowOtherCategory(
+            agent.metadataStatus,
+            agent.categories,
+          );
 
           return (
             <article
@@ -131,6 +136,12 @@ export function SavedAgents() {
                     {formatCategory(category)}
                   </span>
                 ))}
+                {showOtherCategory ? (
+                  <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[0.68rem] font-medium text-muted-foreground">
+                    <Tag className="size-3" aria-hidden="true" />
+                    Other
+                  </span>
+                ) : null}
                 <span className="rounded-md border border-border bg-background px-2 py-1 text-[0.68rem] text-muted-foreground">
                   {formatMetadataStatus(agent.metadataStatus)}
                 </span>

@@ -5,10 +5,10 @@ begin;
 -- sort key over several timestamps. Postgres had to materialise and sort every
 -- agent in the catalogue before `limit` could apply, so the hosted run timed
 -- out and almost no agent was ever scored. This rewrite keeps the exact same
--- contract but expresses the queue as two independently bounded,
--- index-friendly branches: first agents that have no current-version score row
--- at all, then a bounded set of agents whose real source rows changed after the
--- last calculation.
+-- contract but expresses the queue as independently bounded, index-friendly
+-- branches. Current independent evidence is selected before unscorable
+-- catalogue rows, preventing hundreds of thousands of metadata-only agents
+-- from starving the small set that can produce a genuine score.
 
 create index if not exists agent_scores_calculated_at_idx
   on public.agent_scores (calculated_at);
@@ -34,17 +34,40 @@ as $$
   with bounds as (
     select least(greatest(coalesce(p_limit, 200), 1), 500) as row_limit
   ),
-  missing_or_stale as (
-    select a.id as agent_db_id, 0 as priority
-    from public.agents as a
-    left join public.agent_scores as sc on sc.agent_db_id = a.id
+  version_mismatch as (
+    select sc.agent_db_id, 0 as priority
+    from public.agent_scores as sc
+    where sc.score_version <> p_score_version
+    order by sc.calculated_at, sc.agent_db_id
+    limit (select row_limit from bounds)
+  ),
+  current_signals as materialized (
+    select h.agent_db_id
+    from public.agent_health as h
+    where h.last_checked_at > now() - interval '24 hours'
+      and h.status in ('online', 'degraded', 'offline')
+    union
+    select r.agent_db_id
+    from public.agent_reputation as r
+    where r.source is not null
+      and length(trim(r.source)) > 0
+      and r.source_observed_at > now() - interval '180 days'
+      and (
+        r.reputation_score is not null
+        or coalesce(r.successful_jobs, 0) + coalesce(r.failed_jobs, 0) > 0
+      )
+  ),
+  actionable_missing as (
+    select signal.agent_db_id, 1 as priority
+    from current_signals as signal
+    join public.agents as a on a.id = signal.agent_db_id
+    left join public.agent_scores as sc on sc.agent_db_id = signal.agent_db_id
     where sc.agent_db_id is null
-      or sc.score_version <> p_score_version
-    order by a.id
+    order by a.registered_at desc nulls last, signal.agent_db_id
     limit (select row_limit from bounds)
   ),
   changed_inputs as (
-    select sc.agent_db_id, 1 as priority
+    select sc.agent_db_id, 2 as priority
     from public.agent_scores as sc
     join public.agents as a on a.id = sc.agent_db_id
     where sc.score_version = p_score_version
@@ -100,7 +123,9 @@ as $$
   queued as (
     select distinct on (agent_db_id) agent_db_id, priority
     from (
-      select agent_db_id, priority from missing_or_stale
+      select agent_db_id, priority from version_mismatch
+      union all
+      select agent_db_id, priority from actionable_missing
       union all
       select agent_db_id, priority from changed_inputs
     ) as combined
@@ -113,6 +138,6 @@ as $$
 $$;
 
 comment on function public.score_recalculation_candidates(integer, text) is
-  'Bounded server-only queue of agents that have no current-version score row or whose real score inputs changed, expressed as two independently limited index-friendly branches.';
+  'Bounded server-only queue that invalidates old formula versions, prioritizes agents with current independent health or reputation evidence, and refreshes scores whose real inputs changed.';
 
 commit;

@@ -97,8 +97,8 @@ function inspectDeclaration(
     probeUrl.protocol !== "https:" ||
     url.username ||
     url.password ||
+    url.search ||
     (probeUrl.port && probeUrl.port !== "443") ||
-    probeUrl.search ||
     [".example", ".invalid", ".test"].some((suffix) =>
       hostname.endsWith(suffix),
     )

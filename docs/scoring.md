@@ -39,9 +39,18 @@ Run one bounded assessment batch after the M6 migration is deployed:
 npm run check:agents
 ```
 
-Defaults are deliberately free-tier conscious: 20 due agents, concurrency 3, a 5-second timeout, one retry, a 64 KiB response limit, and a six-hour minimum interval. Environment overrides are documented in `.env.example` and have hard maximums.
+Defaults are deliberately free-tier conscious: the local command checks 20 due
+agents while the six-hourly workflow checks at most 50, both with concurrency
+3, a 5-second timeout, one retry, a 64 KiB response limit, and a six-hour
+minimum interval. Environment overrides are documented in `.env.example` and
+have hard maximums.
 
-The server-only queue selects the least recently checked identities first to prevent starvation, then prioritizes agents with an existing score and recently registered agents. It considers only valid metadata with a potentially supported HTTPS service declaration. The checker independently validates each declaration; unsupported, invalid, or unsafe targets remain `Unknown` and receive no request.
+The server-only queue starts from an indexed subset of valid agents declaring a
+potentially supported, query-free HTTPS service. It considers the curated
+category shortlist first, then selects never-checked or least-recently-checked
+agents to prevent starvation. The checker independently validates each
+declaration; unsupported, invalid, or unsafe targets remain `Unknown` and
+receive no request.
 
 An eligible probe:
 
@@ -97,29 +106,37 @@ Recalculate one bounded affected batch:
 npm run score:agents
 ```
 
-The server-only recalculation queue selects a record when no assessment exists, the formula version changed, an agent/service/health/reputation row changed after calculation, or a previously used source crossed its freshness boundary. Upserts use `agent_db_id` as the conflict key, so replaying the same assessment replaces the same row rather than creating duplicates.
+The server-only recalculation queue selects a record when it has current
+independent health or reputation evidence and no assessment, the formula
+version changed, an agent/service/health/reputation row changed after
+calculation, or a previously used source crossed its freshness boundary.
+Metadata-only catalogue rows do not occupy every batch because declarations
+alone cannot produce a publishable score. Upserts use `agent_db_id` as the
+conflict key, so replaying the same assessment replaces the same row rather
+than creating duplicates.
 
 `20260908090000_scale_score_recalculation_queue.sql` rewrites
-`score_recalculation_candidates` as two independently bounded, index-friendly
-branches — first agents with no current-version score row, then a limited set
-whose real source rows changed after the last calculation. The earlier plan
+`score_recalculation_candidates` as independently bounded, index-friendly
+branches — old formula versions, unassessed agents with current independent
+evidence, and records whose real source rows changed after the last
+calculation. The earlier plan
 combined a five-way outer join with a per-row correlated aggregate over
 `agent_services` and a computed multi-timestamp sort key, so Postgres had to
 sort the whole catalogue before `limit` applied and the hosted run timed out.
 The contract, weights, and formula version are unchanged.
 
-Because the six-hourly incremental batch cannot catch up with a large first
-load, run the one-time resumable backfill after the migration is deployed:
+To drain all currently actionable score work after the migration is deployed,
+run the bounded, idempotent backfill:
 
 ```bash
 npm run backfill:scores
 ```
 
-It pages through every agent in stable `id` order, writes a checkpoint to
-`.sift/score-backfill-checkpoint.json`, adaptively shrinks the page size on
-transient errors, and persists both published and withheld assessments through
-the same validated upsert. It is safe to re-run; a completed pass removes its
-checkpoint.
+It repeatedly drains the same evidence-first queue used by the scheduled job,
+stopping when no candidate remains. It does not create hundreds of thousands
+of meaningless metadata-only score rows. A 100-batch safety cap prevents an
+accidental unbounded run; if reached, rerunning continues safely because score
+upserts are idempotent.
 
 `.github/workflows/assess-agents.yml` runs health assessment followed by scoring every six hours and supports manual dispatch. It requires only `SUPABASE_URL` and `SUPABASE_SECRET_KEY` as GitHub secrets. It has read-only repository permission, bounded runtime, and no wallet or signing material.
 
@@ -156,7 +173,8 @@ whether an agent performs well. M14 does not change score weights or the
 formula version.
 
 The bounded health queue prioritizes validated M14 shortlist members only when
-they also satisfy the unchanged safe endpoint criteria. A later score run
+they also satisfy the unchanged safe endpoint criteria. It then fairly checks
+the wider eligible A2A/health-service queue. A later score run
 recalculates records whose real source inputs changed. Missing health,
 reputation, or job evidence remains unavailable and may keep a score withheld.
 The UI continues to show formula version, confidence, missing components,

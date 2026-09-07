@@ -13,6 +13,7 @@ import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buildAgentProfileHref } from "@/features/agents/route";
+import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentDescription,
   formatAgentName,
@@ -61,6 +62,10 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
     uniqueServices.length - visibleServices.length,
   );
   const primaryCategory = agent.categories[0];
+  const showOtherCategory = shouldShowOtherCategory(
+    agent.metadataStatus,
+    agent.categories,
+  );
   const hiddenCategoryCount = Math.max(0, agent.categories.length - 1);
 
   return (
@@ -97,6 +102,11 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                     <span className="truncate">
                       {formatCategory(primaryCategory)}
                     </span>
+                  </span>
+                ) : showOtherCategory ? (
+                  <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                    <Tag className="size-3" aria-hidden="true" />
+                    Other
                   </span>
                 ) : (
                   <span className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">

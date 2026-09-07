@@ -46,6 +46,7 @@ describe("health endpoint eligibility", () => {
       "https://agent.public:8443/a2a",
       "http://agent.public/a2a",
       "https://agent.invalid/a2a",
+      "https://agent.public/a2a?token=secret",
     ]) {
       const result = selectHealthEndpoint([{ endpoint, serviceType: "a2a" }]);
       assert.equal(result.target, null);

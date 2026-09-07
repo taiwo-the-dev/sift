@@ -22,6 +22,7 @@ import {
   describeProfileProvenance,
   hasHumanReadableMetadata,
 } from "@/features/agents/presentation";
+import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentName,
   formatCategory,
@@ -99,6 +100,10 @@ export function ProfileHeader({
     ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`
     : "No health check available";
   const hireable = resolveHiringCompatibility(profile) !== null;
+  const showOtherCategory = shouldShowOtherCategory(
+    profile.metadataStatus,
+    profile.categories,
+  );
 
   return (
     <header className="relative overflow-hidden border-b border-border bg-card">
@@ -170,7 +175,7 @@ export function ProfileHeader({
               <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
                 {name}
               </h1>
-              {profile.categories.length > 0 || profile.otherCategoryDeclared ? (
+              {profile.categories.length > 0 || showOtherCategory ? (
                 <div className="mt-5 flex flex-wrap gap-2">
                   {profile.categories.map((category) => (
                     <span
@@ -180,10 +185,10 @@ export function ProfileHeader({
                       {formatCategory(category)}
                     </span>
                   ))}
-                  {profile.otherCategoryDeclared ? (
+                  {showOtherCategory ? (
                     <span
                       className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                      title="This agent declares a category outside Sift's supported taxonomy."
+                      title="This valid profile does not match one of Sift's four supported marketplace categories."
                     >
                       Other
                     </span>

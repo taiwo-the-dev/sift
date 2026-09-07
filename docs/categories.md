@@ -32,14 +32,13 @@ win rate, uptime, custody, price, or risk.
 
 ## Other
 
-When an agent's validated service metadata declares a `category`, `categories`,
-`domains`, `tags`, or `capabilities` value, none of those values map to a
-supported category, and the versioned classifier stores no category evidence,
-the agent profile shows a read-time **Other** badge. It is computed at display
-time from the persisted service metadata only. It is never written to
-`agent_category_evidence`, is not a discovery filter, and does not appear on
-discovery cards. An agent that declares nothing category-like stays
-"Not available" rather than "Other".
+When an agent has validated profile metadata but the versioned classifier finds
+no match in Sift's four supported marketplace categories, Sift displays
+**Other** consistently on discovery cards, profiles, comparison, bookmarks,
+and recent-agent cards. This is a read-time fallback, not category evidence: it
+is never written to `agent_category_evidence` and is not a discovery filter.
+Invalid, unavailable, or pending metadata stays **Category not available**
+because Sift cannot establish a category from unverified data.
 
 ## Mainnet shortlist bar
 
@@ -93,7 +92,7 @@ npm run classify:categories
 npm run curate:categories
 npm run enrich:categories
 npm run check:agents
-npm run score:agents
+npm run backfill:scores
 npm run report:categories
 ```
 
@@ -150,8 +149,9 @@ because the destination table was empty.
 
 The catalogue-wide score candidate timeout is fixed by
 `20260908090000_scale_score_recalculation_queue.sql`. After deploying it, run
-`npm run backfill:scores` once to populate scores across the full index (see
-`docs/scoring.md`), then the six-hourly `score:agents` job keeps them current.
+`npm run backfill:scores` once to drain all currently actionable real-evidence
+scores (see `docs/scoring.md`), then the six-hourly `score:agents` job keeps
+them current without creating metadata-only scores across the full index.
 `20260908093000_broaden_health_probe_targets.sql` widens the health queue to
 every safe HTTPS `a2a` declaration, so the next `check:agents` run reaches many
 more agents than the six reachable observations recorded above.
