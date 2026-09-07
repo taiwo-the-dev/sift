@@ -14,22 +14,22 @@ export type DiscoveryCategory = CategorySlug;
 
 export const discoveryCategories = [
   {
-    description: "Yield research, farming and position optimisation",
+    description: "Routes liquidity across available yield opportunities",
     label: "Yield Optimisation",
     slug: "yield-optimisation",
   },
   {
-    description: "Grid and rule-based market automation",
+    description: "Places and manages automated grid strategies",
     label: "Grid Trading",
     slug: "grid-trading",
   },
   {
-    description: "Collateral and liquidation-risk monitoring",
+    description: "Monitors lending positions and liquidation risk",
     label: "Health Factor Monitoring",
     slug: "health-factor-monitoring",
   },
   {
-    description: "Liquidity range and allocation management",
+    description: "Manages LP ranges and rebalances liquidity positions",
     label: "Liquidity Rebalancing",
     slug: "liquidity-rebalancing",
   },

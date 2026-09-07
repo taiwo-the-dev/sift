@@ -3,7 +3,7 @@
 Sift uses one versioned taxonomy for Yield Optimisation, Grid Trading, Health
 Factor Monitoring, and Liquidity Rebalancing. The taxonomy is implemented in
 `features/categories/taxonomy.ts` and currently reports version
-`sift-category-taxonomy-v1.0.0`.
+`sift-category-taxonomy-v1.1.0`.
 
 ## Classification contract
 
@@ -21,14 +21,19 @@ evidence, and a failed metadata refresh does not become a positive claim.
 
 | Category | Required narrow evidence examples | Category-specific facts shown only when found in validated source text |
 | --- | --- | --- |
-| Yield Optimisation | yield optimisation, yield strategy/routing/research, APR/APY comparison, vault strategy | protocol, asset, supported behavior, declared service |
-| Grid Trading | grid trading, grid levels, bounded grid, grid strategy | venue/market, asset, grid behavior, declared service |
-| Health Factor Monitoring | health factor, liquidation risk/alert, collateral health | lending protocol, monitored position, alert behavior, declared service |
-| Liquidity Rebalancing | liquidity or LP rebalancing, concentrated liquidity, range management/LP range | protocol/venue, position/range behavior, declared service |
+| Yield Optimisation | yield optimisation/farming/aggregation, yield routing/research, APR/APY comparison, automated compounding, routing liquidity by yield | protocol, asset, supported behavior, declared service |
+| Grid Trading | grid trading/orders/bots, grid levels, bounded grid, automated grid execution | venue/market, asset, grid behavior, declared service |
+| Health Factor Monitoring | health factor, liquidation risk/monitoring/protection, lending-position health, collateral ratio | lending protocol, monitored position, alert behavior, declared service |
+| Liquidity Rebalancing | `Rebalancing` declaration, liquidity or LP rebalancing, LP/liquidity ranges, position management, automatic range resets | protocol/venue, position/range behavior, declared service |
 
 The source dictionary is intentionally bounded. A supported term is displayed
 only with the indexed field that supplied it. Sift does not infer APR, returns,
 win rate, uptime, custody, price, or risk.
+
+Taxonomy v1.1 adds the exact four capability descriptions published for the
+hackathon. It still does not classify generic uses of “trading”, “APR”, “LP”,
+“liquidity”, “loan”, or “automation” on their own. Evidence must come from a
+validated agent name, description, service type, or structured service field.
 
 ## Other
 
@@ -95,6 +100,13 @@ npm run check:agents
 npm run backfill:scores
 npm run report:categories
 ```
+
+For the v1.1 coverage update, first deploy
+`20260908100000_version_category_coverage_report.sql`. The historical
+classification command automatically starts from the beginning when an older
+taxonomy checkpoint exists, replaces evidence idempotently, and can resume if
+interrupted. The coverage report counts only v1.1 evidence after this migration,
+so run it after classification completes.
 
 Classification is an idempotent one-time historical backfill; the Sift Indexer
 classifies future successful metadata updates as it writes them. Curation and

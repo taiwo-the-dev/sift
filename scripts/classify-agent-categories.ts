@@ -50,12 +50,14 @@ async function loadCheckpoint(): Promise<BackfillCheckpoint | null> {
       !Number.isSafeInteger(value.matched) ||
       value.matched < 0 ||
       !("ruleVersion" in value) ||
-      value.ruleVersion !== CATEGORY_TAXONOMY_VERSION
+      typeof value.ruleVersion !== "string"
     ) {
       throw new TypeError("The local category backfill checkpoint is invalid.");
     }
 
-    return value as BackfillCheckpoint;
+    return value.ruleVersion === CATEGORY_TAXONOMY_VERSION
+      ? (value as BackfillCheckpoint)
+      : null;
   } catch (error) {
     if (
       error instanceof Error &&

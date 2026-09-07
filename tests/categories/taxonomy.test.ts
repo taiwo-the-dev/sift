@@ -106,6 +106,55 @@ describe("M14 category taxonomy", () => {
     assert.equal(health[0]?.category, "health-factor-monitoring");
   });
 
+  it("maps the four hackathon capability descriptions without broad guessing", () => {
+    const examples = [
+      {
+        category: "liquidity-rebalancing",
+        description: "Manages LP ranges and resets liquidity positions automatically.",
+      },
+      {
+        category: "grid-trading",
+        description: "Places and manages automated grid orders.",
+      },
+      {
+        category: "yield-optimisation",
+        description: "Routes liquidity to the highest available APR.",
+      },
+      {
+        category: "health-factor-monitoring",
+        description: "Protects lending positions from liquidation.",
+      },
+    ] as const;
+
+    for (const example of examples) {
+      const evidence = classifyAgentCategories({
+        description: example.description,
+        name: null,
+        observedAt,
+        services: [],
+      });
+
+      assert.deepEqual(
+        evidence.map((item) => item.category),
+        [example.category],
+      );
+      assert.equal(evidence[0]?.ruleVersion, "sift-category-taxonomy-v1.1.0");
+    }
+  });
+
+  it("recognizes official Rebalancing as an exact declared category alias", () => {
+    const evidence = classifyAgentCategories({
+      declaredCategories: ["Rebalancing"],
+      description: null,
+      name: null,
+      observedAt,
+      services: [],
+    });
+
+    assert.equal(evidence[0]?.category, "liquidity-rebalancing");
+    assert.equal(evidence[0]?.source, "declared-metadata");
+  });
+
   it("extracts only exact supported category declarations", () => {
     assert.deepEqual(
       extractDeclaredCategoryLabels({

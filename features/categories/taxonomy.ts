@@ -1,7 +1,7 @@
 import type { Json } from "@/lib/db/database.types";
 import type { NormalizedService } from "@/lib/indexer/metadata/normalize";
 
-export const CATEGORY_TAXONOMY_VERSION = "sift-category-taxonomy-v1.0.0";
+export const CATEGORY_TAXONOMY_VERSION = "sift-category-taxonomy-v1.1.0";
 
 export const categorySlugs = [
   "yield-optimisation",
@@ -57,7 +57,7 @@ export const categoryTaxonomy = [
   {
     aliases: ["yield", "yield optimization", "yield optimisation"],
     description:
-      "Finds and manages yield opportunities across supported protocols, farms, and vaults.",
+      "Routes liquidity across available yield opportunities, farms, and vaults.",
     inferencePatterns: [
       { label: "yield optimisation", pattern: /\byield optimi[sz](?:e|es|ed|ing|er|ation)\b/i },
       { label: "yield strategy", pattern: /\byield strateg(?:y|ies)\b/i },
@@ -65,6 +65,12 @@ export const categoryTaxonomy = [
       { label: "yield research", pattern: /\byield (?:analysis|comparison|lens|research)\b/i },
       { label: "APR/APY comparison", pattern: /\b(?:apr|apy)(?:[- ]ranked| comparison| optimisation| optimization)\b/i },
       { label: "vault strategy", pattern: /\bvault(?:s| strategy| optimisation| optimization)\b/i },
+      { label: "yield farming", pattern: /\byield farm(?:s|er|ers|ing)?\b/i },
+      { label: "yield aggregation", pattern: /\byield aggregat(?:e|es|ed|ing|or|ors|ion)\b/i },
+      { label: "automated compounding", pattern: /\b(?:auto(?:matic(?:ally)?)?[- ]?compound(?:s|ed|ing)?|compound(?:s|ed|ing)? yield)\b/i },
+      { label: "best available APR/APY", pattern: /\b(?:best|highest)(?: available)? (?:apr|apy|yield)\b/i },
+      { label: "liquidity routed by yield", pattern: /\brout(?:e|es|ed|ing)\b.{0,40}\bliquidity\b.{0,40}\b(?:apr|apy|yield)\b/i },
+      { label: "liquidity routed by yield", pattern: /\b(?:apr|apy|yield)\b.{0,40}\brout(?:e|es|ed|ing)\b.{0,40}\bliquidity\b/i },
     ],
     label: "Yield Optimisation",
     slug: "yield-optimisation",
@@ -72,13 +78,16 @@ export const categoryTaxonomy = [
   {
     aliases: ["grid", "grid trading", "grid trader"],
     description:
-      "Creates, monitors, or runs grid-trading strategies for supported markets.",
+      "Places and manages automated grid strategies for supported markets.",
     inferencePatterns: [
       { label: "explicit grid label", pattern: /^\s*grid\s*$/i },
       { label: "grid trading", pattern: /\bgrid trad(?:e|er|ing)\b/i },
       { label: "grid levels", pattern: /\bgrid levels?\b/i },
       { label: "bounded grid", pattern: /\bbounded grids?\b/i },
       { label: "grid strategy", pattern: /\bgrid strateg(?:y|ies)\b/i },
+      { label: "grid orders", pattern: /\bgrid orders?\b/i },
+      { label: "grid bot", pattern: /\bgrid (?:bot|bots|automation)\b/i },
+      { label: "automated grid execution", pattern: /\b(?:automat(?:e|es|ed|ing)|place|places|placing|manage|manages|managing|execute|executes|executing)\b.{0,40}\bgrid (?:orders?|trades?|strateg(?:y|ies))\b/i },
     ],
     label: "Grid Trading",
     slug: "grid-trading",
@@ -90,12 +99,17 @@ export const categoryTaxonomy = [
       "liquidation monitoring",
     ],
     description:
-      "Tracks lending positions, collateral health, and liquidation risk.",
+      "Monitors lending positions, collateral health, and liquidation risk.",
     inferencePatterns: [
       { label: "health factor", pattern: /\bhealth[- ]factor(?:s|[- ]monitor|[- ]monitoring)?\b/i },
       { label: "liquidation risk", pattern: /\bliquidation risk\b/i },
       { label: "liquidation alert", pattern: /\bliquidation alert(?:s|ing)?\b/i },
       { label: "collateral health", pattern: /\bcollateral health\b/i },
+      { label: "liquidation monitoring", pattern: /\bliquidation monitor(?:s|ed|ing)?\b/i },
+      { label: "liquidation protection", pattern: /\bliquidation protect(?:s|ed|ing|ion)?\b/i },
+      { label: "lending position protection", pattern: /\bprotect(?:s|ed|ing)?\b.{0,40}\blending positions?\b.{0,40}\bliquidation\b/i },
+      { label: "lending position health", pattern: /\b(?:lending|borrow(?:ing)?) positions?\b.{0,40}\b(?:health|liquidation)\b/i },
+      { label: "collateral ratio", pattern: /\bcollateral (?:ratio|threshold|monitor(?:s|ed|ing)?)\b/i },
     ],
     label: "Health Factor Monitoring",
     slug: "health-factor-monitoring",
@@ -105,15 +119,21 @@ export const categoryTaxonomy = [
       "liquidity rebalancing",
       "lp rebalancing",
       "range management",
+      "rebalancing",
     ],
     description:
-      "Monitors or adjusts liquidity positions, allocations, and price ranges.",
+      "Manages LP ranges and rebalances liquidity positions.",
     inferencePatterns: [
       { label: "liquidity rebalancing", pattern: /\bliquidity rebalanc(?:e|es|ed|ing)\b/i },
       { label: "LP rebalancing", pattern: /\blp rebalanc(?:e|es|ed|ing|er)\b/i },
       { label: "concentrated liquidity", pattern: /\bconcentrated liquidity\b/i },
       { label: "range management", pattern: /\brange (?:manager|management|reset|rebalanc(?:e|es|ed|ing|er))\b/i },
       { label: "LP range", pattern: /\blp ranges?\b/i },
+      { label: "liquidity range", pattern: /\bliquidity ranges?\b/i },
+      { label: "LP position management", pattern: /\b(?:lp|liquidity) positions?\b.{0,40}\b(?:manage|manages|managed|management|monitor|monitors|monitored|rebalanc(?:e|es|ed|ing))\b/i },
+      { label: "LP position management", pattern: /\b(?:manage|manages|managed|management|monitor|monitors|monitored|rebalanc(?:e|es|ed|ing))\b.{0,40}\b(?:lp|liquidity) positions?\b/i },
+      { label: "automatic range reset", pattern: /\b(?:automatic(?:ally)?|auto)[- ]?reset(?:s|ting)?\b.{0,40}\b(?:lp|liquidity|position|range)\b/i },
+      { label: "liquidity position reset", pattern: /\breset(?:s|ting)?\b.{0,40}\b(?:lp|liquidity) (?:positions?|ranges?)\b/i },
     ],
     label: "Liquidity Rebalancing",
     slug: "liquidity-rebalancing",
