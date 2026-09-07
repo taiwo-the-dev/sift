@@ -1,7 +1,6 @@
 import {
   discoveryCategories,
   discoveryMetadataStatuses,
-  type DiscoveryCategory,
 } from "@/features/discovery/model";
 import type { MetadataStatus } from "@/lib/db/validation";
 
@@ -22,10 +21,10 @@ export function formatAgentDescription(description: string | null): string {
   );
 }
 
-export function formatCategory(category: DiscoveryCategory): string {
+export function formatCategory(category: string): string {
   return (
     discoveryCategories.find((option) => option.slug === category)?.label ??
-    "Uncategorised"
+    "Other"
   );
 }
 

@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   formatAgentDescription,
   formatAgentName,
+  formatCategory,
   formatChainName,
   formatRegistrationDate,
   formatServiceType,
@@ -18,6 +19,20 @@ describe("discovery display fallbacks", () => {
   it("humanizes service types without damaging known acronyms", () => {
     assert.equal(formatServiceType("MCP"), "MCP");
     assert.equal(formatServiceType("agent_wallet"), "Agent Wallet");
+  });
+
+  it("keeps supported category names and uses Other outside the taxonomy", () => {
+    assert.equal(formatCategory("yield-optimisation"), "Yield Optimisation");
+    assert.equal(formatCategory("grid-trading"), "Grid Trading");
+    assert.equal(
+      formatCategory("health-factor-monitoring"),
+      "Health Factor Monitoring",
+    );
+    assert.equal(
+      formatCategory("liquidity-rebalancing"),
+      "Liquidity Rebalancing",
+    );
+    assert.equal(formatCategory("portfolio-analytics"), "Other");
   });
 
   it("formats known networks and unavailable registration time", () => {
