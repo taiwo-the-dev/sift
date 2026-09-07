@@ -24,6 +24,7 @@
     "check:smoke": "node --conditions=react-server --import tsx scripts/check-agents.ts smoke",
     "score:agents": "node --conditions=react-server --import tsx scripts/score-agents.ts",
     "score:smoke": "node --conditions=react-server --import tsx scripts/score-agents.ts smoke",
+    "backfill:scores": "node --conditions=react-server --import tsx scripts/backfill-agent-scores.ts",
     "release:data": "node --conditions=react-server --import tsx scripts/verify-release-data.ts",
     "report:catalogue": "node --conditions=react-server --import tsx scripts/report-catalogue-eligibility.ts",
     "classify:categories": "node --conditions=react-server --import tsx scripts/classify-agent-categories.ts",

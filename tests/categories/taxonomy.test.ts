@@ -5,6 +5,8 @@ import {
   CATEGORY_TAXONOMY_VERSION,
   classifyAgentCategories,
   extractDeclaredCategoryLabels,
+  extractRawDeclaredCategoryLabels,
+  hasOffTaxonomyDeclaration,
 } from "../../features/categories/taxonomy";
 
 const observedAt = "2026-09-03T15:00:00.000Z";
@@ -114,6 +116,29 @@ describe("M14 category taxonomy", () => {
       }),
       ["yield optimisation", "Health Factor Monitoring"],
     );
+  });
+
+  it("keeps every raw declared category label for the Other badge", () => {
+    assert.deepEqual(
+      extractRawDeclaredCategoryLabels({
+        category: "Portfolio Analytics",
+        tags: ["DeFi", "Grid Trading"],
+      }),
+      ["Portfolio Analytics", "DeFi", "Grid Trading"],
+    );
+  });
+
+  it("detects an off-taxonomy declaration only when nothing supported is declared", () => {
+    assert.equal(
+      hasOffTaxonomyDeclaration(["portfolio analytics", "sentiment"]),
+      true,
+    );
+    assert.equal(
+      hasOffTaxonomyDeclaration(["portfolio analytics", "grid trading"]),
+      false,
+    );
+    assert.equal(hasOffTaxonomyDeclaration([]), false);
+    assert.equal(hasOffTaxonomyDeclaration(["   "]), false);
   });
 
   it("rejects an invalid source observation time", () => {

@@ -28,6 +28,10 @@ type ScoreRecord = TableRow<"agent_scores">;
 type ServiceRecord = TableRow<"agent_services">;
 
 export type ScoreRepositorySources = Readonly<{
+  listAgentIdPage(
+    after: string | null,
+    limit: number,
+  ): Promise<readonly string[]>;
   listAgentRecords(ids: readonly string[]): Promise<readonly AgentRecord[]>;
   listCandidateIds(
     limit: number,
@@ -42,6 +46,10 @@ export type ScoreRepositorySources = Readonly<{
 }>;
 
 export type ScoreRepository = Readonly<{
+  listCandidatePage(
+    after: string | null,
+    limit: number,
+  ): Promise<readonly SiftScoreInput[]>;
   listCandidates(
     limit: number,
     scoreVersion: string,
@@ -88,6 +96,25 @@ function createSupabaseSources(
   client: SupabaseClient<Database>,
 ): ScoreRepositorySources {
   return {
+    async listAgentIdPage(after, limit) {
+      let query = client
+        .from("agents")
+        .select("id")
+        .order("id", { ascending: true })
+        .limit(limit);
+
+      if (after) {
+        query = query.gt("id", after);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new DatabaseOperationError("list score backfill agents", error);
+      }
+
+      return data.map((row) => row.id);
+    },
     async listCandidateIds(limit, scoreVersion) {
       const { data, error } = await client.rpc(
         "score_recalculation_candidates",
@@ -168,15 +195,14 @@ export function createScoreRepository(
     getSupabaseServerClient(),
   ),
 ): ScoreRepository {
-  return {
-    async listCandidates(limit, scoreVersion) {
-      const ids = await sources.listCandidateIds(limit, scoreVersion);
+  async function composeInputs(
+    ids: readonly string[],
+  ): Promise<readonly SiftScoreInput[]> {
+    if (ids.length === 0) {
+      return [];
+    }
 
-      if (ids.length === 0) {
-        return [];
-      }
-
-      const [agents, healthRecords, reputationRecords, serviceRecords] =
+    const [agents, healthRecords, reputationRecords, serviceRecords] =
         await Promise.all([
           sources.listAgentRecords(ids),
           sources.listHealthRecords(ids),
@@ -258,6 +284,16 @@ export function createScoreRepository(
           x402Supported: agent.x402_supported,
         };
       });
+  }
+
+  return {
+    async listCandidatePage(after, limit) {
+      const ids = await sources.listAgentIdPage(after, limit);
+      return composeInputs(ids);
+    },
+    async listCandidates(limit, scoreVersion) {
+      const ids = await sources.listCandidateIds(limit, scoreVersion);
+      return composeInputs(ids);
     },
     async save(scores) {
       if (scores.length === 0) {

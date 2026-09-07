@@ -55,11 +55,12 @@ export function DiscoveryResultsLoading() {
                 </div>
                 <Skeleton className="hidden h-6 w-28 rounded-full sm:block" />
               </div>
-              <Skeleton className="mt-4 h-4 w-full" />
+              <Skeleton className="mt-3 h-4 w-full" />
               <Skeleton className="mt-2 h-4 w-4/5" />
-              <div className="mt-4 flex gap-2 border-t border-border pt-4">
+              <div className="mt-4 flex gap-2 border-t border-border/70 pt-3">
                 <Skeleton className="h-6 w-16" />
                 <Skeleton className="h-6 w-20" />
+                <Skeleton className="ml-auto h-5 w-24" />
               </div>
             </div>
           </div>

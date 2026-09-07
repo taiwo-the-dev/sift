@@ -102,6 +102,7 @@ function sources(
   overrides: Partial<ScoreRepositorySources> = {},
 ): ScoreRepositorySources {
   return {
+    listAgentIdPage: async () => [agentId],
     listAgentRecords: async () => [agent],
     listCandidateIds: async () => [agentId],
     listHealthRecords: async () => [health],
@@ -146,6 +147,25 @@ describe("score repository integration boundary", () => {
     assert.equal(candidates[0].reputation?.source, reputation.source);
     assert.equal(candidates[0].services[0].serviceType, "health");
     assert.deepEqual(calls.sort(), ["agents", "health", "reputation", "services"]);
+  });
+
+  it("composes a keyset backfill page from the agent id cursor", async () => {
+    const seen: (string | null)[] = [];
+    const repository = createScoreRepository(
+      sources({
+        listAgentIdPage: async (after) => {
+          seen.push(after);
+          return [agentId];
+        },
+      }),
+    );
+
+    const page = await repository.listCandidatePage(null, 500);
+
+    assert.equal(page.length, 1);
+    assert.equal(page[0].agentDbId, agentId);
+    assert.equal(page[0].metadataStatus, "valid");
+    assert.deepEqual(seen, [null]);
   });
 
   it("does not issue evidence queries when the candidate queue is empty", async () => {

@@ -146,6 +146,44 @@ describe("agent profile repository composition", () => {
     assert.deepEqual(profile?.services, []);
   });
 
+  it("flags an off-taxonomy declared category as Other when nothing classifies", async () => {
+    const repository = createAgentProfileRepository(
+      sources({
+        listCategoryEvidence: async () => [],
+        listServices: async () => [
+          {
+            ...service,
+            metadata: { tags: ["portfolio analytics", "sentiment"] },
+          },
+        ],
+      }),
+    );
+
+    const profile = await repository.findByIdentity(97, "1887");
+
+    assert.deepEqual(profile?.categories, []);
+    assert.equal(profile?.otherCategoryDeclared, true);
+  });
+
+  it("does not flag Other when a supported category classifies or none is declared", async () => {
+    const classified = createAgentProfileRepository(sources());
+    const undeclared = createAgentProfileRepository(
+      sources({
+        listCategoryEvidence: async () => [],
+        listServices: async () => [{ ...service, metadata: null }],
+      }),
+    );
+
+    assert.equal(
+      (await classified.findByIdentity(97, "1887"))?.otherCategoryDeclared,
+      false,
+    );
+    assert.equal(
+      (await undeclared.findByIdentity(97, "1887"))?.otherCategoryDeclared,
+      false,
+    );
+  });
+
   it("returns null without querying child tables when identity is missing", async () => {
     let childQueries = 0;
     const repository = createAgentProfileRepository(

@@ -2,9 +2,13 @@ import { createHash } from "node:crypto";
 
 import type {
   HealthObservation,
+  HealthProbeKind,
   HealthProbeTarget,
   HealthServiceDeclaration,
 } from "@/features/health/model";
+
+const A2A_CARD_PATH = "/.well-known/agent-card.json";
+const a2aCardPattern = /\/\.well-known\/agent-card\.json\/?$/i;
 
 type EndpointSelection =
   | Readonly<{ observation: HealthObservation; target: null }>
@@ -42,56 +46,75 @@ function inspectDeclaration(
     };
   }
 
-  const hash = endpointHash(endpoint);
+  const declaredHash = endpointHash(endpoint);
   let url: URL;
 
   try {
     url = new URL(endpoint);
   } catch {
     return {
-      observation: unprobedObservation("invalid-endpoint", service, hash),
+      observation: unprobedObservation("invalid-endpoint", service, declaredHash),
       target: null,
     };
   }
 
   const normalizedType = service.serviceType.trim().toLowerCase();
-  const hostname = url.hostname.toLowerCase();
   const isHealthEndpoint = normalizedType === "health";
-  const isA2aCard =
-    normalizedType === "a2a" &&
-    /\/\.well-known\/agent-card\.json\/?$/i.test(url.pathname);
+  const isA2a = normalizedType === "a2a";
 
-  if (!isHealthEndpoint && !isA2aCard) {
+  if (!isHealthEndpoint && !isA2a) {
     return {
-      observation: unprobedObservation("unsupported-service", service, hash),
+      observation: unprobedObservation(
+        "unsupported-service",
+        service,
+        declaredHash,
+      ),
       target: null,
     };
   }
 
+  // A `health` service is probed exactly as declared. An `a2a` service is
+  // resolved to the standard A2A discovery document at the origin unless the
+  // declaration already points straight at that document.
+  let probeUrl: URL;
+  let kind: HealthProbeKind;
+
+  if (isHealthEndpoint) {
+    probeUrl = new URL(url.toString());
+    kind = "health-endpoint";
+  } else {
+    kind = "a2a-card";
+    probeUrl = a2aCardPattern.test(url.pathname)
+      ? new URL(url.toString())
+      : new URL(A2A_CARD_PATH, url.origin);
+  }
+
+  probeUrl.hash = "";
+
+  const hostname = probeUrl.hostname.toLowerCase();
+
   if (
-    url.protocol !== "https:" ||
+    probeUrl.protocol !== "https:" ||
     url.username ||
     url.password ||
-    (url.port && url.port !== "443") ||
-    url.search ||
+    (probeUrl.port && probeUrl.port !== "443") ||
+    probeUrl.search ||
     [".example", ".invalid", ".test"].some((suffix) =>
       hostname.endsWith(suffix),
     )
   ) {
     return {
-      observation: unprobedObservation("unsafe-endpoint", service, hash),
+      observation: unprobedObservation("unsafe-endpoint", service, declaredHash),
       target: null,
     };
   }
 
-  url.hash = "";
-
   return {
     observation: null,
     target: {
-      checkedEndpoint: url.toString(),
-      endpointHash: hash,
-      kind: isHealthEndpoint ? "health-endpoint" : "a2a-card",
+      checkedEndpoint: probeUrl.toString(),
+      endpointHash: endpointHash(probeUrl.toString()),
+      kind,
       serviceType: service.serviceType,
     },
   };

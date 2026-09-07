@@ -170,16 +170,26 @@ export function ProfileHeader({
               <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
                 {name}
               </h1>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {profile.categories.map((category) => (
-                  <span
-                    key={category}
-                    className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-foreground"
-                  >
-                    {formatCategory(category)}
-                  </span>
-                ))}
-              </div>
+              {profile.categories.length > 0 || profile.otherCategoryDeclared ? (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {profile.categories.map((category) => (
+                    <span
+                      key={category}
+                      className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-foreground"
+                    >
+                      {formatCategory(category)}
+                    </span>
+                  ))}
+                  {profile.otherCategoryDeclared ? (
+                    <span
+                      className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                      title="This agent declares a category outside Sift's supported taxonomy."
+                    >
+                      Other
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
 

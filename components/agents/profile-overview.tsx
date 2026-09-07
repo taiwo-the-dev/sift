@@ -46,7 +46,9 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
           <dd className="mt-3 text-sm font-medium text-foreground">
             {profile.categories.length > 0
               ? profile.categories.map(formatCategory).join(", ")
-              : "Not available"}
+              : profile.otherCategoryDeclared
+                ? "Other"
+                : "Not available"}
           </dd>
         </div>
         <div className="bg-card p-5">

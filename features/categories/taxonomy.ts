@@ -181,26 +181,54 @@ export function resolveDeclaredCategory(value: string): CategorySlug | null {
   );
 }
 
-export function extractDeclaredCategoryLabels(
+const declaredCategoryFields = [
+  "category",
+  "categories",
+  "domains",
+  "tags",
+  "capabilities",
+] as const;
+
+export function extractRawDeclaredCategoryLabels(
   metadata: Readonly<Record<string, unknown>>,
 ): readonly string[] {
-  const values = [
-    metadata.category,
-    metadata.categories,
-    metadata.domains,
-    metadata.tags,
-    metadata.capabilities,
-  ];
-
   return [
     ...new Set(
-      values.flatMap((value) =>
-        stringsFromJson(value as Json | undefined).filter((label) =>
-          Boolean(resolveDeclaredCategory(label)),
-        ),
+      declaredCategoryFields.flatMap((field) =>
+        stringsFromJson(metadata[field] as Json | undefined),
       ),
     ),
   ];
+}
+
+export function extractDeclaredCategoryLabels(
+  metadata: Readonly<Record<string, unknown>>,
+): readonly string[] {
+  return [
+    ...new Set(
+      extractRawDeclaredCategoryLabels(metadata).filter((label) =>
+        Boolean(resolveDeclaredCategory(label)),
+      ),
+    ),
+  ];
+}
+
+/**
+ * True when the agent declared at least one category-like value and none of the
+ * declared values map to a supported Sift category. Used for the read-time
+ * "Other" badge; it is never persisted as category evidence.
+ */
+export function hasOffTaxonomyDeclaration(
+  rawLabels: readonly string[],
+): boolean {
+  const meaningful = rawLabels
+    .map((label) => label.trim())
+    .filter((label) => label.length > 0);
+
+  return (
+    meaningful.length > 0 &&
+    meaningful.every((label) => resolveDeclaredCategory(label) === null)
+  );
 }
 
 function serviceCategoryDeclarations(

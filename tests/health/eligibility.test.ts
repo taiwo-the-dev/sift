@@ -17,7 +17,40 @@ describe("health endpoint eligibility", () => {
 
     assert.equal(health.target?.kind, "health-endpoint");
     assert.equal(a2a.target?.kind, "a2a-card");
+    assert.equal(
+      a2a.target?.checkedEndpoint,
+      "https://agent.public/.well-known/agent-card.json",
+    );
     assert.match(health.target?.endpointHash ?? "", /^[0-9a-f]{64}$/);
+  });
+
+  it("derives the A2A discovery document from a base-URL declaration", () => {
+    for (const endpoint of [
+      "https://agent.public",
+      "https://agent.public/",
+      "https://agent.public/a2a",
+      "https://agent.public/agents/42#fragment",
+    ]) {
+      const result = selectHealthEndpoint([{ endpoint, serviceType: "a2a" }]);
+
+      assert.equal(result.target?.kind, "a2a-card");
+      assert.equal(
+        result.target?.checkedEndpoint,
+        "https://agent.public/.well-known/agent-card.json",
+      );
+    }
+  });
+
+  it("still rejects an A2A declaration on an unsafe origin", () => {
+    for (const endpoint of [
+      "https://agent.public:8443/a2a",
+      "http://agent.public/a2a",
+      "https://agent.invalid/a2a",
+    ]) {
+      const result = selectHealthEndpoint([{ endpoint, serviceType: "a2a" }]);
+      assert.equal(result.target, null);
+      assert.equal(result.observation?.status, "unknown");
+    }
   });
 
   it("does not probe unsupported, unsafe, credentialed, or placeholder URLs", () => {

@@ -9,9 +9,19 @@ The formula was finalized after a read-only audit of the hosted BSC Testnet cata
 The service declarations included 478 `A2A` and 46 `MCP` records, plus generic web and protocol-specific declarations. Only these targets are considered meaningful health checks in M6:
 
 - an explicit `health` service with a safe public HTTPS endpoint;
-- an `A2A` service whose public HTTPS path ends in `/.well-known/agent-card.json`.
+- an `A2A` service with a safe public HTTPS endpoint. The checker probes the
+  standard A2A discovery document at `<origin>/.well-known/agent-card.json`,
+  deriving it from the declared base URL when the declaration does not already
+  point straight at that document (`20260908093000_broaden_health_probe_targets.sql`).
+  The earlier rule required the declared path itself to end in
+  `/.well-known/agent-card.json`, which almost no real agent satisfied, so
+  nearly every agent stayed `Unknown` and was never probed.
 
 Generic web, MCP, blockchain, DID, IPFS, ERC-8183, and other declarations are not probed. Reachability of those values would not reliably describe agent health, and some require protocol actions that M6 must not execute.
+
+The bounded probe contract is unchanged: `GET` only, HTTPS on port 443, no body,
+no query string, no embedded credentials, at most two validated redirects, a
+capped response size, and an A2A response must still be a JSON object.
 
 These counts are an audit snapshot, not hard-coded product data. The implementation always calculates from current persisted evidence.
 
@@ -88,6 +98,28 @@ npm run score:agents
 ```
 
 The server-only recalculation queue selects a record when no assessment exists, the formula version changed, an agent/service/health/reputation row changed after calculation, or a previously used source crossed its freshness boundary. Upserts use `agent_db_id` as the conflict key, so replaying the same assessment replaces the same row rather than creating duplicates.
+
+`20260908090000_scale_score_recalculation_queue.sql` rewrites
+`score_recalculation_candidates` as two independently bounded, index-friendly
+branches — first agents with no current-version score row, then a limited set
+whose real source rows changed after the last calculation. The earlier plan
+combined a five-way outer join with a per-row correlated aggregate over
+`agent_services` and a computed multi-timestamp sort key, so Postgres had to
+sort the whole catalogue before `limit` applied and the hosted run timed out.
+The contract, weights, and formula version are unchanged.
+
+Because the six-hourly incremental batch cannot catch up with a large first
+load, run the one-time resumable backfill after the migration is deployed:
+
+```bash
+npm run backfill:scores
+```
+
+It pages through every agent in stable `id` order, writes a checkpoint to
+`.sift/score-backfill-checkpoint.json`, adaptively shrinks the page size on
+transient errors, and persists both published and withheld assessments through
+the same validated upsert. It is safe to re-run; a completed pass removes its
+checkpoint.
 
 `.github/workflows/assess-agents.yml` runs health assessment followed by scoring every six hours and supports manual dispatch. It requires only `SUPABASE_URL` and `SUPABASE_SECRET_KEY` as GitHub secrets. It has read-only repository permission, bounded runtime, and no wallet or signing material.
 

@@ -1,8 +1,6 @@
 import {
   ArrowUpRight,
   BadgeCheck,
-  Blocks,
-  CalendarDays,
   CircleAlert,
   Database,
   Gauge,
@@ -21,7 +19,6 @@ import {
   formatCategory,
   formatChainName,
   formatMetadataStatus,
-  formatRegistrationDate,
   formatServiceType,
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
@@ -53,15 +50,18 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           goal: comparisonGoal,
         }).toString()}`
       : baseProfileHref;
-  const visibleServices = [
+  const uniqueServices = [
     ...new Set(
       agent.services.map((service) => formatServiceType(service.serviceType)),
     ),
-  ].slice(0, 5);
+  ];
+  const visibleServices = uniqueServices.slice(0, 3);
   const hiddenServiceCount = Math.max(
     0,
-    agent.services.length - visibleServices.length,
+    uniqueServices.length - visibleServices.length,
   );
+  const primaryCategory = agent.categories[0];
+  const hiddenCategoryCount = Math.max(0, agent.categories.length - 1);
 
   return (
     <article className="sift-card-reveal group rounded-xl border border-border bg-card p-4 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:bg-card/95 hover:shadow-[0_18px_44px_rgba(0,0,0,0.2)] motion-reduce:transform-none sm:p-5">
@@ -73,45 +73,44 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
         />
 
         <div className="min-w-0">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand/8 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-brand">
+                <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-brand">
                   <Database className="size-3" aria-hidden="true" />
                   {formatChainName(agent.chainId)}
                 </span>
-                {agent.categories.slice(0, 2).map((category) => (
+                <span
+                  className="size-1 rounded-full bg-border"
+                  aria-hidden="true"
+                />
+                {primaryCategory ? (
                   <span
-                    key={category}
                     title={
                       agent.categorySource === "deterministic-rule"
-                        ? "Suggested from the agent's verified profile"
-                        : "Published in the agent's verified profile"
+                        ? "Suggested from verified profile evidence"
+                        : "Published in verified profile metadata"
                     }
-                    className="inline-flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-brand"
+                    className="inline-flex min-w-0 items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-brand"
                   >
                     <Tag className="size-3" aria-hidden="true" />
-                    {formatCategory(category)}
+                    <span className="truncate">
+                      {formatCategory(primaryCategory)}
+                    </span>
                   </span>
-                ))}
-                {agent.categories.length === 0 ? (
-                  <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                ) : (
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                     Category not available
+                  </span>
+                )}
+                {hiddenCategoryCount > 0 ? (
+                  <span className="text-[0.65rem] font-medium text-muted-foreground">
+                    +{hiddenCategoryCount} more
                   </span>
                 ) : null}
               </div>
 
-              {agent.categoryEvidence[0] ? (
-                <p className="mt-2 text-[0.68rem] leading-5 text-muted-foreground">
-                  {agent.categoryEvidence[0].source === "declared-metadata"
-                    ? "Published category"
-                    : "Suggested category"}{" "}
-                  · {Math.round(agent.categoryEvidence[0].confidence * 100)}%
-                  match confidence · {agent.categoryEvidence[0].ruleVersion}
-                </p>
-              ) : null}
-
-              <h2 className="mt-1.5 truncate text-lg font-semibold tracking-[-0.025em] text-foreground sm:text-xl">
+              <h2 className="mt-2 truncate text-lg font-semibold tracking-[-0.025em] text-foreground sm:text-xl">
                 {profileHref ? (
                   <Link
                     href={profileHref}
@@ -129,44 +128,17 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                 )}
               </h2>
               <p className="mt-1 font-mono text-[0.68rem] text-muted-foreground">
-                ERC-8004 agent #{agent.agentId}
+                Agent #{agent.agentId}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2 md:justify-end">
-              <BookmarkToggle agent={agent} variant="compact" />
+              <BookmarkToggle agent={agent} variant="icon" />
               <ComparisonToggle
                 reference={{ agentId: agent.agentId, chainId: agent.chainId }}
                 goal={comparisonGoal}
                 variant="compact"
               />
-              {agent.score ? (
-                <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-[0.7rem] font-semibold text-brand">
-                  <Gauge className="size-3" aria-hidden="true" />
-                  {agent.score.score === null
-                    ? "Score unavailable"
-                    : `Sift Score ${agent.score.score} · ${
-                        isScoreStale(agent.score.calculatedAt)
-                          ? "Stale"
-                          : describeScoreConfidence(
-                        agent.score.confidence,
-                            )
-                      }`}
-                </span>
-              ) : null}
-              <span
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border px-2.5 py-1 text-[0.7rem] font-semibold",
-                  metadataStatusStyles[agent.metadataStatus],
-                )}
-              >
-                {agent.metadataStatus === "valid" ? (
-                  <BadgeCheck className="size-3" aria-hidden="true" />
-                ) : (
-                  <CircleAlert className="size-3" aria-hidden="true" />
-                )}
-                {formatMetadataStatus(agent.metadataStatus)}
-              </span>
             </div>
           </div>
 
@@ -174,35 +146,30 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
             {formatAgentDescription(agent.description)}
           </p>
 
-          <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="min-w-0">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Services
-              </p>
-              {visibleServices.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {visibleServices.map((service) => (
-                    <span
-                      key={service}
-                      className="rounded-md border border-border bg-background px-2 py-1 text-[0.7rem] font-medium text-foreground"
-                    >
-                      {service}
-                    </span>
-                  ))}
-                  {hiddenServiceCount > 0 ? (
-                    <span className="px-1.5 py-1 text-[0.7rem] text-muted-foreground">
-                      +{hiddenServiceCount} more
-                    </span>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Not available
-                </p>
-              )}
-            </div>
+          <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-3 sm:flex-row sm:items-center sm:justify-between">
+            {visibleServices.length > 0 ? (
+              <div className="flex min-w-0 flex-wrap gap-1.5">
+                {visibleServices.map((service) => (
+                  <span
+                    key={service}
+                    className="rounded-md border border-border bg-background/70 px-2 py-1 text-[0.68rem] font-medium text-foreground"
+                  >
+                    {service}
+                  </span>
+                ))}
+                {hiddenServiceCount > 0 ? (
+                  <span className="px-1.5 py-1 text-[0.7rem] text-muted-foreground">
+                    +{hiddenServiceCount} more
+                  </span>
+                ) : null}
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                Services not listed
+              </span>
+            )}
 
-            <dl className="grid shrink-0 grid-cols-1 gap-x-5 gap-y-2 text-xs text-muted-foreground sm:grid-cols-2 xl:max-w-lg xl:grid-cols-4">
+            <dl className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:justify-end">
               <div className="flex items-center gap-2">
                 <RadioTower
                   className="size-3.5 shrink-0 text-brand"
@@ -219,36 +186,43 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   </dd>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Blocks
-                  className="size-3.5 shrink-0 text-brand"
-                  aria-hidden="true"
-                />
-                <div>
-                  <dt className="sr-only">Registration standard</dt>
-                  <dd>ERC-8004</dd>
+              {agent.score && agent.score.score !== null ? (
+                <div
+                  className="flex items-center gap-2"
+                  title={
+                    isScoreStale(agent.score.calculatedAt)
+                      ? "This score needs refreshing"
+                      : `${describeScoreConfidence(agent.score.confidence)} confidence`
+                  }
+                >
+                  <Gauge
+                    className="size-3.5 shrink-0 text-brand"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <dt className="sr-only">Sift Score</dt>
+                    <dd>
+                      Score {agent.score.score}
+                      {isScoreStale(agent.score.calculatedAt) ? " · Stale" : ""}
+                    </dd>
+                  </div>
                 </div>
-              </div>
-              <div className="flex min-w-0 items-center gap-2">
-                <CalendarDays
-                  className="size-3.5 shrink-0 text-brand"
-                  aria-hidden="true"
-                />
-                <div className="min-w-0">
-                  <dt className="sr-only">Registration date</dt>
-                  <dd className="truncate whitespace-nowrap">
-                    {formatRegistrationDate(agent.registeredAt)}
-                  </dd>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Database
-                  className="size-3.5 shrink-0 text-brand"
-                  aria-hidden="true"
-                />
+              ) : null}
+              <div
+                className={cn(
+                  "flex items-center gap-1.5",
+                  metadataStatusStyles[agent.metadataStatus],
+                  "border-0 bg-transparent p-0",
+                )}
+              >
+                {agent.metadataStatus === "valid" ? (
+                  <BadgeCheck className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <CircleAlert className="size-3.5" aria-hidden="true" />
+                )}
                 <div>
-                  <dt className="sr-only">Network</dt>
-                  <dd>{formatChainName(agent.chainId)}</dd>
+                  <dt className="sr-only">Profile status</dt>
+                  <dd>{formatMetadataStatus(agent.metadataStatus)}</dd>
                 </div>
               </div>
             </dl>

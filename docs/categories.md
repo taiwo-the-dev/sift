@@ -30,6 +30,17 @@ The source dictionary is intentionally bounded. A supported term is displayed
 only with the indexed field that supplied it. Sift does not infer APR, returns,
 win rate, uptime, custody, price, or risk.
 
+## Other
+
+When an agent's validated service metadata declares a `category`, `categories`,
+`domains`, `tags`, or `capabilities` value, none of those values map to a
+supported category, and the versioned classifier stores no category evidence,
+the agent profile shows a read-time **Other** badge. It is computed at display
+time from the persisted service metadata only. It is never written to
+`agent_category_evidence`, is not a discovery filter, and does not appear on
+discovery cards. An agent that declares nothing category-like stays
+"Not available" rather than "Other".
+
 ## Mainnet shortlist bar
 
 The M14 curation command accepts a candidate only when all of these are true at
@@ -136,3 +147,11 @@ The forward migration
 shortlist replacement function for future reruns and must still be deployed to
 the hosted project. The initial hosted shortlist was safely bootstrapped only
 because the destination table was empty.
+
+The catalogue-wide score candidate timeout is fixed by
+`20260908090000_scale_score_recalculation_queue.sql`. After deploying it, run
+`npm run backfill:scores` once to populate scores across the full index (see
+`docs/scoring.md`), then the six-hourly `score:agents` job keeps them current.
+`20260908093000_broaden_health_probe_targets.sql` widens the health queue to
+every safe HTTPS `a2a` declaration, so the next `check:agents` run reaches many
+more agents than the six reachable observations recorded above.

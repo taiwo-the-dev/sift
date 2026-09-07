@@ -10,6 +10,10 @@ import type {
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { Database, TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
+import {
+  extractRawDeclaredCategoryLabels,
+  hasOffTaxonomyDeclaration,
+} from "@/features/categories/taxonomy";
 import { mapCategoryEvidenceRecord } from "@/lib/db/category-repository";
 import { mapHealthRecord } from "@/lib/db/health-repository";
 import { mapScoreRecord } from "@/lib/db/score-repository";
@@ -204,6 +208,16 @@ export function composeAgentProfile(
   const categoryEvidence = categoryEvidenceRecords.map(mapCategoryEvidenceRecord);
   const categories = categoryEvidence.map((evidence) => evidence.category);
   const categorySource = categoryEvidence[0]?.source ?? null;
+  const rawDeclaredCategoryLabels = services.flatMap((service) =>
+    typeof service.metadata === "object" &&
+    service.metadata !== null &&
+    !Array.isArray(service.metadata)
+      ? extractRawDeclaredCategoryLabels(service.metadata)
+      : [],
+  );
+  const otherCategoryDeclared =
+    categories.length === 0 &&
+    hasOffTaxonomyDeclaration(rawDeclaredCategoryLabels);
 
   return {
     active: agent.active,
@@ -225,6 +239,7 @@ export function composeAgentProfile(
       agent.metadata_verified_at ??
       (agent.metadata_status === "valid" ? agent.last_synced_at : null),
     name: agent.name,
+    otherCategoryDeclared,
     ownerAddress: agent.owner_address,
     registeredAt: agent.registered_at,
     registeredBlock: agent.registered_block,

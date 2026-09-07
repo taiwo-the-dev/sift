@@ -51,6 +51,7 @@ describe("score calculation orchestration", () => {
   it("persists a stable overwrite for identical inputs", async () => {
     const batches: (readonly AgentScoreWriteInput[])[] = [];
     const repository = {
+      listCandidatePage: async () => [candidate],
       listCandidates: async () => [candidate],
       save: async (records: readonly AgentScoreWriteInput[]) => {
         batches.push(structuredClone(records));
@@ -74,6 +75,7 @@ describe("score calculation orchestration", () => {
     let current = candidate;
     const scores: (number | null)[] = [];
     const repository = {
+      listCandidatePage: async () => [current],
       listCandidates: async () => [current],
       save: async (records: readonly AgentScoreWriteInput[]) => {
         scores.push(records[0].assessment.score);
