@@ -13,14 +13,29 @@ export async function AgentCollectionsData() {
 
   const repository = createDiscoveryRepository();
   try {
-    const result = await repository.search(
+    // Prefer agents with a usable task service. This is a landing-page
+    // showcase, so if nothing qualifies (for example every declared service
+    // has been probed unavailable) fall back to verified profiles rather than
+    // rendering an empty carousel.
+    const readyResult = await repository.search(
       parseDiscoverySearchParams({
         availability: "ready",
         network: "all",
         size: "24",
       }),
     );
-    featuredAgents = result.agents.slice(0, 10);
+    featuredAgents = readyResult.agents.slice(0, 10);
+
+    if (featuredAgents.length === 0) {
+      const verifiedResult = await repository.search(
+        parseDiscoverySearchParams({
+          metadata: "valid",
+          network: "all",
+          size: "24",
+        }),
+      );
+      featuredAgents = verifiedResult.agents.slice(0, 10);
+    }
   } catch {
     catalogueAvailable = false;
   }
