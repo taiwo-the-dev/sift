@@ -3,14 +3,19 @@ import {
   BriefcaseBusiness,
   Check,
   CircleEllipsis,
+  Clock3,
   Database,
+  FileWarning,
   FlaskConical,
   Globe2,
   Grid3X3,
+  RadioTower,
   RefreshCw,
   RotateCcw,
   SlidersHorizontal,
   TrendingUp,
+  TriangleAlert,
+  WifiOff,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -46,12 +51,32 @@ const categoryIcons = {
 } as const satisfies Readonly<Record<DiscoveryCategory, LucideIcon>>;
 
 const agentStatusOptions = [
-  { kind: "availability", label: "Available", value: "available" },
-  { kind: "metadata", label: "Invalid profile data", value: "invalid" },
-  { kind: "health", label: "Online", value: "online" },
-  { kind: "health", label: "Offline", value: "offline" },
-  { kind: "health", label: "Degraded", value: "degraded" },
-  { kind: "metadata", label: "Verification pending", value: "pending" },
+  {
+    icon: BriefcaseBusiness,
+    kind: "availability",
+    label: "Available",
+    value: "available",
+  },
+  { icon: RadioTower, kind: "health", label: "Online", value: "online" },
+  { icon: WifiOff, kind: "health", label: "Offline", value: "offline" },
+  {
+    icon: TriangleAlert,
+    kind: "health",
+    label: "Degraded",
+    value: "degraded",
+  },
+  {
+    icon: FileWarning,
+    kind: "metadata",
+    label: "Invalid profile data",
+    value: "invalid",
+  },
+  {
+    icon: Clock3,
+    kind: "metadata",
+    label: "Verification pending",
+    value: "pending",
+  },
 ] as const;
 
 function countSelectedAgentStatuses(query: DiscoveryQuery): number {
@@ -216,6 +241,7 @@ function FilterOptions({ query }: FilterPanelProps) {
         </legend>
         <div className="mt-3 flex flex-wrap items-stretch gap-2">
           {agentStatusOptions.map((status) => {
+            const StatusIcon = status.icon;
             const selectableMetadataStatuses = hiringSupportSelected
               ? metadataWithoutHiringRequirement
               : query.metadataStatuses;
@@ -289,17 +315,13 @@ function FilterOptions({ query }: FilterPanelProps) {
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
                 )}
               >
-                {status.kind === "availability" ? (
-                  <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
-                ) : (
-                  <span
-                    className={cn(
-                      "size-1.5 shrink-0 rounded-full",
-                      selected ? "bg-brand" : "bg-muted-foreground/45",
-                    )}
-                    aria-hidden="true"
-                  />
-                )}
+                <StatusIcon
+                  className={cn(
+                    "size-3.5 shrink-0",
+                    selected ? "text-brand" : "text-muted-foreground",
+                  )}
+                  aria-hidden="true"
+                />
                 {status.label}
               </Link>
             );
