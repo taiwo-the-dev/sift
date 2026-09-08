@@ -20,6 +20,9 @@ jobs:
       HEALTH_CHECK_CONCURRENCY: ${{ vars.HEALTH_CHECK_CONCURRENCY || '3' }}
       HEALTH_CHECK_INTERVAL_HOURS: ${{ vars.HEALTH_CHECK_INTERVAL_HOURS || '6' }}
       HEALTH_CHECK_LIMIT: ${{ vars.HEALTH_CHECK_LIMIT || '50' }}
+      ACTIVATION_CHECK_CONCURRENCY: ${{ vars.ACTIVATION_CHECK_CONCURRENCY || '3' }}
+      ACTIVATION_CHECK_INTERVAL_HOURS: ${{ vars.ACTIVATION_CHECK_INTERVAL_HOURS || '6' }}
+      ACTIVATION_CHECK_LIMIT: ${{ vars.ACTIVATION_CHECK_LIMIT || '25' }}
       SCORE_BATCH_LIMIT: ${{ vars.SCORE_BATCH_LIMIT || '500' }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -42,6 +45,9 @@ jobs:
 
       - name: Check bounded eligible endpoints
         run: npm run check:agents
+
+      - name: Check declared task services
+        run: npm run check:activation
 
       - name: Recalculate affected Sift Scores
         run: npm run score:agents

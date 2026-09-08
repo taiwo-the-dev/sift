@@ -12,8 +12,10 @@ import {
   type DiscoveryResult,
   type DiscoveryService,
 } from "@/features/discovery/model";
-import { isHiringAvailabilityQuery } from "@/features/discovery/query";
-import { assessHiringCompatibility } from "@/features/hiring/compatibility";
+import {
+  parseActivationMethod,
+  parseActivationStatus,
+} from "@/features/activation/model";
 import type {
   CategoryEvidence,
   CategoryFact,
@@ -104,10 +106,21 @@ export type DiscoveryEvidenceSources = Readonly<{
   listScores(ids: readonly string[]): Promise<readonly TableRow<"agent_scores">[]>;
   listServices(
     ids: readonly string[],
-  ): Promise<readonly Pick<
-    TableRow<"agent_services">,
-    "agent_db_id" | "endpoint" | "service_type" | "version"
-  >[]>;
+  ): Promise<readonly (
+    Pick<
+      TableRow<"agent_services">,
+      "agent_db_id" | "endpoint" | "service_type" | "version"
+    > &
+      Partial<
+        Pick<
+          TableRow<"agent_services">,
+          | "activation_method"
+          | "availability_last_success_at"
+          | "availability_status"
+          | "id"
+        >
+      >
+  )[]>;
 }>;
 
 function isRecord(value: Json): value is Readonly<Record<string, Json | undefined>> {
@@ -327,14 +340,35 @@ export function createDiscoveryRepository(
     async listServices(ids) {
       const { data, error } = await client
         .from("agent_services")
-        .select("agent_db_id,endpoint,service_type,version")
+        .select("id,agent_db_id,endpoint,service_type,version,activation_method,availability_status,availability_last_success_at")
         .in("agent_db_id", [...ids]);
 
-      if (error) {
-        throw new DatabaseOperationError("list discovery services", error);
+      if (!error) {
+        return data;
       }
 
-      return data;
+      // Preserve ordinary discovery during the database-first M22 rollout. An
+      // older schema has no activation columns, so its services are unchecked.
+      if (error.code === "42703" || error.code === "PGRST204") {
+        const fallback = await client
+          .from("agent_services")
+          .select("id,agent_db_id,endpoint,service_type,version")
+          .in("agent_db_id", [...ids]);
+        if (fallback.error) {
+          throw new DatabaseOperationError(
+            "list discovery services",
+            fallback.error,
+          );
+        }
+        return fallback.data.map((service) => ({
+          ...service,
+          activation_method: null,
+          availability_last_success_at: null,
+          availability_status: "unchecked",
+        }));
+      }
+
+      throw new DatabaseOperationError("list discovery services", error);
     },
   },
 ): DiscoveryRepository {
@@ -367,7 +401,16 @@ export function createDiscoveryRepository(
     for (const service of serviceRecords) {
       const services = servicesById.get(service.agent_db_id) ?? [];
       services.push({
+        activationMethod: service.activation_method
+          ? parseActivationMethod(service.activation_method)
+          : null,
+        availabilityLastSuccessAt:
+          service.availability_last_success_at ?? null,
+        availabilityStatus: service.availability_status
+          ? parseActivationStatus(service.availability_status)
+          : "unchecked",
         endpoint: service.endpoint,
+        id: service.id ?? null,
         serviceType: service.service_type,
         version: service.version,
       });
@@ -425,6 +468,7 @@ export function createDiscoveryRepository(
   ): Promise<DiscoveryResult> {
     if (
       query.sort === "recent" &&
+      query.taskAvailability === null &&
       query.effectiveCategories.length === 0 &&
       query.healthStatuses.length === 0 &&
       query.searchTerms.length === 0
@@ -432,8 +476,9 @@ export function createDiscoveryRepository(
       return searchRecentAgents(query);
     }
 
-    const functionName =
-      query.healthStatuses.length > 0
+    const functionName = query.taskAvailability === "ready"
+      ? "search_ready_agents"
+      : query.healthStatuses.length > 0
         ? "search_agents_with_health"
         : "search_agents";
     const sharedParameters = {
@@ -446,7 +491,8 @@ export function createDiscoveryRepository(
       p_sort: query.sort,
     };
     const { data, error } =
-      functionName === "search_agents_with_health"
+      functionName === "search_agents_with_health" ||
+      functionName === "search_ready_agents"
         ? await client.rpc(functionName, {
             ...sharedParameters,
             p_health_statuses: [...query.healthStatuses],
@@ -470,50 +516,8 @@ export function createDiscoveryRepository(
     };
   }
 
-  async function searchHiringAvailableAgents(
-    query: DiscoveryQuery,
-  ): Promise<DiscoveryResult> {
-    const firstRequestedIndex = (query.page - 1) * query.pageSize;
-    const endRequestedIndex = firstRequestedIndex + query.pageSize;
-    const requiredEligibleAgents = endRequestedIndex + 1;
-    const eligibleAgents: DiscoveryAgent[] = [];
-    const sourcePageSize: DiscoveryPageSize = 36;
-    let sourceHasMore = true;
-    let sourcePage = 1;
-
-    while (
-      sourceHasMore &&
-      eligibleAgents.length < requiredEligibleAgents &&
-      sourcePage <= 10_000
-    ) {
-      const sourceResult = await searchDatabasePage({
-        ...query,
-        page: sourcePage,
-        pageSize: sourcePageSize,
-      });
-
-      eligibleAgents.push(
-        ...sourceResult.agents.filter(
-          (agent) => assessHiringCompatibility(agent).compatibility !== null,
-        ),
-      );
-      sourceHasMore = sourceResult.hasNextPage;
-      sourcePage += 1;
-    }
-
-    return {
-      agents: eligibleAgents.slice(firstRequestedIndex, endRequestedIndex),
-      hasNextPage: eligibleAgents.length > endRequestedIndex,
-      page: query.page,
-      pageSize: query.pageSize,
-      totalCount: null,
-    };
-  }
-
   function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
-    return isHiringAvailabilityQuery(query)
-      ? searchHiringAvailableAgents(query)
-      : searchDatabasePage(query);
+    return searchDatabasePage(query);
   }
 
   return {
@@ -531,6 +535,7 @@ export function createDiscoveryRepository(
         query: "",
         searchTerms: [],
         sort: "recent",
+        taskAvailability: null,
       });
     },
     search,

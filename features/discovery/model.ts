@@ -10,6 +10,10 @@ import type {
   CategorySlug,
 } from "@/features/categories/taxonomy";
 import { categorySlugs } from "@/features/categories/taxonomy";
+import type {
+  ActivationAvailabilityStatus,
+  ActivationMethod,
+} from "@/features/activation/model";
 
 export const discoveryCategorySlugs = categorySlugs;
 
@@ -111,7 +115,11 @@ export type DiscoveryPageSize = (typeof discoveryPageSizes)[number];
 export type CategorySource = CategoryEvidenceSource | null;
 
 export type DiscoveryService = Readonly<{
+  activationMethod?: ActivationMethod | null;
+  availabilityLastSuccessAt?: string | null;
+  availabilityStatus?: ActivationAvailabilityStatus;
   endpoint: string | null;
+  id?: string | null;
   serviceType: string;
   version: string | null;
 }>;
@@ -153,6 +161,7 @@ export type DiscoveryQuery = Readonly<{
   query: string;
   searchTerms: readonly string[];
   sort: DiscoverySort;
+  taskAvailability: "ready" | null;
 }>;
 
 export type DiscoveryResult = Readonly<{

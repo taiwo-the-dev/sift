@@ -324,7 +324,16 @@ export type Database = {
       };
       agent_services: {
         Row: {
+          activation_method: string | null;
+          activation_validation_version: string | null;
           agent_db_id: string;
+          availability_checked_at: string | null;
+          availability_failure_code: string | null;
+          availability_failure_count: number;
+          availability_last_success_at: string | null;
+          availability_response_time_ms: number | null;
+          availability_status: string;
+          capability_summary: Json | null;
           created_at: string;
           endpoint: string | null;
           id: string;
@@ -334,7 +343,16 @@ export type Database = {
           version: string | null;
         };
         Insert: {
+          activation_method?: string | null;
+          activation_validation_version?: string | null;
           agent_db_id: string;
+          availability_checked_at?: string | null;
+          availability_failure_code?: string | null;
+          availability_failure_count?: number;
+          availability_last_success_at?: string | null;
+          availability_response_time_ms?: number | null;
+          availability_status?: string;
+          capability_summary?: Json | null;
           created_at?: string;
           endpoint?: string | null;
           id?: string;
@@ -344,7 +362,16 @@ export type Database = {
           version?: string | null;
         };
         Update: {
+          activation_method?: string | null;
+          activation_validation_version?: string | null;
           agent_db_id?: string;
+          availability_checked_at?: string | null;
+          availability_failure_code?: string | null;
+          availability_failure_count?: number;
+          availability_last_success_at?: string | null;
+          availability_response_time_ms?: number | null;
+          availability_status?: string;
+          capability_summary?: Json | null;
           created_at?: string;
           endpoint?: string | null;
           id?: string;
@@ -828,6 +855,26 @@ export type Database = {
         Args: { p_records: Json };
         Returns: undefined;
       };
+      activation_check_candidates: {
+        Args: {
+          p_limit?: number;
+          p_stale_before?: string;
+        };
+        Returns: {
+          activation_method: string;
+          agent_db_id: string;
+          agent_id: string;
+          availability_failure_count: number;
+          availability_last_success_at: string | null;
+          availability_status: string;
+          chain_id: number;
+          endpoint: string;
+          owner_address: string | null;
+          service_id: string;
+          service_type: string;
+          version: string | null;
+        }[];
+      };
       score_recalculation_candidates: {
         Args: {
           p_limit?: number;
@@ -870,6 +917,41 @@ export type Database = {
         }[];
       };
       search_agents_with_health: {
+        Args: {
+          p_categories?: string[];
+          p_chain_ids?: number[];
+          p_health_statuses?: string[];
+          p_metadata_statuses?: string[];
+          p_page?: number;
+          p_page_size?: number;
+          p_search_terms?: string[];
+          p_sort?: string;
+        };
+        Returns: {
+          active: boolean | null;
+          agent_db_id: string;
+          agent_id: string;
+          category_evidence: Json;
+          category_source: string | null;
+          chain_id: number;
+          description: string | null;
+          has_more: boolean;
+          image_url: string | null;
+          last_synced_at: string | null;
+          metadata_status: string;
+          name: string | null;
+          owner_address: string | null;
+          registered_at: string | null;
+          registered_block: number | null;
+          registry_address: string;
+          relevance: number;
+          resolved_categories: string[];
+          result_page: number;
+          services: Json;
+          x402_supported: boolean | null;
+        }[];
+      };
+      search_ready_agents: {
         Args: {
           p_categories?: string[];
           p_chain_ids?: number[];

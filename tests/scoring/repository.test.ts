@@ -67,7 +67,16 @@ const reputation: TableRow<"agent_reputation"> = {
 };
 
 const service: TableRow<"agent_services"> = {
+  activation_method: null,
+  activation_validation_version: null,
   agent_db_id: agentId,
+  availability_checked_at: null,
+  availability_failure_code: null,
+  availability_failure_count: 0,
+  availability_last_success_at: null,
+  availability_response_time_ms: null,
+  availability_status: "unchecked",
+  capability_summary: null,
   created_at: timestamp,
   endpoint: "https://agent.test-only.dev/health",
   id: "22222222-2222-4222-8222-222222222222",

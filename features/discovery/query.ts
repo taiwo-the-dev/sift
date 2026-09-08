@@ -178,12 +178,12 @@ export function extractDiscoverySearchTerms(query: string): readonly string[] {
     .slice(0, maximumSearchTerms);
 }
 
-export function isHiringAvailabilityQuery(query: DiscoveryQuery): boolean {
-  return (
-    query.query.toLowerCase() === "erc-8183" &&
-    query.metadataStatuses.includes("valid")
-  );
+export function isReadyAvailabilityQuery(query: DiscoveryQuery): boolean {
+  return query.taskAvailability === "ready";
 }
+
+/** @deprecated Use evidence-based isReadyAvailabilityQuery. */
+export const isHiringAvailabilityQuery = isReadyAvailabilityQuery;
 
 function parsePositiveInteger(value: string | undefined): number {
   if (!value || !/^\d+$/.test(value)) {
@@ -241,6 +241,9 @@ export function parseDiscoverySearchParams(
   ) as readonly HealthStatus[];
   const inferredCategory = inferDiscoveryCategory(query);
   const network = parseNetwork(firstValue(params.network));
+  const taskAvailability = firstValue(params.availability) === "ready"
+    ? "ready"
+    : null;
 
   return {
     categories,
@@ -260,6 +263,7 @@ export function parseDiscoverySearchParams(
     query,
     searchTerms: extractDiscoverySearchTerms(query),
     sort: parseSort(firstValue(params.sort), query.length > 0),
+    taskAvailability,
   };
 }
 
@@ -272,6 +276,7 @@ export type DiscoveryQueryOverrides = Readonly<{
   pageSize?: DiscoveryPageSize;
   query?: string;
   sort?: DiscoverySort;
+  taskAvailability?: "ready" | null;
 }>;
 
 export function buildDiscoveryHref(
@@ -286,6 +291,10 @@ export function buildDiscoveryHref(
   const nextPage = overrides.page ?? query.page;
   const nextSize = overrides.pageSize ?? query.pageSize;
   const nextSort = overrides.sort ?? query.sort;
+  const nextTaskAvailability =
+    overrides.taskAvailability === undefined
+      ? query.taskAvailability
+      : overrides.taskAvailability;
   const params = new URLSearchParams();
 
   if (nextQuery) {
@@ -302,6 +311,10 @@ export function buildDiscoveryHref(
 
   for (const status of nextHealthStatuses) {
     params.append("health", status);
+  }
+
+  if (nextTaskAvailability === "ready") {
+    params.set("availability", "ready");
   }
 
   if (nextNetwork !== defaultDiscoveryNetwork) {

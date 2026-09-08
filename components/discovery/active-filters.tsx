@@ -9,7 +9,7 @@ import {
 import type { DiscoveryQuery } from "@/features/discovery/model";
 import {
   buildDiscoveryHref,
-  isHiringAvailabilityQuery,
+  isReadyAvailabilityQuery,
 } from "@/features/discovery/query";
 
 interface ActiveFiltersProps {
@@ -17,16 +17,15 @@ interface ActiveFiltersProps {
 }
 
 export function ActiveFilters({ query }: ActiveFiltersProps) {
-  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
-  const visibleMetadataStatuses = query.metadataStatuses.filter(
-    (status) => !(hiringAvailabilitySelected && status === "valid"),
-  );
+  const hiringAvailabilitySelected = isReadyAvailabilityQuery(query);
+  const visibleMetadataStatuses = query.metadataStatuses;
   const hasFilters =
     query.query.length > 0 ||
     query.categories.length > 0 ||
     query.healthStatuses.length > 0 ||
     query.metadataStatuses.length > 0 ||
-    query.network !== "bsc-mainnet";
+    query.network !== "bsc-mainnet" ||
+    hiringAvailabilitySelected;
 
   if (!hasFilters) {
     return null;
@@ -35,7 +34,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
       <span className="mr-1 text-xs font-medium text-muted-foreground">Active</span>
-      {query.network !== "bsc-mainnet" && !hiringAvailabilitySelected ? (
+      {query.network !== "bsc-mainnet" ? (
         <Link
           href={buildDiscoveryHref(query, {
             network: "bsc-mainnet",
@@ -48,28 +47,31 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           <X className="size-3" aria-hidden="true" />
         </Link>
       ) : null}
+      {hiringAvailabilitySelected ? (
+        <Link
+          href={buildDiscoveryHref(query, {
+            page: 1,
+            taskAvailability: null,
+          })}
+          className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/8 px-3 py-1.5 text-xs font-medium text-brand outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
+          aria-label="Remove Available filter"
+        >
+          Available
+          <X className="size-3" aria-hidden="true" />
+        </Link>
+      ) : null}
       {query.query ? (
         <Link
           href={buildDiscoveryHref(query, {
-            metadataStatuses: hiringAvailabilitySelected
-              ? query.metadataStatuses.filter((status) => status !== "valid")
-              : query.metadataStatuses,
-            network: hiringAvailabilitySelected
-              ? "bsc-mainnet"
-              : query.network,
             page: 1,
             query: "",
             sort: "recent",
           })}
           className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-input bg-secondary px-3 py-1.5 text-xs font-medium text-foreground outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
-          aria-label={
-            hiringAvailabilitySelected
-              ? "Remove Available filter"
-              : `Remove search ${query.query}`
-          }
+          aria-label={`Remove search ${query.query}`}
         >
           <span className="max-w-52 truncate">
-            {hiringAvailabilitySelected ? "Available" : `“${query.query}”`}
+            “{query.query}”
           </span>
           <X className="size-3" aria-hidden="true" />
         </Link>

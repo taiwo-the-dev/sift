@@ -30,6 +30,9 @@ M20 adds an optional Altana passkey wallet with visible, registered, bounded,
 and revocable session permissions plus atomic ERC-8183 hiring. Automated checks
 pass locally; real testnet grant, hire, and revoke evidence still requires a
 human browser test and is not claimed yet.
+M22 adds one evidence-based **Start task** entry point for recently checked
+ERC-8183, A2A, read-only MCP, and x402 services. Its code is implemented
+locally; the hosted migration and live-service validation are still pending.
 
 **Live application:** not deployed or recorded yet. Do not replace this status
 with a URL until the exact Vercel deployment passes the
@@ -69,6 +72,9 @@ claim that the app is already deployed.
 - Optional Altana passkey hiring with a one-hour registered session, exact
   spending boundary, visible revocation, and independently verified on-chain
   result.
+- One **Start task** entry point that uses a recently checked service method:
+  protected ERC-8183 hiring, confirmed A2A messaging, read-only MCP tools, or an
+  exact x402 quote.
 
 ## Architecture
 
@@ -79,7 +85,7 @@ flowchart LR
   metadata["Registration files\nand services"] --> indexer
   indexer --> db[("Supabase\nPostgreSQL")]
   scan["8004scan\noptional validation"] --> db
-  assessment["Health + Sift Score\nGitHub Actions"] <--> db
+  assessment["Health + Sift Score + task-service checks\nGitHub Actions"] <--> db
   metadata --> assessment
   browser["Browser"] <--> app["Next.js\nVercel"]
   app <--> db
@@ -138,6 +144,7 @@ an honest recovery state and never substitutes demo agents.
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
 | `NEXT_PUBLIC_BNB_TESTNET_RPC_URL`, `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC overrides |
 | `SIFT_8004SCAN_API_KEY` | Optional for core discovery; required for the intended Pro-tier validation run | Server-only external cross-check credential |
+| `ACTIVATION_CHECK_LIMIT`, `ACTIVATION_CHECK_CONCURRENCY`, `ACTIVATION_CHECK_INTERVAL_HOURS` | Optional | Bounded scheduled task-service checks; safe defaults are provided |
 
 Indexer limits, metadata limits, health cadence, score batches, registry
 overrides, and IPFS configuration are documented in `.env.example`. Never
@@ -170,6 +177,8 @@ npm run report:catalogue   # per-network hosted counts/checkpoints/freshness
 npm run check:smoke
 npm run score:smoke
 npm run check:agents       # bounded eligible endpoint observations
+npm run check:activation:smoke # validate task-service checker configuration
+npm run check:activation   # check a bounded set of declared task services
 npm run score:agents       # bounded affected score recalculation
 npm run classify:categories # one-time resumable mainnet category backfill
 npm run curate:categories   # validate and persist 3 real candidates per category
@@ -241,6 +250,9 @@ The full evidence-bound list is maintained in
   and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;
   invalid, unreachable, stale, and insufficient-evidence states remain visible.
+- A2A and read-only MCP requests are direct calls to an external agent service.
+  x402 is quote-only: Sift does not send payment until an exact wallet spending
+  cap and explicit approval flow are implemented and reviewed.
 - Public/free RPCs and free-tier schedulers can rate-limit or delay freshness;
   stored checkpoints and evidence timestamps expose what Sift actually knows.
 
@@ -274,6 +286,7 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Sift Score](docs/scoring.md)
 - [M14 category evidence](docs/categories.md)
 - [M15 activation proof](docs/activation-proof.md)
+- [Starting agent tasks](docs/agent-tasks.md)
 - [Comparison](docs/comparison.md)
 - [Wallet](docs/wallet.md)
 - [Hiring](docs/hiring.md)

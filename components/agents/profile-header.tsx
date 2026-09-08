@@ -32,6 +32,7 @@ import { isHealthStale } from "@/features/health/presentation";
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
+import { currentActivationServices } from "@/features/activation/service";
 
 interface ProfileHeaderProps {
   comparisonGoal?: string;
@@ -100,6 +101,11 @@ export function ProfileHeader({
     : "No health check available";
   const hiring = assessHiringCompatibility(profile);
   const hireable = hiring.compatibility !== null;
+  const taskServices = currentActivationServices(profile.services);
+  const taskReady =
+    profile.metadataStatus === "valid" &&
+    profile.active !== false &&
+    taskServices.length > 0;
   const showOtherCategory = shouldShowOtherCategory(
     profile.metadataStatus,
     profile.categories,
@@ -200,13 +206,13 @@ export function ProfileHeader({
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
             <BookmarkToggle agent={profile} />
-            {hireable ? (
+            {taskReady ? (
               <Link
-                href={`/hire/${profile.chainId}/${profile.agentId}`}
+                href={`/start/${profile.chainId}/${profile.agentId}`}
                 className={cn(buttonVariants({ variant: "brand" }), "gap-2")}
               >
                 <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
-                Hire agent
+                Start task
               </Link>
             ) : null}
             <ComparisonToggle
@@ -257,12 +263,12 @@ export function ProfileHeader({
           />
           <EvidenceStat
             icon={<BriefcaseBusiness className="size-4 text-violet-300" aria-hidden="true" />}
-            label="Hiring"
-            value={hireable ? "Ready to check" : "Unavailable"}
+            label="Task access"
+            value={taskReady ? "Available" : "Unavailable"}
             detail={
-              hireable
-                ? "Live service and price checked next"
-                : hiring.title
+              taskReady
+                ? `${taskServices.length} recently checked ${taskServices.length === 1 ? "method" : "methods"}`
+                : "No supported service has a current successful check"
             }
           />
         </dl>

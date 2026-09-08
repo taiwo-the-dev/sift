@@ -32,7 +32,16 @@ const agent: TableRow<"agents"> = {
 };
 
 const service: TableRow<"agent_services"> = {
+  activation_method: "mcp",
+  activation_validation_version: "sift-activation-v1.0.0",
   agent_db_id: agent.id,
+  availability_checked_at: "2026-08-21T18:58:31.000Z",
+  availability_failure_code: null,
+  availability_failure_count: 0,
+  availability_last_success_at: "2026-08-21T18:58:31.000Z",
+  availability_response_time_ms: 90,
+  availability_status: "available",
+  capability_summary: { tools: [] },
   created_at: "2026-08-21T18:58:31.000Z",
   endpoint: "https://agent.example/mcp",
   id: "22222222-2222-4222-8222-222222222222",

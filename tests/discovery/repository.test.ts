@@ -231,76 +231,59 @@ describe("discovery repository integration boundary", () => {
     ]);
   });
 
-  it("paginates after applying the exact hiring availability checks", async () => {
-    const calls: Readonly<{ page: number; pageSize: number }>[] = [];
+  it("delegates current task availability and pagination to one bounded RPC", async () => {
+    const calls: Readonly<{ name: string; parameters: unknown }>[] = [];
     const firstBatch = Array.from({ length: 12 }, (_, index) => ({
       ...fixtureRows[0]!,
       agent_db_id: `10000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
       agent_id: String(100 + index),
       has_more: true,
+      result_page: 1,
       services: [
         { endpoint: null, serviceType: "ERC-8183", version: "1.0" },
       ],
     }));
-    const secondBatch = Array.from({ length: 12 }, (_, index) => ({
-      ...fixtureRows[0]!,
-      agent_db_id: `20000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-      agent_id: String(200 + index),
-      has_more: false,
-      services: [
-        { endpoint: null, serviceType: "ERC-8183", version: "1.0" },
-      ],
-    }));
-    const eligibleIds = new Set([
-      firstBatch[0]!.agent_db_id,
-      ...secondBatch.map((agent) => agent.agent_db_id),
-    ]);
     const client = {
       async rpc(
-        _name: string,
-        parameters: Readonly<{ p_page: number; p_page_size: number }>,
+        name: string,
+        parameters: unknown,
       ) {
-        calls.push({
-          page: parameters.p_page,
-          pageSize: parameters.p_page_size,
-        });
+        calls.push({ name, parameters });
         return {
-          data: parameters.p_page === 1 ? firstBatch : secondBatch,
+          data: firstBatch,
           error: null,
         };
       },
     } as unknown as SupabaseClient<Database>;
-    const evidence = {
-      listHealth: async () => [],
-      listScores: async () => [],
-      listServices: async (ids: readonly string[]) =>
-        ids.map((id) => ({
-          agent_db_id: id,
-          endpoint: eligibleIds.has(id)
-            ? "https://hiring.sift-agent.dev/erc8183"
-            : null,
-          service_type: "ERC-8183",
-          version: "1.0",
-        })),
-    };
     const query = parseDiscoverySearchParams({
-      metadata: "valid",
+      availability: "ready",
       network: "all",
-      q: "ERC-8183",
+      q: "protocol",
       size: "12",
     });
 
-    const result = await createDiscoveryRepository(client, evidence).search(
+    const result = await createDiscoveryRepository(client, noEvidence).search(
       query,
     );
 
     assert.deepEqual(calls, [
-      { page: 1, pageSize: 36 },
-      { page: 2, pageSize: 36 },
+      {
+        name: "search_ready_agents",
+        parameters: {
+          p_categories: [],
+          p_chain_ids: [56, 97],
+          p_health_statuses: [],
+          p_metadata_statuses: [],
+          p_page: 1,
+          p_page_size: 12,
+          p_search_terms: ["protocol"],
+          p_sort: "relevance",
+        },
+      },
     ]);
     assert.equal(result.agents.length, 12);
     assert.equal(result.agents[0]?.agentId, "100");
-    assert.equal(result.agents.at(-1)?.agentId, "210");
+    assert.equal(result.agents.at(-1)?.agentId, "111");
     assert.equal(result.hasNextPage, true);
     assert.equal(result.page, 1);
   });

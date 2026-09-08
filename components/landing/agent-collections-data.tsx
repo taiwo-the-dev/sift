@@ -15,9 +15,8 @@ export async function AgentCollectionsData() {
   try {
     const result = await repository.search(
       parseDiscoverySearchParams({
-        metadata: "valid",
+        availability: "ready",
         network: "all",
-        q: "ERC-8183",
         size: "24",
       }),
     );

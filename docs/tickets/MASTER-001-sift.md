@@ -28,6 +28,7 @@ Ready for Development
 - M19 — Implemented Locally; Hosted Migration and Human Validation Pending
 - M20 — Implemented Locally; Human Altana Testnet Evidence Pending
 - M21 — Implemented Locally; Browser Validation Pending
+- M22 — Implemented Locally; Hosted Migration and Live Service Validation Pending
 
 ## Priority
 
@@ -1634,6 +1635,24 @@ budget. Build the atomic hiring bundle with the pinned official SDK and verify
 real receipt events, funded state, and historical KeyStore authority before
 persistence. Preserve the original direct-wallet path and never store private
 session material or automate a mainnet write.
+
+---
+
+## M21 — Hiring UX and Evidence Clarity
+
+Clarify when protected hiring is available, keep discovery and profile actions
+consistent, and preserve honest unavailable states without dead-end controls.
+
+---
+
+## M22 — Unified Agent Tasks
+
+Add an evidence-based **Start task** entry point that routes each agent to its
+genuinely supported ERC-8183, A2A, MCP, or x402 method. Availability must come
+from recent live checks. Keep ERC-8183 protected, restrict direct MCP execution
+to explicitly read-only tools, require confirmation for A2A requests, and show
+an exact x402 quote without automatic payment. Never equate ERC-8004 identity
+registration with service availability.
 
 ---
 

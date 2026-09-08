@@ -24,7 +24,7 @@ import {
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
 import { isHealthStale } from "@/features/health/presentation";
-import { assessHiringCompatibility } from "@/features/hiring/compatibility";
+import { hasCurrentActivation } from "@/features/activation/model";
 import {
   describeScoreConfidence,
   isScoreStale,
@@ -58,8 +58,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
     agent.categories,
   );
   const hiddenCategoryCount = Math.max(0, agent.categories.length - 1);
-  const hiring = assessHiringCompatibility(agent);
-  const canRequestQuote = hiring.compatibility !== null;
+  const taskReady = hasCurrentActivation(agent.services);
 
   return (
     <article className="sift-card-reveal group rounded-xl border border-border bg-card p-4 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:bg-card/95 hover:shadow-[0_18px_44px_rgba(0,0,0,0.2)] motion-reduce:transform-none sm:p-5">
@@ -204,14 +203,14 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   <dd>{formatMetadataStatus(agent.metadataStatus)}</dd>
                 </div>
               </div>
-              {canRequestQuote ? (
+              {taskReady ? (
                 <div
-                  title={hiring.explanation}
+                  title="A supported task service passed a recent live check"
                   className="flex items-center gap-1.5 text-emerald-200"
                 >
                   <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
                   <div>
-                    <dt className="sr-only">Hiring status</dt>
+                    <dt className="sr-only">Task availability</dt>
                     <dd>Available</dd>
                   </div>
                 </div>

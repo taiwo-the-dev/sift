@@ -55,7 +55,16 @@ const thirdAgent = agent(
 );
 
 const service: TableRow<"agent_services"> = {
+  activation_method: "mcp",
+  activation_validation_version: "sift-activation-v1.0.0",
   agent_db_id: firstAgent.id,
+  availability_checked_at: "2026-08-22T09:00:00.000Z",
+  availability_failure_code: null,
+  availability_failure_count: 0,
+  availability_last_success_at: "2026-08-22T09:00:00.000Z",
+  availability_response_time_ms: 90,
+  availability_status: "available",
+  capability_summary: { tools: [] },
   created_at: "2026-08-22T09:00:00.000Z",
   endpoint: "https://test-only.example/mcp",
   id: "44444444-4444-4444-8444-444444444444",

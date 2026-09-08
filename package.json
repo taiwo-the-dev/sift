@@ -22,6 +22,8 @@
     "index:smoke": "node --conditions=react-server --import tsx scripts/index-agents.ts smoke",
     "check:agents": "node --conditions=react-server --import tsx scripts/check-agents.ts",
     "check:smoke": "node --conditions=react-server --import tsx scripts/check-agents.ts smoke",
+    "check:activation": "node --conditions=react-server --import tsx scripts/check-activation.ts",
+    "check:activation:smoke": "node --conditions=react-server --import tsx scripts/check-activation.ts smoke",
     "score:agents": "node --conditions=react-server --import tsx scripts/score-agents.ts",
     "score:smoke": "node --conditions=react-server --import tsx scripts/score-agents.ts smoke",
     "backfill:scores": "node --conditions=react-server --import tsx scripts/backfill-agent-scores.ts",

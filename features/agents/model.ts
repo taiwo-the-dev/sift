@@ -8,11 +8,24 @@ import type { HealthOutcome } from "@/features/health/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
 import type { CategoryEvidence } from "@/features/categories/taxonomy";
 import type { ScanCrossCheck } from "@/lib/integrations/8004scan";
+import type {
+  ActivationAvailabilityStatus,
+  ActivationMethod,
+} from "@/features/activation/model";
 
 export type AgentProfileService = Readonly<{
+  activationMethod?: ActivationMethod | null;
+  availabilityCheckedAt?: string | null;
+  availabilityFailureCode?: string | null;
+  availabilityLastSuccessAt?: string | null;
+  availabilityResponseTimeMs?: number | null;
+  availabilityStatus?: ActivationAvailabilityStatus;
+  capabilitySummary?: Json | null;
   endpoint: string | null;
+  id?: string;
   metadata: Json | null;
   serviceType: string;
+  validationVersion?: string | null;
   version: string | null;
 }>;
 

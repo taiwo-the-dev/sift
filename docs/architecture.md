@@ -13,7 +13,8 @@ flowchart LR
   indexer["Sift Indexer\nGitHub Actions"]
   taxonomy["Versioned category evidence\nand curated shortlist"]
   scan["8004scan API\noptional cross-check"]
-  assessment["Health + Sift Score\nGitHub Actions"]
+  assessment["Health + Sift Score + task checks\nGitHub Actions"]
+  direct["Checked A2A / MCP / x402\nagent services"]
   db[("Supabase PostgreSQL\nRLS + server-only access")]
   app["Next.js App Router\nVercel"]
   browser["Judge browser"]
@@ -32,6 +33,7 @@ flowchart LR
   db <--> assessment
   browser <--> app
   app <--> db
+  app -->|"one confirmed, bounded request"| direct
   browser <--> wallet
   wallet -->|"explicitly approved transactions"| apex
   browser <--> altana
@@ -52,6 +54,11 @@ flowchart LR
 - The health and score workflow checks eligible public declarations in bounded
   batches, records the observation source/time, and calculates a versioned Sift
   Score only when enough current evidence exists.
+- The same bounded workflow checks explicitly declared ERC-8183, A2A, MCP, and
+  x402 services. A current successful observation enables **Start task**;
+  registration or an unchecked metadata label does not. Direct endpoints are
+  resolved from stored service IDs, restricted to public HTTPS, size/time
+  bounded, and rechecked immediately before an action.
 - The shared M14 taxonomy classifies validated metadata during indexing and a
   resumable historical backfill. Discovery reads materialized evidence instead
   of rescanning the catalogue or duplicating keyword rules in UI code.
@@ -72,6 +79,10 @@ flowchart LR
   before recording it as confirmed.
 - Dashboard access requires a short-lived signed ownership challenge. Opaque
   session material is held in HttpOnly cookies; only digests are persisted.
+- A2A messages require an explicit confirmation and are sent once. MCP execution
+  is limited to tools whose live declaration says `readOnlyHint: true`. x402
+  challenges expose the exact network, token, recipient, and raw amount, but
+  Sift does not yet execute their payment.
 
 ## Deployment topology
 

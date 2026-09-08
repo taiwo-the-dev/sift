@@ -29,7 +29,7 @@ import {
 } from "@/features/discovery/model";
 import {
   buildDiscoveryHref,
-  isHiringAvailabilityQuery,
+  isReadyAvailabilityQuery,
 } from "@/features/discovery/query";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +90,7 @@ const agentStatusOptions = [
 ] as const;
 
 function countSelectedAgentStatuses(query: DiscoveryQuery): number {
-  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
+  const hiringAvailabilitySelected = isReadyAvailabilityQuery(query);
   const metadataCount = query.metadataStatuses.filter((status) =>
     agentStatusOptions.some(
       (option) => option.kind === "metadata" && option.value === status,
@@ -106,12 +106,8 @@ function countSelectedAgentStatuses(query: DiscoveryQuery): number {
 }
 
 function FilterOptions({ query }: FilterPanelProps) {
-  const hiringSupportSelected = isHiringAvailabilityQuery(query);
+  const hiringSupportSelected = isReadyAvailabilityQuery(query);
   const selectedAgentStatusCount = countSelectedAgentStatuses(query);
-  const metadataWithoutHiringRequirement = query.metadataStatuses.filter(
-    (status) => status !== "valid",
-  );
-
   return (
     <div className="space-y-6">
       <fieldset>
@@ -259,50 +255,26 @@ function FilterOptions({ query }: FilterPanelProps) {
         <div className="mt-3 flex flex-wrap gap-2">
           {agentStatusOptions.map((status) => {
             const StatusIcon = status.icon;
-            const selectableMetadataStatuses = hiringSupportSelected
-              ? metadataWithoutHiringRequirement
-              : query.metadataStatuses;
             const selected =
               status.kind === "availability"
                 ? hiringSupportSelected
                 : status.kind === "metadata"
-                  ? selectableMetadataStatuses.includes(status.value)
+                  ? query.metadataStatuses.includes(status.value)
                   : query.healthStatuses.includes(status.value);
             const href =
               status.kind === "availability"
-                ? hiringSupportSelected
-                  ? buildDiscoveryHref(query, {
-                      metadataStatuses: metadataWithoutHiringRequirement,
-                      network: "bsc-mainnet",
-                      page: 1,
-                      query: "",
-                      sort: "recent",
-                    })
-                  : buildDiscoveryHref(query, {
-                      metadataStatuses: [
-                        ...new Set([
-                          ...query.metadataStatuses,
-                          "valid" as const,
-                        ]),
-                      ],
-                      network: "all",
-                      page: 1,
-                      query: "ERC-8183",
-                      sort: "relevance",
-                    })
+                ? buildDiscoveryHref(query, {
+                    page: 1,
+                    taskAvailability: hiringSupportSelected ? null : "ready",
+                  })
                 : status.kind === "metadata"
                   ? buildDiscoveryHref(query, {
                       metadataStatuses: selected
-                        ? selectableMetadataStatuses.filter(
+                        ? query.metadataStatuses.filter(
                             (value) => value !== status.value,
                           )
-                        : [...selectableMetadataStatuses, status.value],
-                      network: hiringSupportSelected
-                        ? "bsc-mainnet"
-                        : query.network,
+                        : [...query.metadataStatuses, status.value],
                       page: 1,
-                      query: hiringSupportSelected ? "" : query.query,
-                      sort: hiringSupportSelected ? "recent" : query.sort,
                     })
                   : buildDiscoveryHref(query, {
                       healthStatuses: selected
@@ -322,7 +294,7 @@ function FilterOptions({ query }: FilterPanelProps) {
                 aria-checked={selected}
                 title={
                   status.kind === "availability"
-                    ? "Show verified agents that list supported hiring"
+                    ? "Show agents with a service Sift checked in the last 24 hours"
                     : undefined
                 }
                 className={cn(
@@ -379,11 +351,10 @@ function FilterOptions({ query }: FilterPanelProps) {
 }
 
 export function FilterPanel({ query }: FilterPanelProps) {
-  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
   const activeCount =
     query.categories.length +
     countSelectedAgentStatuses(query) +
-    (query.network === "bsc-mainnet" || hiringAvailabilitySelected ? 0 : 1);
+    (query.network === "bsc-mainnet" ? 0 : 1);
 
   return (
     <>

@@ -5,7 +5,7 @@ import {
   buildDiscoveryHref,
   extractDiscoverySearchTerms,
   inferDiscoveryCategory,
-  isHiringAvailabilityQuery,
+  isReadyAvailabilityQuery,
   parseDiscoverySearchParams,
 } from "../../features/discovery/query";
 
@@ -143,18 +143,20 @@ describe("discovery query parsing", () => {
     assert.equal(buildDiscoveryHref(query), "/discover");
   });
 
-  it("recognizes only the verified ERC-8183 availability shortcut", () => {
+  it("uses an explicit evidence-based task availability filter", () => {
     const availabilityQuery = parseDiscoverySearchParams({
-      metadata: "valid",
-      q: "ERC-8183",
+      availability: "ready",
     });
 
-    assert.equal(isHiringAvailabilityQuery(availabilityQuery), true);
-    assert.deepEqual(availabilityQuery.searchTerms, ["erc", "8183"]);
+    assert.equal(isReadyAvailabilityQuery(availabilityQuery), true);
+    assert.deepEqual(availabilityQuery.searchTerms, []);
     assert.equal(
-      isHiringAvailabilityQuery(
-        parseDiscoverySearchParams({ metadata: "invalid", q: "ERC-8183" }),
-      ),
+      new URL(buildDiscoveryHref(availabilityQuery), "https://sift.example")
+        .searchParams.get("availability"),
+      "ready",
+    );
+    assert.equal(
+      isReadyAvailabilityQuery(parseDiscoverySearchParams({ q: "ERC-8183" })),
       false,
     );
   });

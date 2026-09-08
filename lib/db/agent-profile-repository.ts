@@ -15,6 +15,10 @@ import { mapHealthRecord } from "@/lib/db/health-repository";
 import { mapScoreRecord } from "@/lib/db/score-repository";
 import { mapStored8004ScanEvidence } from "@/lib/integrations/8004scan";
 import { metadataStatuses, type MetadataStatus } from "@/lib/db/validation";
+import {
+  parseActivationMethod,
+  parseActivationStatus,
+} from "@/features/activation/model";
 
 type AgentRecord = TableRow<"agents">;
 type AgentHealthRecord = TableRow<"agent_health">;
@@ -72,9 +76,20 @@ function mapServices(
   records: readonly AgentServiceRecord[],
 ): readonly AgentProfileService[] {
   return records.map((record) => ({
+    activationMethod: record.activation_method
+      ? parseActivationMethod(record.activation_method)
+      : null,
+    availabilityCheckedAt: record.availability_checked_at ?? null,
+    availabilityFailureCode: record.availability_failure_code ?? null,
+    availabilityLastSuccessAt: record.availability_last_success_at ?? null,
+    availabilityResponseTimeMs: record.availability_response_time_ms ?? null,
+    availabilityStatus: parseActivationStatus(record.availability_status),
+    capabilitySummary: record.capability_summary ?? null,
     endpoint: record.endpoint,
+    id: record.id,
     metadata: record.metadata,
     serviceType: record.service_type,
+    validationVersion: record.activation_validation_version ?? null,
     version: record.version,
   }));
 }
