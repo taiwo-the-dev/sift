@@ -1,4 +1,4 @@
-import { isAddress } from "viem";
+import { formatUnits, isAddress } from "viem";
 
 import { getSupportedWalletChain } from "@/lib/blockchain/chains";
 
@@ -55,6 +55,31 @@ export function shortenWalletAddress(address: string | undefined): string | null
   }
 
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+export function formatWalletBalance(
+  value: bigint | undefined,
+  decimals: number | undefined,
+  symbol: string | undefined,
+): string | null {
+  if (value === undefined || decimals === undefined || !symbol) {
+    return null;
+  }
+
+  if (value === 0n) {
+    return `0 ${symbol}`;
+  }
+
+  const [whole = "0", fraction = ""] = formatUnits(value, decimals).split(".");
+  const visibleFraction = fraction.slice(0, 4).replace(/0+$/, "");
+
+  if (whole === "0" && visibleFraction.length === 0) {
+    return `<0.0001 ${symbol}`;
+  }
+
+  const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  return `${groupedWhole}${visibleFraction ? `.${visibleFraction}` : ""} ${symbol}`;
 }
 
 export function describeWalletChain(chainId: unknown): string | null {

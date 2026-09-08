@@ -1,10 +1,7 @@
 "use client";
 
-import { Select } from "@base-ui/react/select";
 import {
   ArrowRight,
-  Check,
-  ChevronDown,
   CircleDollarSign,
   ClipboardPenLine,
   Clock3,
@@ -15,6 +12,7 @@ import {
 import type { FormEvent, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/ui/select-field";
 import type { HiringMissionInput } from "@/features/hiring/model";
 import {
   getErc8183Deployment,
@@ -262,64 +260,17 @@ export function MissionStep({
             >
               Execution expiry
             </label>
-            <Select.Root<number>
-              items={durationOptions}
+            <SelectField
+              aria-describedby="hiring-expiry-description"
+              aria-labelledby="hiring-expiry-label"
+              icon={Clock3}
+              options={durationOptions}
               value={mission.durationSeconds}
               onValueChange={(durationSeconds) => {
-                if (durationSeconds !== null) {
-                  onChange({ ...mission, durationSeconds });
-                }
+                onChange({ ...mission, durationSeconds });
               }}
-            >
-              <Select.Trigger
-                aria-labelledby="hiring-expiry-label"
-                aria-describedby="hiring-expiry-description"
-                className="group mt-2 flex h-12 w-full cursor-pointer items-center gap-3 rounded-xl border border-input bg-background/80 px-3.5 text-left text-sm text-foreground outline-none transition-[border-color,box-shadow,background-color] hover:border-muted-foreground/55 focus-visible:border-brand focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-brand/10 data-popup-open:border-brand data-popup-open:ring-3 data-popup-open:ring-brand/10"
-              >
-                <Clock3
-                  className="size-4 shrink-0 text-muted-foreground group-data-[popup-open]:text-brand"
-                  aria-hidden="true"
-                />
-                <Select.Value className="min-w-0 flex-1 font-medium" />
-                <Select.Icon className="grid size-5 shrink-0 place-items-center text-muted-foreground">
-                  <ChevronDown
-                    className="size-4 transition-transform duration-150 group-data-[popup-open]:rotate-180"
-                    aria-hidden="true"
-                  />
-                </Select.Icon>
-              </Select.Trigger>
-
-              <Select.Portal>
-                <Select.Positioner
-                  align="start"
-                  alignItemWithTrigger={false}
-                  side="bottom"
-                  sideOffset={6}
-                  className="z-50 w-[var(--anchor-width)] outline-none"
-                >
-                  <Select.Popup className="w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-input bg-popover p-1.5 text-popover-foreground shadow-2xl shadow-black/45 outline-none transition-[opacity,transform] duration-150 data-ending-style:-translate-y-1 data-ending-style:opacity-0 data-starting-style:-translate-y-1 data-starting-style:opacity-0">
-                    <Select.List className="outline-none">
-                      {durationOptions.map((duration) => (
-                        <Select.Item
-                          key={duration.value}
-                          value={duration.value}
-                          className="grid min-h-11 w-full cursor-pointer grid-cols-[minmax(0,1fr)_1.25rem] items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none transition-colors data-highlighted:bg-muted data-highlighted:text-foreground data-selected:bg-brand/8 data-selected:text-foreground"
-                        >
-                          <Select.ItemText>{duration.label}</Select.ItemText>
-                          <Select.ItemIndicator className="grid size-5 place-items-center rounded-full bg-brand text-brand-foreground">
-                            <Check
-                              className="size-3"
-                              strokeWidth={2.5}
-                              aria-hidden="true"
-                            />
-                          </Select.ItemIndicator>
-                        </Select.Item>
-                      ))}
-                    </Select.List>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
+              triggerClassName="mt-2"
+            />
             <p
               id="hiring-expiry-description"
               className="mt-2 text-xs leading-5 text-muted-foreground"

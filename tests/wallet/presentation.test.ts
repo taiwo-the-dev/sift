@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   describeWalletChain,
+  formatWalletBalance,
   mapWalletError,
   shortenWalletAddress,
 } from "../../features/wallet/presentation";
@@ -25,6 +26,16 @@ describe("wallet presentation", () => {
     assert.equal(describeWalletChain(97), "BSC Testnet");
     assert.equal(describeWalletChain(56), "BSC Mainnet");
     assert.equal(describeWalletChain(1), null);
+  });
+
+  it("formats real native-token balances without inventing precision", () => {
+    assert.equal(formatWalletBalance(0n, 18, "BNB"), "0 BNB");
+    assert.equal(
+      formatWalletBalance(1_234_567_890_000_000_000_000n, 18, "BNB"),
+      "1,234.5678 BNB",
+    );
+    assert.equal(formatWalletBalance(10_000_000_000n, 18, "BNB"), "<0.0001 BNB");
+    assert.equal(formatWalletBalance(undefined, 18, "BNB"), null);
   });
 
   it("maps rejected, pending, missing-provider and switching errors safely", () => {

@@ -14,8 +14,8 @@ function render(view: WalletConnectionView, mobile = false): string {
     createElement(WalletControlView, {
       mobile,
       onConnect() {},
+      onDisconnect() {},
       onDismissNotice() {},
-      onOpenAccount() {},
       onOpenChain() {},
       onSwitchToTestnet() {},
       view,
@@ -44,9 +44,11 @@ describe("wallet connection control states", () => {
   it("shows the actual shortened account and supported network", () => {
     const html = render({
       addressLabel: "0x1234…5678",
+      balanceLabel: "1.25 BNB",
       chainName: "BSC Testnet",
       connection: "connected",
       supportedChain: true,
+      walletName: "Browser wallet",
     });
 
     assert.match(html, /0x1234…5678/);

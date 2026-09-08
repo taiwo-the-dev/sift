@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
-        <Brand />
+      <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
+        <Brand className="justify-self-start" />
 
         <nav
-          className="ml-7 hidden items-center gap-1 md:flex"
+          className="hidden items-center justify-center gap-1 lg:flex"
           aria-label="Primary navigation"
         >
           {navigationItems.map((item) =>
@@ -37,7 +37,7 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-2 md:flex">
+        <div className="hidden items-center justify-self-end gap-2 lg:flex">
           <Link
             href="/discover#discovery-search"
             aria-label="Search for agents"

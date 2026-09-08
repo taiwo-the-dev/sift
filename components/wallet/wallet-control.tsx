@@ -2,7 +2,13 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useState } from "react";
-import { useAccount, useConnectors, useSwitchChain } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useConnectors,
+  useDisconnect,
+  useSwitchChain,
+} from "wagmi";
 
 import {
   WalletControlView,
@@ -10,6 +16,7 @@ import {
 } from "@/components/wallet/wallet-control-view";
 import {
   describeWalletChain,
+  formatWalletBalance,
   mapWalletError,
   shortenWalletAddress,
   type WalletErrorMessage,
@@ -27,7 +34,6 @@ interface WalletControlProps {
 
 type RainbowControl = Readonly<{
   mounted: boolean;
-  openAccountModal: () => void;
   openChainModal: () => void;
   openConnectModal: () => void;
 }>;
@@ -43,6 +49,7 @@ function WalletControlInner({
 }>) {
   const account = useAccount();
   const connectors = useConnectors();
+  const disconnect = useDisconnect();
   const switchChain = useSwitchChain();
   const [noticeState, setNoticeState] = useState<Readonly<{
     contextKey: string;
@@ -51,6 +58,13 @@ function WalletControlInner({
   const walletConnectConfigured = isWalletConnectConfigured();
 
   const chain = getSupportedWalletChain(account.chainId);
+  const balance = useBalance({
+    address: account.address,
+    chainId: chain?.id,
+    query: {
+      enabled: account.status === "connected" && chain !== null,
+    },
+  });
   const contextKey = `${account.status}:${account.address ?? ""}:${account.chainId ?? ""}`;
   const providerWindow =
     rainbow.mounted && typeof window !== "undefined"
@@ -71,15 +85,27 @@ function WalletControlInner({
     : account.status;
   const view: WalletConnectionView = {
     addressLabel: shortenWalletAddress(account.address) ?? undefined,
+    balanceLabel:
+      account.status !== "connected" || chain === null || !account.address
+        ? "Unavailable"
+        : balance.isPending
+          ? "Loading…"
+          : (formatWalletBalance(
+              balance.data?.value,
+              balance.data?.decimals,
+              balance.data?.symbol,
+            ) ?? "Unavailable"),
     chainName:
       describeWalletChain(account.chainId) ??
       account.chain?.name ??
       "Unsupported network",
     connection,
+    disconnecting: disconnect.isPending,
     notice,
     providerAvailable,
     switching: switchChain.isPending,
     supportedChain: account.status === "connected" ? chain !== null : undefined,
+    walletName: account.connector?.name,
   };
 
   function connectWallet(): void {
@@ -118,11 +144,18 @@ function WalletControlInner({
       mobile={mobile}
       view={view}
       onConnect={connectWallet}
-      onDismissNotice={() => setNoticeState(null)}
-      onOpenAccount={() => {
-        onBeforeWalletAction?.();
-        rainbow.openAccountModal();
+      onDisconnect={() => {
+        setNoticeState(null);
+        disconnect.disconnect(undefined, {
+          onError(error) {
+            setNoticeState({ contextKey, message: mapWalletError(error) });
+          },
+          onSuccess() {
+            onBeforeWalletAction?.();
+          },
+        });
       }}
+      onDismissNotice={() => setNoticeState(null)}
       onOpenChain={() => {
         onBeforeWalletAction?.();
         rainbow.openChainModal();
@@ -140,7 +173,6 @@ export function WalletControl({
     <ConnectButton.Custom>
       {({
         mounted,
-        openAccountModal,
         openChainModal,
         openConnectModal,
       }) => (
@@ -149,7 +181,6 @@ export function WalletControl({
           onBeforeWalletAction={onBeforeWalletAction}
           rainbow={{
             mounted,
-            openAccountModal,
             openChainModal,
             openConnectModal,
           }}

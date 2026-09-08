@@ -15,7 +15,7 @@ export function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="ml-auto md:hidden">
+    <div className="ml-auto lg:hidden">
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Trigger
           aria-label="Open navigation"
