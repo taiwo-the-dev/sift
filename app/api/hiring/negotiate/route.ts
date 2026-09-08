@@ -138,7 +138,13 @@ export async function POST(request: Request): Promise<Response> {
     return json({ quote });
   } catch (error) {
     if (error instanceof HiringQuoteError) {
-      const status = error.code === "quote-over-budget" ? 409 : 502;
+      const status =
+        error.code === "quote-over-budget" ||
+        error.code === "unsupported-agent-service"
+          ? 409
+          : error.code === "protocol-unavailable"
+            ? 503
+            : 502;
       return json({ code: error.code, error: error.message }, status);
     }
 

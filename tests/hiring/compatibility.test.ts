@@ -8,7 +8,11 @@ import {
   isErc8183ServiceType,
   resolveHiringCompatibility,
 } from "../../features/hiring/compatibility";
-import { parseAgentCommerceStatus } from "../../features/hiring/quote";
+import {
+  HiringQuoteError,
+  parseAgentCommerceStatus,
+  parseNegotiationEnvelope,
+} from "../../features/hiring/quote";
 import { getErc8183Deployment } from "../../features/hiring/protocol";
 
 const erc8183Deployment = getErc8183Deployment(97);
@@ -97,6 +101,44 @@ describe("ERC-8183 hiring compatibility", () => {
         profile.ownerAddress,
         97,
       ),
+    );
+  });
+
+  it("identifies an outdated status format without trusting its numeric token price", () => {
+    const status = {
+      agent_address: profile.ownerAddress,
+      commerce_address: erc8183Deployment.commerce,
+      payment_token: erc8183Deployment.paymentToken,
+      policy_address: "0x4F4678D4439feC812Ac7674Bb3Efb4C8f5Fb78A6",
+      router_address: erc8183Deployment.router,
+      service_price: 1_000_000_000_000_000_000,
+      status: "ok",
+    };
+
+    assert.throws(
+      () => parseAgentCommerceStatus(status, profile.ownerAddress, 97),
+      (error: unknown) =>
+        error instanceof HiringQuoteError &&
+        error.code === "unsupported-agent-service" &&
+        /older ERC-8183 hiring format/.test(error.message),
+    );
+  });
+
+  it("identifies an unsigned legacy price response", () => {
+    assert.throws(
+      () =>
+        parseNegotiationEnvelope({
+          accepted: true,
+          chain_id: 97,
+          currency: erc8183Deployment.paymentToken,
+          price: "1000000000000000000",
+          provider_address: profile.ownerAddress,
+          quote_expires_at: 1_788_857_342,
+        }),
+      (error: unknown) =>
+        error instanceof HiringQuoteError &&
+        error.code === "unsupported-agent-service" &&
+        /unsigned price/.test(error.message),
     );
   });
 

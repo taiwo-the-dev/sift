@@ -57,8 +57,18 @@ const agentStatusOptions = [
     label: "Available",
     value: "available",
   },
-  { icon: RadioTower, kind: "health", label: "Online", value: "online" },
-  { icon: WifiOff, kind: "health", label: "Offline", value: "offline" },
+  {
+    icon: RadioTower,
+    kind: "health",
+    label: "Online",
+    value: "online",
+  },
+  {
+    icon: WifiOff,
+    kind: "health",
+    label: "Offline",
+    value: "offline",
+  },
   {
     icon: TriangleAlert,
     kind: "health",
@@ -198,25 +208,32 @@ function FilterOptions({ query }: FilterPanelProps) {
                 role="checkbox"
                 aria-checked={selected}
                 className={cn(
-                  "group flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  "group/category relative inline-flex min-h-11 w-full items-center gap-2.5 overflow-hidden rounded-lg border py-1.5 pr-2.5 pl-1.5 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,box-shadow,color,transform] hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none",
                   selected
-                    ? "border-brand/35 bg-brand/8 text-foreground"
-                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                    ? "border-brand/45 bg-[linear-gradient(135deg,rgba(240,185,11,0.16),rgba(240,185,11,0.05))] text-foreground shadow-[inset_3px_0_0_#f0b90b]"
+                    : "border-border bg-background/35 text-muted-foreground hover:border-input hover:bg-background hover:text-foreground",
                 )}
               >
-                <Icon
-                  className={cn(
-                    "size-4 shrink-0",
-                    selected ? "text-brand" : "text-muted-foreground",
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="min-w-0 flex-1 leading-5">
-                  {category.label}
-                </span>
                 <span
                   className={cn(
-                    "grid size-4 shrink-0 place-items-center rounded border",
+                    "grid size-7 shrink-0 place-items-center rounded-md border transition-colors",
+                    selected
+                      ? "border-brand/25 bg-brand/12"
+                      : "border-border bg-card group-hover/category:border-input",
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "size-3.5",
+                      selected ? "text-brand" : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="min-w-0 flex-1">{category.label}</span>
+                <span
+                  className={cn(
+                    "grid size-4 shrink-0 place-items-center rounded-full border transition-colors",
                     selected
                       ? "border-brand bg-brand text-brand-foreground"
                       : "border-input text-transparent",
@@ -239,7 +256,7 @@ function FilterOptions({ query }: FilterPanelProps) {
               : "Any"}
           </span>
         </legend>
-        <div className="mt-3 flex flex-wrap items-stretch gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {agentStatusOptions.map((status) => {
             const StatusIcon = status.icon;
             const selectableMetadataStatuses = hiringSupportSelected
@@ -309,20 +326,40 @@ function FilterOptions({ query }: FilterPanelProps) {
                     : undefined
                 }
                 className={cn(
-                  "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+                  "group/status relative inline-flex min-h-11 w-fit items-center gap-2.5 overflow-hidden rounded-lg border py-1.5 pr-2.5 pl-1.5 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,box-shadow,color,transform] hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none",
                   selected
-                    ? "border-brand/40 bg-brand/12 text-brand"
-                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                    ? "border-brand/45 bg-[linear-gradient(135deg,rgba(240,185,11,0.16),rgba(240,185,11,0.05))] text-foreground shadow-[inset_3px_0_0_#f0b90b]"
+                    : "border-border bg-background/35 text-muted-foreground hover:border-input hover:bg-background hover:text-foreground",
                 )}
               >
-                <StatusIcon
+                <span
                   className={cn(
-                    "size-3.5 shrink-0",
-                    selected ? "text-brand" : "text-muted-foreground",
+                    "grid size-7 shrink-0 place-items-center rounded-md border transition-colors",
+                    selected
+                      ? "border-brand/25 bg-brand/12"
+                      : "border-border bg-card group-hover/status:border-input",
+                  )}
+                >
+                  <StatusIcon
+                    className={cn(
+                      "size-3.5",
+                      selected ? "text-brand" : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span>{status.label}</span>
+                <span
+                  className={cn(
+                    "grid size-4 shrink-0 place-items-center rounded-full border transition-colors",
+                    selected
+                      ? "border-brand bg-brand text-brand-foreground"
+                      : "border-input text-transparent",
                   )}
                   aria-hidden="true"
-                />
-                {status.label}
+                >
+                  <Check className="size-2.5" />
+                </span>
               </Link>
             );
           })}

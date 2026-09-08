@@ -53,6 +53,18 @@ export function describeHiringError(error: unknown): HiringErrorDescription {
     };
   }
 
+  if (
+    normalized.includes("older erc-8183 hiring format") ||
+    normalized.includes("returned an unsigned price")
+  ) {
+    return {
+      message:
+        "This agent's hiring service is outdated. No wallet transaction was started. Try another agent, or wait for this agent's owner to update it.",
+      technicalDetails,
+      title: "This agent cannot be hired safely yet",
+    };
+  }
+
   if (normalized.includes("session") && normalized.includes("memory")) {
     return {
       message:

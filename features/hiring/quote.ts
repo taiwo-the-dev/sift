@@ -114,12 +114,39 @@ export class HiringQuoteError extends Error {
       | "quote-expired"
       | "quote-over-budget"
       | "quote-signature-invalid"
-      | "protocol-unavailable",
+      | "protocol-unavailable"
+      | "unsupported-agent-service",
     message: string,
   ) {
     super(message);
     this.name = "HiringQuoteError";
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function usesLegacyAgentStatusFormat(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    (typeof value.payment_token === "string" &&
+      typeof value.currency !== "string") ||
+    typeof value.service_price === "number"
+  );
+}
+
+function isUnsignedLegacyQuote(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.accepted === "boolean" &&
+    typeof value.price === "string" &&
+    typeof value.currency === "string" &&
+    typeof value.provider_sig !== "string"
+  );
 }
 
 function sanitizeForClaim(value: string): string {
@@ -217,6 +244,13 @@ export function parseAgentCommerceStatus(
   const result = agentStatusSchema.safeParse(input);
 
   if (!result.success) {
+    if (usesLegacyAgentStatusFormat(input)) {
+      throw new HiringQuoteError(
+        "unsupported-agent-service",
+        "This agent uses an older ERC-8183 hiring format. Its owner must update the service before protected hiring can continue.",
+      );
+    }
+
     throw new HiringQuoteError(
       "invalid-agent-status",
       "The agent did not return a valid ERC-8183 status document.",
@@ -267,6 +301,13 @@ export function parseNegotiationEnvelope(
   const result = negotiationEnvelopeSchema.safeParse(input);
 
   if (!result.success) {
+    if (isUnsignedLegacyQuote(input)) {
+      throw new HiringQuoteError(
+        "unsupported-agent-service",
+        "This agent returned an unsigned price. Its owner must update the service before protected hiring can continue.",
+      );
+    }
+
     throw new HiringQuoteError(
       "invalid-quote",
       "The agent returned an invalid signed quote.",

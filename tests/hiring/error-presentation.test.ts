@@ -21,6 +21,18 @@ describe("hiring error presentation", () => {
     assert.match(result.message, /Nothing was submitted/);
   });
 
+  it("explains when an agent still uses an unsupported hiring service", () => {
+    const result = describeHiringError(
+      new Error(
+        "This agent uses an older ERC-8183 hiring format. Its owner must update the service before protected hiring can continue.",
+      ),
+    );
+
+    assert.equal(result.title, "This agent cannot be hired safely yet");
+    assert.match(result.message, /No wallet transaction was started/);
+    assert.match(result.message, /Try another agent/);
+  });
+
   it("does not replace an unfamiliar actionable message", () => {
     const result = describeHiringError(new Error("The quote signature is invalid."));
 
