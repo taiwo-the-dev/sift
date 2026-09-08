@@ -22,6 +22,11 @@ These limitations are product boundaries, not placeholder claims.
   reviewed BSC Mainnet and BSC Testnet ERC-8183/APEX deployments. Mainnet can
   spend real assets and remains unavailable in hosted environments until the
   mainnet-hiring migration and release validation are complete.
+- Altana protected hiring is implemented locally but has no claimed real grant,
+  hire, or revoke until the human BSC Testnet runbook is completed. The live
+  session signer intentionally disappears on reload; its public KeyStore record
+  remains inspectable and revocable. Passkey-wallet jobs are not yet accessible
+  through the EOA-signed private dashboard.
 - Existing records indexed before M13 have no registration transaction hash
   until a controlled source-backed replay observes it. Sift displays that value
   as unavailable and does not reconstruct it from assumptions.

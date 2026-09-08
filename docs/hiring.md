@@ -2,6 +2,12 @@
 
 Sift implements a client-side wallet checkout for real indexed agents that expose the current BNB Agent SDK ERC-8183 HTTP service on BSC Mainnet or BSC Testnet. The browser signs transactions; Sift never receives signing material and does not mark a step confirmed until its server independently verifies the selected chain, calldata, receipt, events, and confirmations.
 
+Users can now choose either the original connected-wallet sequence or M20's
+Altana protected-session sequence. The Altana path uses an OS-protected passkey
+wallet, a one-hour registered KeyStore session, an exact token cap, a bounded
+native-gas cap, and only four reviewed ERC-8183 function signatures. Sift never
+stores the generated session signer: it remains in page memory only.
+
 ## Verified protocol selection
 
 The integration was re-verified on 2026-09-07 against the official [ERC-8183 draft](https://eips.ethereum.org/EIPS/eip-8183), [BNB Agent SDK](https://github.com/bnb-chain/bnbagent-sdk), and the `main` branch of [bnb-chain/apex-contracts](https://github.com/bnb-chain/apex-contracts). ERC-8183 remains a draft standard and APEX is under active development, so Sift validates deployment relationships at runtime instead of trusting addresses alone.
@@ -53,6 +59,23 @@ The current APEX contract requires separate explicit wallet actions:
 5. `AgenticCommerce.fund(jobId, signedPrice, 0x)`.
 
 Sift simulates each call before requesting a signature. Approvals are exact, never unlimited. The server verifies chain ID, sender, destination, zero native value, decoded arguments, receipt status, expected protocol event, two confirmations, and the final funded job state. The job expiry is compared with the mined block timestamp, not the later API verification time. Mainnet review additionally requires an explicit real-funds acknowledgement before an intent can be created.
+
+In protected mode, the pinned official Altana SDK builds the same five-call
+bundle. Sift removes exactly the token approval call and fails closed if the
+bundle shape changes. The passkey admin separately provisions only the exact
+Commerce allowance; the registered session then submits create, register,
+budget, and fund atomically. The server accepts the result only when all four
+events, the funded job state, two confirmations, and the session's historical
+KeyStore registration match the saved quote.
+
+Altana SDK `0.7.1` still bundles testnet policy
+`0x4F4678D4439feC812Ac7674Bb3Efb4C8f5Fb78A6`; the official BNB Agent SDK
+`0.5.5` and Sift's live deployment checks use the current testnet policy
+`0xd6a4217588f6b1f5657a92a3e94e6422ad771cea`. Sift recognizes only that exact
+known SDK mismatch and passes the current reviewed address explicitly to
+`buildHireCalls`. Changes to any other bundled deployment field fail closed.
+
+See [the beginner protected-hiring test runbook](altana-session-testing.md).
 
 ## Persistence and resume security
 
@@ -111,6 +134,9 @@ approving a real transaction.
 - M10 monitors persisted jobs and verified protocol state. Refunds, disputes, pause, and revoke controls remain omitted because the current verified Sift client does not implement those writes.
 - Sift does not implement custody, autonomous signing, delivery guarantees,
   refunds, disputes, or pause/revoke writes.
+- Protected-session revocation applies to Altana wallet authority, not an
+  already confirmed ERC-8183 escrow job or an earlier passkey-approved token
+  allowance. Passkey-wallet dashboard authorization is not yet implemented.
 
 ## Validation
 

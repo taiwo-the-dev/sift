@@ -1,9 +1,10 @@
-import { ArrowUpRight, BadgeCheck, ExternalLink, LayoutDashboard } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, ExternalLink, LayoutDashboard, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import type {
   HiringAgentSummary,
+  HiringExecutionMode,
   HiringIntentSnapshot,
 } from "@/features/hiring/model";
 import {
@@ -15,8 +16,10 @@ import { cn } from "@/lib/utils";
 export function ConfirmationStep({
   agent,
   intent,
+  executionMode = "wallet",
 }: Readonly<{
   agent: HiringAgentSummary;
+  executionMode?: HiringExecutionMode;
   intent: HiringIntentSnapshot;
 }>) {
   const deployment = getErc8183Deployment(agent.chainId);
@@ -78,10 +81,17 @@ export function ConfirmationStep({
       </dl>
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-        <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }))}>
-          Monitor in dashboard
-          <LayoutDashboard className="size-4" aria-hidden="true" />
-        </Link>
+        {executionMode === "wallet" ? (
+          <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }))}>
+            Monitor in dashboard
+            <LayoutDashboard className="size-4" aria-hidden="true" />
+          </Link>
+        ) : (
+          <Link href="/permissions" className={cn(buttonVariants({ size: "lg" }))}>
+            Review or revoke permission
+            <ShieldCheck className="size-4" aria-hidden="true" />
+          </Link>
+        )}
         <Link href={agent.profileHref} className={cn(buttonVariants({ size: "lg" }))}>
           View agent profile
           <ArrowUpRight className="size-4" aria-hidden="true" />
@@ -89,10 +99,17 @@ export function ConfirmationStep({
         <Link href="/discover" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
           Return to Discover
         </Link>
+        {executionMode === "wallet" ? (
+          <Link href="/permissions" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+            Permissions
+            <ShieldCheck className="size-4" aria-hidden="true" />
+          </Link>
+        ) : null}
       </div>
       <p className="mt-4 text-xs text-muted-foreground">
-        The dashboard asks this same wallet for a read-only ownership signature
-        before showing its private agent task record.
+        {executionMode === "wallet"
+          ? "The dashboard asks this same wallet for a read-only ownership signature before showing its private agent task record."
+          : "The transaction link is the source of truth for this funded job. Passkey-wallet dashboard authorization is not yet supported; the Permissions page still lets you inspect and revoke the session."}
       </p>
     </section>
   );

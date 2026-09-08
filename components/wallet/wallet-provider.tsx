@@ -10,6 +10,7 @@ import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { WagmiProvider } from "wagmi";
 
+import { AltanaSessionProvider } from "@/components/altana/altana-session-provider";
 import { defaultWalletChain } from "@/lib/blockchain/chains";
 import { getWalletConfig } from "@/lib/blockchain/wallet-config";
 
@@ -53,7 +54,7 @@ export function WalletProvider({ children }: Readonly<PropsWithChildren>) {
           modalSize="compact"
           theme={siftWalletTheme}
         >
-          {children}
+          <AltanaSessionProvider>{children}</AltanaSessionProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

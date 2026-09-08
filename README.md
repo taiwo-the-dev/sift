@@ -26,6 +26,10 @@ The chain-aware BSC Mainnet hiring extension is implemented locally with
 verified APEX addresses and real-funds safeguards. It remains unavailable in
 the hosted app until migration `20260908110000_enable_mainnet_hiring.sql` is
 deployed and the release is validated without automated mainnet writes.
+M20 adds an optional Altana passkey wallet with visible, registered, bounded,
+and revocable session permissions plus atomic ERC-8183 hiring. Automated checks
+pass locally; real testnet grant, hire, and revoke evidence still requires a
+human browser test and is not claimed yet.
 
 **Live application:** not deployed or recorded yet. Do not replace this status
 with a URL until the exact Vercel deployment passes the
@@ -62,6 +66,9 @@ claim that the app is already deployed.
   fail-closed, chain-isolated ERC-8183/APEX hiring for compatible services.
 - A signed-challenge dashboard that exposes only the connected wallet's
   persisted job and on-chain evidence.
+- Optional Altana passkey hiring with a one-hour registered session, exact
+  spending boundary, visible revocation, and independently verified on-chain
+  result.
 
 ## Architecture
 
@@ -77,7 +84,9 @@ flowchart LR
   browser["Browser"] <--> app["Next.js\nVercel"]
   app <--> db
   browser <--> wallet["User-controlled\nwallet"]
+  browser <--> altana["Altana passkey\n+ bounded session"]
   wallet --> apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
+  altana --> apex
   apex --> rpc
   rpc --> app
 ```
@@ -93,6 +102,8 @@ verification.
 - Hosted Supabase PostgreSQL with RLS and a server-only JavaScript client
 - viem for typed BNB Chain reads and transaction verification
 - RainbowKit, wagmi, and TanStack Query for browser wallet state
+- `@altananetwork/sdk` for optional passkey wallets, KeyStore sessions,
+  revocation, and atomic ERC-8183 execution
 - GitHub Actions for free scheduled indexing, health checks, and score updates
 - Vercel free tier as the approved web deployment target
 

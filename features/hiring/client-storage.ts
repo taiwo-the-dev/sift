@@ -1,6 +1,7 @@
 import type { HiringMissionInput } from "@/features/hiring/model";
 
 export type SavedHiringResume = Readonly<{
+  executionMode: "altana" | "wallet";
   id: string;
   idempotencyKey: string;
   resumeToken: string;
@@ -91,6 +92,8 @@ export function readHiringResume(key: string): SavedHiringResume | null {
       typeof parsed.idempotencyKey === "string" &&
       typeof parsed.resumeToken === "string"
       ? {
+          executionMode:
+            parsed.executionMode === "altana" ? "altana" : "wallet",
           id: parsed.id,
           idempotencyKey: parsed.idempotencyKey,
           resumeToken: parsed.resumeToken,

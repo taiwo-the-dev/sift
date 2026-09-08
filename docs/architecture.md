@@ -18,6 +18,8 @@ flowchart LR
   app["Next.js App Router\nVercel"]
   browser["Judge browser"]
   wallet["User-controlled wallet"]
+  altana["Altana passkey wallet\n+ bounded session"]
+  keystore["Altana KeyStore\npublic authority"]
   apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
 
   mainnet --> rpc --> indexer
@@ -32,6 +34,10 @@ flowchart LR
   app <--> db
   browser <--> wallet
   wallet -->|"explicitly approved transactions"| apex
+  browser <--> altana
+  altana -->|"registered session"| keystore
+  altana -->|"bounded atomic hire"| apex
+  keystore -->|"status at receipt block"| rpc
   apex -->|"receipts and job state"| rpc
   rpc -->|"server-side verification"| app
   app -->|"verified job/activity evidence"| db
@@ -56,6 +62,11 @@ flowchart LR
   server-only repositories. `SUPABASE_SECRET_KEY` never enters the browser.
 - The browser owns wallet interaction. Sift requests each mainnet or testnet action
   explicitly and never receives a private key or seed phrase.
+- The optional Altana browser boundary creates an OS-protected passkey wallet.
+  It retains the live generated session signer only in React memory and stores
+  only public wallet, credential-handle, permission, and transaction evidence
+  locally. Altana KeyStore exposes the public session authority and revocation
+  state on-chain.
 - After a transaction, the server independently checks the sender, chain,
   destination, calldata, receipt, event, confirmations, and protocol state
   before recording it as confirmed.
@@ -70,7 +81,7 @@ flowchart LR
 | Data | Hosted Supabase free tier | PostgreSQL catalogue, evidence, jobs, activity, wallet sessions |
 | Scheduled operations | GitHub Actions | Two-hour incremental indexing and six-hour health/scoring batches |
 | Chain reads | Public/free BNB RPC fallbacks | ERC-8004 ingestion and ERC-8183 verification |
-| Wallet writes | User-controlled wallet | Explicit chain-bound BSC Mainnet or Testnet ERC-8183/APEX transactions only |
+| Wallet writes | User-controlled wallet or Altana passkey/session | Explicit chain-bound BSC Mainnet or Testnet ERC-8183/APEX transactions only |
 
 The detailed database, indexer, scoring, hiring, dashboard, and security
 contracts are documented in their focused files under `docs/`. This diagram
@@ -82,3 +93,7 @@ reviewed chain-56 and chain-97 deployments. Quotes, RPC reads, wallet clients,
 stored jobs, receipt verification, and explorer links remain bound to the
 agent's chain. Mainnet requires a real-funds acknowledgement and every write
 still requires explicit wallet confirmation.
+The protected option keeps token approval under the passkey admin and gives the
+one-hour session only the four reviewed hiring functions plus exact token and
+native-gas caps. Its atomic result is persisted only after the same job evidence
+and historical KeyStore authority are verified by the server.

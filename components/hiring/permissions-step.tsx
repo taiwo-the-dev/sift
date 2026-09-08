@@ -6,10 +6,12 @@ import {
   Route,
   UserRoundCheck,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import type {
   HiringAgentSummary,
+  HiringExecutionMode,
   HiringMissionInput,
   HiringQuote,
 } from "@/features/hiring/model";
@@ -21,10 +23,13 @@ import { hiringExpiryLabel } from "@/features/hiring/review";
 
 interface PermissionsStepProps {
   agent: HiringAgentSummary;
+  canContinue?: boolean;
+  executionMode?: HiringExecutionMode;
   mission: HiringMissionInput;
   onBack: () => void;
   onContinue: () => void;
   quote: HiringQuote;
+  sessionControl?: ReactNode;
 }
 
 const restrictions = [
@@ -52,10 +57,13 @@ const restrictions = [
 
 export function PermissionsStep({
   agent,
+  canContinue = true,
+  executionMode = "wallet",
   mission,
   onBack,
   onContinue,
   quote,
+  sessionControl,
 }: PermissionsStepProps) {
   const deployment = getErc8183Deployment(agent.chainId);
 
@@ -69,10 +77,13 @@ export function PermissionsStep({
           Review what the protocol will allow.
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          This flow grants no access to private data, arbitrary contracts, or
-          unrestricted spending.
+          {executionMode === "altana"
+            ? "Your permission is time-limited, registered on-chain, and restricted to the reviewed hiring contracts and budget."
+            : "This flow grants no access to private data, arbitrary contracts, or unrestricted spending."}
         </p>
       </div>
+
+      {sessionControl}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {restrictions.map((restriction) => {
@@ -135,11 +146,16 @@ export function PermissionsStep({
           <ArrowLeft className="size-4" aria-hidden="true" />
           Edit task
         </Button>
-        <Button type="button" size="lg" onClick={onContinue}>
+        <Button type="button" size="lg" onClick={onContinue} disabled={!canContinue}>
           Review hiring details
           <ArrowRight className="size-4" aria-hidden="true" />
         </Button>
       </div>
+      {!canContinue ? (
+        <p className="text-right text-xs text-amber-200">
+          Create the protected permission above before continuing.
+        </p>
+      ) : null}
     </section>
   );
 }

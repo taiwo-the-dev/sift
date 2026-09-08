@@ -7,8 +7,15 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { z } from "zod";
 
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
+import { useAltanaSession } from "@/components/altana/altana-session-provider";
+import {
+  AltanaHiringPermissions,
+  altanaSessionCovers,
+} from "@/components/hiring/altana-hiring-permissions";
+import { AltanaWalletStep } from "@/components/hiring/altana-wallet-step";
 import { ConfirmationStep } from "@/components/hiring/confirmation-step";
 import { HiringStepper } from "@/components/hiring/hiring-stepper";
+import { HiringMethodSelector } from "@/components/hiring/hiring-method-selector";
 import { MissionStep } from "@/components/hiring/mission-step";
 import { PermissionsStep } from "@/components/hiring/permissions-step";
 import { ReviewStep } from "@/components/hiring/review-step";
@@ -36,6 +43,7 @@ import {
 import { createHiringResumeToken } from "@/features/hiring/idempotency";
 import type {
   HiringAgentSummary,
+  HiringExecutionMode,
   HiringFlowStep,
   HiringIntentSnapshot,
   HiringMissionInput,
@@ -54,9 +62,12 @@ const initialMission: HiringMissionInput = {
 
 export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
   const deployment = getErc8183Deployment(agent.chainId);
+  const altana = useAltanaSession();
   const account = useAccount();
   const switchChain = useSwitchChain();
   const [step, setStep] = useState<HiringFlowStep>("mission");
+  const [executionMode, setExecutionMode] =
+    useState<HiringExecutionMode>("altana");
   const [mission, setMission] = useState<HiringMissionInput>(() => ({
     ...initialMission,
     maxSpend: deployment.isMainnet ? "0" : initialMission.maxSpend,
@@ -98,6 +109,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       .then((snapshot) => {
         if (!active) return;
         setResume(saved);
+        setExecutionMode(saved.executionMode);
         setIntent(snapshot);
         setMission({
           deliverables: snapshot.deliverables,
@@ -133,6 +145,11 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
     setRecoveryNotice(null);
 
     try {
+      const selectedWallet =
+        executionMode === "altana" ? altana.walletAddress : account.address;
+      if (executionMode === "altana" && !selectedWallet) {
+        throw new Error("Create or recover a passkey wallet before requesting a quote.");
+      }
       const normalized = parseHiringMission(mission, agent.chainId);
       const nextQuote = await requestHiringQuote(
         { agentId: agent.agentId, chainId: agent.chainId },
@@ -140,7 +157,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       );
       setMission(normalized);
       setQuote(nextQuote);
-      setQuoteWallet(account.address?.toLowerCase() ?? null);
+      setQuoteWallet(selectedWallet?.toLowerCase() ?? null);
       setStep("permissions");
     } catch (caught) {
       setError(
@@ -156,7 +173,9 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
   }
 
   async function createIntent(mainnetRiskAccepted: boolean): Promise<void> {
-    const connectedWallet = account.address?.toLowerCase() ?? null;
+    const hiringWallet =
+      executionMode === "altana" ? altana.walletAddress : account.address;
+    const connectedWallet = hiringWallet?.toLowerCase() ?? null;
 
     if (quote && quoteRequiresRefreshForWallet(quoteWallet, connectedWallet)) {
       setQuote(null);
@@ -166,7 +185,11 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
       return;
     }
 
-    if (!quote || !account.address || account.chainId !== agent.chainId) {
+    if (
+      !quote ||
+      !hiringWallet ||
+      (executionMode === "wallet" && account.chainId !== agent.chainId)
+    ) {
       return;
     }
 
@@ -178,9 +201,10 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         agent,
         mission,
         quote,
-        walletAddress: account.address,
+        walletAddress: hiringWallet,
       });
       const saved: SavedHiringResume = {
+        executionMode,
         id: "",
         idempotencyKey: crypto.randomUUID(),
         resumeToken: createHiringResumeToken(),
@@ -197,7 +221,7 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         qualityStandards: mission.qualityStandards,
         quote,
         resumeToken: saved.resumeToken,
-        walletAddress: account.address,
+        walletAddress: hiringWallet,
       });
       const completeResume = { ...saved, id: snapshot.id };
       writeHiringResume(storageKey, completeResume);
@@ -294,20 +318,40 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
         <HiringStepper current={step} />
         <div className="mt-8 border-t border-border pt-7">
           {step === "mission" ? (
-            <MissionStep
-              chainId={agent.chainId}
-              error={error}
-              mission={mission}
-              notice={recoveryNotice}
-              onChange={setMission}
-              onSubmit={negotiate}
-              pending={pending}
-            />
+            <>
+              <HiringMethodSelector
+                chainId={agent.chainId}
+                mode={executionMode}
+                onChange={(nextMode) => {
+                  setExecutionMode(nextMode);
+                  setError(null);
+                }}
+              />
+              <MissionStep
+                chainId={agent.chainId}
+                error={error}
+                mission={mission}
+                notice={recoveryNotice}
+                onChange={setMission}
+                onSubmit={negotiate}
+                pending={pending}
+              />
+            </>
           ) : null}
 
           {step === "permissions" && quote ? (
             <PermissionsStep
               agent={agent}
+              canContinue={
+                executionMode === "wallet" ||
+                altanaSessionCovers(
+                  altana.publicSessions[agent.chainId],
+                  altana.walletAddress,
+                  BigInt(quote.budgetBaseUnits),
+                  altana.hasLiveSession(agent.chainId),
+                )
+              }
+              executionMode={executionMode}
               mission={mission}
               onBack={() => {
                 setError(null);
@@ -315,15 +359,28 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
               }}
               onContinue={() => setStep("review")}
               quote={quote}
+              sessionControl={
+                executionMode === "altana" ? (
+                  <AltanaHiringPermissions
+                    budget={BigInt(quote.budgetBaseUnits)}
+                    chainId={agent.chainId}
+                  />
+                ) : null
+              }
             />
           ) : null}
 
           {step === "review" && quote ? (
             <ReviewStep
-              address={account.address}
+              address={
+                executionMode === "altana"
+                  ? altana.walletAddress ?? undefined
+                  : account.address
+              }
               agent={agent}
               chainId={account.chainId}
               error={error}
+              executionMode={executionMode}
               mission={mission}
               onBack={() => {
                 setError(null);
@@ -338,17 +395,31 @@ export function HiringFlow({ agent }: Readonly<{ agent: HiringAgentSummary }>) {
           ) : null}
 
           {step === "wallet" && intent && resume ? (
-            <WalletStep
-              agent={agent}
-              intent={intent}
-              onIntentChange={updateIntent}
-              onRestart={restartHiringFlow}
-              resume={resume}
-            />
+            executionMode === "altana" ? (
+              <AltanaWalletStep
+                agent={agent}
+                intent={intent}
+                onIntentChange={updateIntent}
+                onRestart={restartHiringFlow}
+                resume={resume}
+              />
+            ) : (
+              <WalletStep
+                agent={agent}
+                intent={intent}
+                onIntentChange={updateIntent}
+                onRestart={restartHiringFlow}
+                resume={resume}
+              />
+            )
           ) : null}
 
           {step === "confirmation" && intent ? (
-            <ConfirmationStep agent={agent} intent={intent} />
+            <ConfirmationStep
+              agent={agent}
+              executionMode={executionMode}
+              intent={intent}
+            />
           ) : null}
         </div>
       </div>

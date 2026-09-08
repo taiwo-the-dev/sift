@@ -112,6 +112,29 @@ export async function recordRemoteHiringTransaction(
   return payload.intent;
 }
 
+export async function recordRemoteAltanaHire(
+  id: string,
+  resumeToken: string,
+  input: Readonly<{
+    hash: `0x${string}`;
+    sessionExpiry: number;
+    sessionPublicKey: `0x${string}`;
+  }>,
+): Promise<HiringIntentSnapshot> {
+  const response = await fetch(`/api/hiring/jobs/${encodeURIComponent(id)}`, {
+    body: JSON.stringify({ action: "record_altana_hire", ...input }),
+    headers: {
+      "content-type": "application/json",
+      "x-sift-resume-token": resumeToken,
+    },
+    method: "PATCH",
+  });
+  const payload = await readApiResponse<
+    Readonly<{ intent: HiringIntentSnapshot }>
+  >(response);
+  return payload.intent;
+}
+
 export async function recordRemoteClientState(
   id: string,
   resumeToken: string,

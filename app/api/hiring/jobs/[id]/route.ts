@@ -2,6 +2,7 @@ import { getAddress, type Hash } from "viem";
 import { z } from "zod";
 
 import type { HiringIntentStatus } from "@/features/hiring/model";
+import { inspectAltanaHiringTransaction } from "@/features/altana/receipt";
 import {
   getErc8183Deployment,
   hiringTransactionSteps,
@@ -39,9 +40,16 @@ const clientStateActionSchema = z.object({
   message: z.string().max(300).optional(),
   status: z.enum(["awaiting_wallet", "cancelled"]),
 });
+const altanaHireActionSchema = z.object({
+  action: z.literal("record_altana_hire"),
+  hash: z.string().regex(hashPattern),
+  sessionExpiry: z.number().int().positive(),
+  sessionPublicKey: z.string().regex(/^0x04[0-9a-fA-F]{128}$/),
+});
 const actionSchema = z.discriminatedUnion("action", [
   transactionActionSchema,
   clientStateActionSchema,
+  altanaHireActionSchema,
 ]);
 
 function json(body: unknown, status = 200): Response {
@@ -195,6 +203,48 @@ export async function PATCH(
       );
       const refreshed = await getAuthorizedHiringIntent(job.id, token);
       return json({ intent: refreshed.snapshot });
+    }
+
+    if (action.action === "record_altana_hire") {
+      const existing = authorized.snapshot.transactions.find(
+        (transaction) => transaction.step === "fund_job",
+      );
+      if (
+        authorized.snapshot.status === "confirmed" &&
+        existing?.hash.toLowerCase() === action.hash.toLowerCase()
+      ) {
+        return json({ intent: authorized.snapshot });
+      }
+      if (authorized.snapshot.status === "confirmed") {
+        throw new HiringConflictError("This hiring process is already confirmed.");
+      }
+      if (
+        authorized.snapshot.transactions.length > 0 ||
+        authorized.snapshot.currentStep !== "create_job"
+      ) {
+        throw new HiringConflictError(
+          "A direct-wallet transaction already started. Restart with a fresh quote to use protected hiring.",
+        );
+      }
+
+      const verification = await inspectAltanaHiringTransaction({
+        client: getHiringPublicClient(job.chain_id),
+        hash: action.hash as Hash,
+        job,
+        sessionExpiry: action.sessionExpiry,
+        sessionPublicKey: action.sessionPublicKey as `0x${string}`,
+      });
+      const snapshot = await persistVerifiedHiringTransaction(job, verification, {
+        block_number: Number(verification.blockNumber),
+        confirmed_at: verification.confirmedAt,
+        current_step: null,
+        failure_code: null,
+        failure_message: null,
+        onchain_job_id: verification.onchainJobId,
+        status: "confirmed",
+        transaction_hash: verification.hash.toLowerCase(),
+      });
+      return json({ intent: snapshot });
     }
 
     if (authorized.snapshot.status === "confirmed") {

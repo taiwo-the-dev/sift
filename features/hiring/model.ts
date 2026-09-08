@@ -28,6 +28,8 @@ export type HiringFlowStep =
   | "wallet"
   | "confirmation";
 
+export type HiringExecutionMode = "altana" | "wallet";
+
 export type HiringCompatibility = Readonly<{
   endpoint: string;
   negotiateUrl: string;

@@ -26,6 +26,7 @@ Ready for Development
 - M17 — Not Started
 - M18 — Blocked Pending Official Phase 2 Criteria
 - M19 — Implemented Locally; Hosted Migration and Human Validation Pending
+- M20 — Implemented Locally; Human Altana Testnet Evidence Pending
 
 ## Priority
 
@@ -1619,6 +1620,19 @@ Deliver:
 Mainnet hiring must remain non-custodial and fail closed. Never automate a
 mainnet transaction, request a private key, use unlimited approval, or claim a
 successful mainnet hire without independently verified human-approved evidence.
+
+---
+
+## M20 — Altana Session Hiring
+
+Add an optional Altana passkey-wallet path to the existing ERC-8183 hire. Show
+the session's allowed contract functions, exact token cap, gas cap, one-hour
+expiry, KeyStore registration, transaction evidence, and revocation inside
+Sift. Keep token approval outside session authority and exact to the signed job
+budget. Build the atomic hiring bundle with the pinned official SDK and verify
+real receipt events, funded state, and historical KeyStore authority before
+persistence. Preserve the original direct-wallet path and never store private
+session material or automate a mainnet write.
 
 ---
 

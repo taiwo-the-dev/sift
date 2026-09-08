@@ -42,6 +42,7 @@
     "db:types": "supabase gen types typescript --linked --schema public > lib/db/database.generated.ts"
   },
   "dependencies": {
+    "@altananetwork/sdk": "0.7.1",
     "@base-ui/react": "1.7.0",
     "@next/env": "16.3.1",
     "@rainbow-me/rainbowkit": "2.2.11",

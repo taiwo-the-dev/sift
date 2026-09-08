@@ -15,6 +15,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type {
   HiringAgentSummary,
+  HiringExecutionMode,
   HiringMissionInput,
   HiringQuote,
 } from "@/features/hiring/model";
@@ -33,6 +34,7 @@ interface ReviewStepProps {
   agent: HiringAgentSummary;
   chainId: number | undefined;
   error: string | null;
+  executionMode?: HiringExecutionMode;
   mission: HiringMissionInput;
   onBack: () => void;
   onContinue: (mainnetRiskAccepted: boolean) => void;
@@ -59,6 +61,7 @@ export function ReviewStep({
   agent,
   chainId,
   error,
+  executionMode = "wallet",
   mission,
   onBack,
   onContinue,
@@ -70,7 +73,8 @@ export function ReviewStep({
   const deployment = getErc8183Deployment(agent.chainId);
   const [mainnetRiskAccepted, setMainnetRiskAccepted] = useState(false);
   const connected = Boolean(address);
-  const correctNetwork = chainId === deployment.chainId;
+  const correctNetwork =
+    executionMode === "altana" || chainId === deployment.chainId;
 
   return (
     <section className="space-y-6">
@@ -82,7 +86,9 @@ export function ReviewStep({
           Review this agent hire before continuing.
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          No blockchain transaction is sent until you approve it in your wallet.
+          {executionMode === "altana"
+            ? "Your passkey approves the exact token allowance; the protected session then submits the reviewed hire as one atomic action."
+            : "No blockchain transaction is sent until you approve it in your wallet."}
         </p>
       </div>
 
@@ -150,9 +156,9 @@ export function ReviewStep({
       </dl>
 
       <div className="rounded-xl border border-sky-400/20 bg-sky-400/7 px-4 py-3 text-xs leading-5 text-sky-100">
-        This protocol requires separate job creation, policy registration,
-        budget, exact token approval when needed, and funding transactions. Sift
-        simulates each call and asks for explicit wallet confirmation each time.
+        {executionMode === "altana"
+          ? "Altana batches job creation, policy registration, budget setting, and funding atomically. Token approval is kept outside the session and limited to this exact budget."
+          : "This protocol requires separate job creation, policy registration, budget, exact token approval when needed, and funding transactions. Sift simulates each call and asks for explicit wallet confirmation each time."}
       </div>
 
       {deployment.isMainnet ? (
@@ -186,6 +192,21 @@ export function ReviewStep({
           Back
         </Button>
 
+        {executionMode === "altana" ? (
+          <Button
+            type="button"
+            size="lg"
+            onClick={() => onContinue(mainnetRiskAccepted)}
+            disabled={!connected || pending || (deployment.isMainnet && !mainnetRiskAccepted)}
+          >
+            {pending ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <ArrowRight className="size-4" aria-hidden="true" />
+            )}
+            {pending ? "Saving hiring details" : "Continue to protected hire"}
+          </Button>
+        ) : (
         <ConnectButton.Custom>
           {({ mounted, openConnectModal }) => {
             if (!mounted) {
@@ -238,9 +259,10 @@ export function ReviewStep({
             );
           }}
         </ConnectButton.Custom>
+        )}
       </div>
 
-      {!correctNetwork && connected ? (
+      {executionMode === "wallet" && !correctNetwork && connected ? (
         <p className="flex items-center justify-end gap-2 text-xs text-amber-200">
           <CircleAlert className="size-3.5" aria-hidden="true" />
           This agent must be hired on {deployment.networkName} (chain {deployment.chainId}).

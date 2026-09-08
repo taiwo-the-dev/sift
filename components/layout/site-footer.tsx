@@ -8,6 +8,7 @@ const footerGroups = [
     links: [
       { label: "Discover", href: "/discover" },
       { label: "Saved agents", href: "/saved" },
+      { label: "Permissions", href: "/permissions" },
       { label: "Categories", href: "/#categories" },
     ],
   },

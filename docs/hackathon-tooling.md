@@ -60,8 +60,7 @@ explorer URLs, faucets, and network behavior.
 ## Partner tooling boundary
 
 Altana, TermiX, and PancakeSwap resources belong to separately judged partner
-tracks. They are not included in the main-track implementation merely because
-they appear on the Resources tab:
+tracks. They are not included merely because they appear on the Resources tab:
 
 - Altana changes wallet authority, session-key, revocation, and transaction
   security architecture.
@@ -70,8 +69,15 @@ they appear on the Resources tab:
 - PancakeSwap requires a real benefit delivered to traders or liquidity
   providers, not a decorative API or logo integration.
 
-Using any partner tool requires a separate approved ticket with its own data,
-security, transaction, testing, and stop conditions.
+M20 is the separately approved Altana integration. It pins the official SDK,
+uses browser passkeys, registers bounded sessions in KeyStore, exposes
+revocation, and routes a real ERC-8183 hire through that session. Its human
+testnet evidence remains pending. TermiX is represented only by the empty
+real-evidence worksheet in `agent-advantage-report.md`; no result is claimed.
+PancakeSwap remains unimplemented.
+
+Any additional partner feature still requires a separate approved ticket with
+its own data, security, transaction, testing, and stop conditions.
 
 ## Evidence of meaningful use
 

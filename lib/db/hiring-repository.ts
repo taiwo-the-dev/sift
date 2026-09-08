@@ -389,6 +389,7 @@ export type VerifiedTransactionWrite = Readonly<{
   replacedHash: Hash | null;
   status: HiringTransactionStatus;
   step: HiringTransactionStep;
+  to?: Address;
 }>;
 
 export async function persistVerifiedHiringTransaction(
@@ -440,9 +441,8 @@ export async function persistVerifiedHiringTransaction(
     p_replaced_transaction_hash:
       transaction.replacedHash?.toLowerCase() ?? null,
     p_step: transaction.step,
-    p_to_address: transactionDestination(
-      transaction.step,
-      job.chain_id,
+    p_to_address: (
+      transaction.to ?? transactionDestination(transaction.step, job.chain_id)
     ).toLowerCase(),
     p_transaction_confirmed_at: transaction.confirmedAt,
     p_transaction_hash: transaction.hash.toLowerCase(),
