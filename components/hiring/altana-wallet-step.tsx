@@ -14,10 +14,15 @@ import { useState } from "react";
 import type { Hash } from "viem";
 
 import { useAltanaSession } from "@/components/altana/altana-session-provider";
+import { HiringErrorNotice } from "@/components/hiring/hiring-error-notice";
 import { Button } from "@/components/ui/button";
 import { buildAltanaTransactionHref } from "@/features/altana/protocol";
 import type { SavedHiringResume } from "@/features/hiring/client-storage";
 import { recordRemoteAltanaHire } from "@/features/hiring/client-api";
+import {
+  describeHiringError,
+  type HiringErrorDescription,
+} from "@/features/hiring/error-presentation";
 import type {
   HiringAgentSummary,
   HiringIntentSnapshot,
@@ -48,6 +53,7 @@ export function AltanaWalletStep({
   );
   const [busy, setBusy] = useState<"approval" | "hire" | "verify" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<HiringErrorDescription | null>(null);
   const walletMatches =
     altana.walletAddress?.toLowerCase() === intent.walletAddress.toLowerCase();
   const sessionReady =
@@ -59,6 +65,7 @@ export function AltanaWalletStep({
 
   async function prepareAllowance(): Promise<void> {
     setBusy("approval");
+    setError(null);
     setNotice("Approve the exact signed budget with your passkey. This permission is not given to the session.");
     try {
       const result = await altana.approveExactHiringBudget(agent.chainId, budget);
@@ -73,7 +80,8 @@ export function AltanaWalletStep({
           : "The existing allowance already covers this exact budget.",
       );
     } catch (caught) {
-      setNotice(caught instanceof Error ? caught.message : "Sift could not prepare the exact allowance.");
+      setNotice(null);
+      setError(describeHiringError(caught));
     } finally {
       setBusy(null);
     }
@@ -82,6 +90,7 @@ export function AltanaWalletStep({
   async function verify(hash: Hash): Promise<void> {
     if (!session) return;
     setBusy("verify");
+    setError(null);
     setNotice(`Verifying the funded ERC-8183 job and Altana KeyStore record on ${deployment.networkName}…`);
     try {
       const refreshed = await recordRemoteAltanaHire(intent.id, resume.resumeToken, {
@@ -92,7 +101,8 @@ export function AltanaWalletStep({
       onIntentChange(refreshed);
       setNotice("The protected hire and funded job are confirmed on-chain.");
     } catch (caught) {
-      setNotice(caught instanceof Error ? caught.message : "Sift could not verify the protected hire yet.");
+      setNotice(null);
+      setError(describeHiringError(caught));
     } finally {
       setBusy(null);
     }
@@ -101,6 +111,7 @@ export function AltanaWalletStep({
   async function hire(): Promise<void> {
     if (!sessionReady) return;
     setBusy("hire");
+    setError(null);
     setNotice("Submitting the four permitted ERC-8183 calls as one protected Altana action…");
     try {
       const result = await altana.executeSessionHire(intent);
@@ -114,7 +125,8 @@ export function AltanaWalletStep({
       setHireHash(hash);
       await verify(hash);
     } catch (caught) {
-      setNotice(caught instanceof Error ? caught.message : "The protected hire could not be submitted.");
+      setNotice(null);
+      setError(describeHiringError(caught));
       setBusy(null);
     }
   }
@@ -182,7 +194,7 @@ export function AltanaWalletStep({
             ) : (
               <Button type="button" size="sm" onClick={hire} disabled={busy !== null || !approvalReady || !sessionReady}>
                 {busy === "hire" ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
-                Hire with protected session
+                Complete protected hire
               </Button>
             )}
           </div>
@@ -200,6 +212,7 @@ export function AltanaWalletStep({
         </p>
       ) : null}
       {notice ? <p role="status" className="text-sm leading-6 text-muted-foreground">{notice}</p> : null}
+      {error ? <HiringErrorNotice error={error} /> : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
         <Button type="button" variant="outline" onClick={onRestart} disabled={busy !== null}>

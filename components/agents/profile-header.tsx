@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Gauge,
   RadioTower,
-  ServerCog,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -30,7 +29,7 @@ import {
   formatMetadataStatus,
 } from "@/features/discovery/format";
 import { isHealthStale } from "@/features/health/presentation";
-import { resolveHiringCompatibility } from "@/features/hiring/compatibility";
+import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +88,7 @@ export function ProfileHeader({
       ? "Not enough data"
       : `${profile.score.score}/100`;
   const scoreDetail = !profile.score
-    ? "Sift Score not available"
+    ? "Waiting for enough verified evidence"
     : profile.score.score === null
       ? `${describeScoreConfidence(profile.score.confidence)} · insufficient evidence`
       : describeScoreConfidence(profile.score.confidence);
@@ -99,7 +98,8 @@ export function ProfileHeader({
   const healthDetail = profile.health
     ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`
     : "No health check available";
-  const hireable = resolveHiringCompatibility(profile) !== null;
+  const hiring = assessHiringCompatibility(profile);
+  const hireable = hiring.compatibility !== null;
   const showOtherCategory = shouldShowOtherCategory(
     profile.metadataStatus,
     profile.categories,
@@ -256,13 +256,13 @@ export function ProfileHeader({
             detail={healthDetail}
           />
           <EvidenceStat
-            icon={<ServerCog className="size-4 text-violet-300" aria-hidden="true" />}
-            label="Services"
-            value={profile.services.length.toString()}
+            icon={<BriefcaseBusiness className="size-4 text-violet-300" aria-hidden="true" />}
+            label="Hiring"
+            value={hireable ? "Ready to check" : "Unavailable"}
             detail={
-              profile.services.length === 1
-                ? "1 service listed"
-                : `${profile.services.length} services listed`
+              hireable
+                ? "Live service and price checked next"
+                : hiring.title
             }
           />
         </dl>
@@ -285,11 +285,14 @@ export function ProfileHeader({
           </p>
         </div>
 
-        <div className="mt-4 rounded-xl border border-border bg-background/55 px-4 py-3 text-xs leading-5 text-muted-foreground">
+        <div
+          id="hiring-availability"
+          className="mt-4 scroll-mt-24 rounded-xl border border-border bg-background/55 px-4 py-3 text-xs leading-5 text-muted-foreground"
+        >
           <span className="font-semibold text-foreground">Hiring availability: </span>
           {hireable
-            ? `Available to hire through ERC-8183 on ${formatChainName(profile.chainId)}.`
-            : "This agent does not meet the current ERC-8183 hiring requirements."}
+            ? `This profile lists supported hiring on ${formatChainName(profile.chainId)}. Sift will check the live service and signed price before you can pay.`
+            : hiring.explanation}
         </div>
       </div>
     </header>

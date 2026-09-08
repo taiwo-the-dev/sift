@@ -1,6 +1,7 @@
 import {
   ArrowUpRight,
   BadgeCheck,
+  BriefcaseBusiness,
   CircleAlert,
   Database,
   Gauge,
@@ -20,10 +21,10 @@ import {
   formatCategory,
   formatChainName,
   formatMetadataStatus,
-  formatServiceType,
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
 import { isHealthStale } from "@/features/health/presentation";
+import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import {
   describeScoreConfidence,
   isScoreStale,
@@ -51,22 +52,14 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           goal: comparisonGoal,
         }).toString()}`
       : baseProfileHref;
-  const uniqueServices = [
-    ...new Set(
-      agent.services.map((service) => formatServiceType(service.serviceType)),
-    ),
-  ];
-  const visibleServices = uniqueServices.slice(0, 3);
-  const hiddenServiceCount = Math.max(
-    0,
-    uniqueServices.length - visibleServices.length,
-  );
   const primaryCategory = agent.categories[0];
   const showOtherCategory = shouldShowOtherCategory(
     agent.metadataStatus,
     agent.categories,
   );
   const hiddenCategoryCount = Math.max(0, agent.categories.length - 1);
+  const hiring = assessHiringCompatibility(agent);
+  const canRequestQuote = hiring.compatibility !== null;
 
   return (
     <article className="sift-card-reveal group rounded-xl border border-border bg-card p-4 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:bg-card/95 hover:shadow-[0_18px_44px_rgba(0,0,0,0.2)] motion-reduce:transform-none sm:p-5">
@@ -157,29 +150,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           </p>
 
           <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-3 sm:flex-row sm:items-center sm:justify-between">
-            {visibleServices.length > 0 ? (
-              <div className="flex min-w-0 flex-wrap gap-1.5">
-                {visibleServices.map((service) => (
-                  <span
-                    key={service}
-                    className="rounded-md border border-border bg-background/70 px-2 py-1 text-[0.68rem] font-medium text-foreground"
-                  >
-                    {service}
-                  </span>
-                ))}
-                {hiddenServiceCount > 0 ? (
-                  <span className="px-1.5 py-1 text-[0.7rem] text-muted-foreground">
-                    +{hiddenServiceCount} more
-                  </span>
-                ) : null}
-              </div>
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                Services not listed
-              </span>
-            )}
-
-            <dl className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:justify-end">
+            <dl className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <RadioTower
                   className="size-3.5 shrink-0 text-brand"
@@ -192,32 +163,30 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                       ? `${isHealthStale(agent.health) ? "Stale " : ""}${
                           agent.health.status
                         }`
-                      : "Unknown health"}
+                      : "Health not checked"}
                   </dd>
                 </div>
               </div>
-              {agent.score && agent.score.score !== null ? (
-                <div
-                  className="flex items-center gap-2"
-                  title={
-                    isScoreStale(agent.score.calculatedAt)
+              <div
+                className="flex items-center gap-2"
+                title={
+                  agent.score
+                    ? isScoreStale(agent.score.calculatedAt)
                       ? "This score needs refreshing"
                       : `${describeScoreConfidence(agent.score.confidence)} confidence`
-                  }
-                >
-                  <Gauge
-                    className="size-3.5 shrink-0 text-brand"
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <dt className="sr-only">Sift Score</dt>
-                    <dd>
-                      Score {agent.score.score}
-                      {isScoreStale(agent.score.calculatedAt) ? " · Stale" : ""}
-                    </dd>
-                  </div>
+                    : "Sift has not recorded enough current evidence to publish a score."
+                }
+              >
+                <Gauge className="size-3.5 shrink-0 text-brand" aria-hidden="true" />
+                <div>
+                  <dt className="sr-only">Sift Score</dt>
+                  <dd>
+                    {agent.score?.score !== null && agent.score?.score !== undefined
+                      ? `Score ${agent.score.score}${isScoreStale(agent.score.calculatedAt) ? " · Stale" : ""}`
+                      : "Score not available"}
+                  </dd>
                 </div>
-              ) : null}
+              </div>
               <div
                 className={cn(
                   "flex items-center gap-1.5",
@@ -235,7 +204,29 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
                   <dd>{formatMetadataStatus(agent.metadataStatus)}</dd>
                 </div>
               </div>
+              {canRequestQuote ? (
+                <div
+                  title={hiring.explanation}
+                  className="flex items-center gap-1.5 text-emerald-200"
+                >
+                  <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
+                  <div>
+                    <dt className="sr-only">Hiring status</dt>
+                    <dd>Available</dd>
+                  </div>
+                </div>
+              ) : null}
             </dl>
+            {profileHref ? (
+              <Link
+                href={profileHref}
+                prefetch={false}
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground outline-none transition-colors hover:border-brand/30 hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                View agent
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

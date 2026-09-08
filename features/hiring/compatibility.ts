@@ -55,6 +55,17 @@ export type HiringCompatibilityAssessment = Readonly<{
   title: string;
 }>;
 
+type HiringCompatibilityProfile = Readonly<{
+  active: boolean | null;
+  chainId: number;
+  metadataStatus: AgentProfile["metadataStatus"];
+  ownerAddress: string | null;
+  services: readonly Pick<
+    AgentProfileService,
+    "endpoint" | "serviceType" | "version"
+  >[];
+}>;
+
 export function isErc8183ServiceType(value: string): boolean {
   return value.trim().toLowerCase().replaceAll("-", "") === "erc8183";
 }
@@ -136,7 +147,7 @@ function compatibilityAssessment(
  * receipt checks performed later in the flow.
  */
 export function assessHiringCompatibility(
-  profile: Pick<AgentProfile, "active" | "chainId" | "metadataStatus" | "ownerAddress" | "services">,
+  profile: HiringCompatibilityProfile,
 ): HiringCompatibilityAssessment {
   const checks: HiringCompatibilityCheck[] = [];
 
@@ -239,7 +250,7 @@ export function assessHiringCompatibility(
 }
 
 export function resolveHiringCompatibility(
-  profile: Pick<AgentProfile, "active" | "chainId" | "metadataStatus" | "ownerAddress" | "services">,
+  profile: HiringCompatibilityProfile,
 ): HiringCompatibility | null {
   return assessHiringCompatibility(profile).compatibility;
 }

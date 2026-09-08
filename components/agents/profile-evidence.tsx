@@ -44,7 +44,7 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
       <CategoryEvidencePanel profile={profile} />
 
       <div className="mt-4">
-      <ScoreExplanation score={profile.score} />
+      <ScoreExplanation profile={profile} score={profile.score} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">

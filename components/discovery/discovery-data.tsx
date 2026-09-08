@@ -5,6 +5,7 @@ import { Pagination } from "@/components/discovery/pagination";
 import { ResultToolbar } from "@/components/discovery/result-toolbar";
 import type { CatalogueNetworkStatus } from "@/features/catalogue/status";
 import type { DiscoveryQuery } from "@/features/discovery/model";
+import { isHiringAvailabilityQuery } from "@/features/discovery/query";
 import { createCatalogueStatusRepository } from "@/lib/db/catalogue-status-repository";
 import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
 
@@ -50,7 +51,9 @@ export async function DiscoveryResults({ query }: DiscoveryDataProps) {
               <AgentCard
                 key={agent.agentDbId}
                 agent={agent}
-                comparisonGoal={query.query}
+                comparisonGoal={
+                  isHiringAvailabilityQuery(query) ? "" : query.query
+                }
               />
             ))}
           </div>

@@ -14,7 +14,8 @@ import { useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 
 import { useAltanaSession } from "@/components/altana/altana-session-provider";
-import { CopyButton } from "@/components/agents/copy-button";
+import { AltanaWalletFunding } from "@/components/altana/altana-wallet-funding";
+import { HiringErrorNotice } from "@/components/hiring/hiring-error-notice";
 import { Button } from "@/components/ui/button";
 import {
   buildAltanaKeyStoreHref,
@@ -25,6 +26,10 @@ import {
   getErc8183Deployment,
   type HiringChainId,
 } from "@/features/hiring/protocol";
+import {
+  describeHiringError,
+  type HiringErrorDescription,
+} from "@/features/hiring/error-presentation";
 import { cn } from "@/lib/utils";
 
 type PendingAction = "create" | "grant" | "recover" | "refresh" | "revoke";
@@ -43,6 +48,7 @@ export function AltanaSessionControls() {
   const [mainnetAccepted, setMainnetAccepted] = useState(false);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<HiringErrorDescription | null>(null);
   const deployment = getErc8183Deployment(chainId);
   const session = altana.publicSessions[chainId];
 
@@ -53,11 +59,12 @@ export function AltanaSessionControls() {
   ): Promise<void> {
     setPending(action);
     setNotice(null);
+    setError(null);
     try {
       await operation();
       setNotice(success);
     } catch (caught) {
-      setNotice(caught instanceof Error ? caught.message : "Sift could not complete this permission action.");
+      setError(describeHiringError(caught));
     } finally {
       setPending(null);
     }
@@ -93,24 +100,7 @@ export function AltanaSessionControls() {
           ) : null}
         </div>
         {altana.walletAddress ? (
-          <div className="mt-5 rounded-xl border border-border bg-background/45 p-4">
-            <p className="text-xs font-medium text-muted-foreground">
-              Passkey wallet funding address
-            </p>
-            <div className="mt-2 flex items-center gap-3">
-              <code className="min-w-0 flex-1 break-all font-mono text-sm text-foreground">
-                {altana.walletAddress}
-              </code>
-              <CopyButton
-                label="passkey wallet address"
-                value={altana.walletAddress}
-              />
-            </div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              This is separate from your connected wallet. Copy this exact
-              address when funding it on the selected BSC network.
-            </p>
-          </div>
+          <AltanaWalletFunding address={altana.walletAddress} chainId={chainId} />
         ) : null}
         {!altana.walletAddress ? (
           <div className="mt-5 flex flex-wrap gap-2">
@@ -199,7 +189,7 @@ export function AltanaSessionControls() {
               onClick={() => run("grant", () => altana.grantHiringSession(chainId, parseCap()), "Permission created and registered in Altana KeyStore.")}
             >
               {pending === "grant" ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <ShieldCheck className="size-4" aria-hidden="true" />}
-              Create one-hour permission
+              Create protected permission
             </Button>
           ) : (
             <>
@@ -241,6 +231,7 @@ export function AltanaSessionControls() {
       ) : null}
 
       {notice ? <p role="status" className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">{notice}</p> : null}
+      {error ? <HiringErrorNotice error={error} /> : null}
     </div>
   );
 }

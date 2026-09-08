@@ -7,8 +7,9 @@ const footerGroups = [
     title: "Product",
     links: [
       { label: "Discover", href: "/discover" },
-      { label: "Saved agents", href: "/saved" },
-      { label: "Permissions", href: "/permissions" },
+      { label: "Bookmarked agents", href: "/saved" },
+      { label: "Wallet safety", href: "/permissions" },
+      { label: "My jobs", href: "/dashboard" },
       { label: "Categories", href: "/#categories" },
     ],
   },

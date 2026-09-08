@@ -1,5 +1,6 @@
 import {
   Activity,
+  BriefcaseBusiness,
   Check,
   CircleEllipsis,
   Database,
@@ -16,14 +17,15 @@ import Link from "next/link";
 
 import {
   discoveryCategories,
-  discoveryHealthStatuses,
-  discoveryMetadataStatuses,
   discoveryNetworkOptions,
   type DiscoveryCategory,
   type DiscoveryNetworkScope,
   type DiscoveryQuery,
 } from "@/features/discovery/model";
-import { buildDiscoveryHref } from "@/features/discovery/query";
+import {
+  buildDiscoveryHref,
+  isHiringAvailabilityQuery,
+} from "@/features/discovery/query";
 import { cn } from "@/lib/utils";
 
 interface FilterPanelProps {
@@ -43,7 +45,38 @@ const categoryIcons = {
   "yield-optimisation": TrendingUp,
 } as const satisfies Readonly<Record<DiscoveryCategory, LucideIcon>>;
 
+const agentStatusOptions = [
+  { kind: "availability", label: "Available", value: "available" },
+  { kind: "metadata", label: "Invalid profile data", value: "invalid" },
+  { kind: "health", label: "Online", value: "online" },
+  { kind: "health", label: "Offline", value: "offline" },
+  { kind: "health", label: "Degraded", value: "degraded" },
+  { kind: "metadata", label: "Verification pending", value: "pending" },
+] as const;
+
+function countSelectedAgentStatuses(query: DiscoveryQuery): number {
+  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
+  const metadataCount = query.metadataStatuses.filter((status) =>
+    agentStatusOptions.some(
+      (option) => option.kind === "metadata" && option.value === status,
+    ),
+  ).length;
+  const healthCount = query.healthStatuses.filter((status) =>
+    agentStatusOptions.some(
+      (option) => option.kind === "health" && option.value === status,
+    ),
+  ).length;
+
+  return metadataCount + healthCount + (hiringAvailabilitySelected ? 1 : 0);
+}
+
 function FilterOptions({ query }: FilterPanelProps) {
+  const hiringSupportSelected = isHiringAvailabilityQuery(query);
+  const selectedAgentStatusCount = countSelectedAgentStatuses(query);
+  const metadataWithoutHiringRequirement = query.metadataStatuses.filter(
+    (status) => status !== "valid",
+  );
+
   return (
     <div className="space-y-6">
       <fieldset>
@@ -176,29 +209,79 @@ function FilterOptions({ query }: FilterPanelProps) {
         <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Agent status
           <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
-            {query.metadataStatuses.length + query.healthStatuses.length > 0
-              ? `${query.metadataStatuses.length + query.healthStatuses.length} selected`
+            {selectedAgentStatusCount > 0
+              ? `${selectedAgentStatusCount} selected`
               : "Any"}
           </span>
         </legend>
         <div className="mt-3 flex flex-wrap items-stretch gap-2">
-          {discoveryMetadataStatuses.map((status) => {
-            const selected = query.metadataStatuses.includes(status.value);
-            const nextStatuses = selected
-              ? query.metadataStatuses.filter(
-                  (value) => value !== status.value,
-                )
-              : [...query.metadataStatuses, status.value];
+          {agentStatusOptions.map((status) => {
+            const selectableMetadataStatuses = hiringSupportSelected
+              ? metadataWithoutHiringRequirement
+              : query.metadataStatuses;
+            const selected =
+              status.kind === "availability"
+                ? hiringSupportSelected
+                : status.kind === "metadata"
+                  ? selectableMetadataStatuses.includes(status.value)
+                  : query.healthStatuses.includes(status.value);
+            const href =
+              status.kind === "availability"
+                ? hiringSupportSelected
+                  ? buildDiscoveryHref(query, {
+                      metadataStatuses: metadataWithoutHiringRequirement,
+                      network: "bsc-mainnet",
+                      page: 1,
+                      query: "",
+                      sort: "recent",
+                    })
+                  : buildDiscoveryHref(query, {
+                      metadataStatuses: [
+                        ...new Set([
+                          ...query.metadataStatuses,
+                          "valid" as const,
+                        ]),
+                      ],
+                      network: "all",
+                      page: 1,
+                      query: "ERC-8183",
+                      sort: "relevance",
+                    })
+                : status.kind === "metadata"
+                  ? buildDiscoveryHref(query, {
+                      metadataStatuses: selected
+                        ? selectableMetadataStatuses.filter(
+                            (value) => value !== status.value,
+                          )
+                        : [...selectableMetadataStatuses, status.value],
+                      network: hiringSupportSelected
+                        ? "bsc-mainnet"
+                        : query.network,
+                      page: 1,
+                      query: hiringSupportSelected ? "" : query.query,
+                      sort: hiringSupportSelected ? "recent" : query.sort,
+                    })
+                  : buildDiscoveryHref(query, {
+                      healthStatuses: selected
+                        ? query.healthStatuses.filter(
+                            (value) => value !== status.value,
+                          )
+                        : [...query.healthStatuses, status.value],
+                      page: 1,
+                    });
+
             return (
               <Link
-                key={status.value}
-                href={buildDiscoveryHref(query, {
-                  metadataStatuses: nextStatuses,
-                  page: 1,
-                })}
+                key={`${status.kind}:${status.value}`}
+                href={href}
                 prefetch={false}
                 role="checkbox"
                 aria-checked={selected}
+                title={
+                  status.kind === "availability"
+                    ? "Show verified agents that list supported hiring"
+                    : undefined
+                }
                 className={cn(
                   "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
                   selected
@@ -206,46 +289,17 @@ function FilterOptions({ query }: FilterPanelProps) {
                     : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
                 )}
               >
-                <span
-                  className={cn(
-                    "size-1.5 shrink-0 rounded-full",
-                    selected ? "bg-brand" : "bg-muted-foreground/45",
-                  )}
-                  aria-hidden="true"
-                />
-                {status.label.replace(" metadata", "")}
-              </Link>
-            );
-          })}
-          {discoveryHealthStatuses.map((status) => {
-            const selected = query.healthStatuses.includes(status.value);
-            const nextStatuses = selected
-              ? query.healthStatuses.filter((value) => value !== status.value)
-              : [...query.healthStatuses, status.value];
-            return (
-              <Link
-                key={status.value}
-                href={buildDiscoveryHref(query, {
-                  healthStatuses: nextStatuses,
-                  page: 1,
-                })}
-                prefetch={false}
-                role="checkbox"
-                aria-checked={selected}
-                className={cn(
-                  "inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
-                  selected
-                    ? "border-brand/40 bg-brand/12 text-brand"
-                    : "border-border bg-background/45 text-muted-foreground hover:border-brand/25 hover:bg-background hover:text-foreground",
+                {status.kind === "availability" ? (
+                  <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <span
+                    className={cn(
+                      "size-1.5 shrink-0 rounded-full",
+                      selected ? "bg-brand" : "bg-muted-foreground/45",
+                    )}
+                    aria-hidden="true"
+                  />
                 )}
-              >
-                <span
-                  className={cn(
-                    "size-1.5 shrink-0 rounded-full",
-                    selected ? "bg-brand" : "bg-muted-foreground/45",
-                  )}
-                  aria-hidden="true"
-                />
                 {status.label}
               </Link>
             );
@@ -266,11 +320,11 @@ function FilterOptions({ query }: FilterPanelProps) {
 }
 
 export function FilterPanel({ query }: FilterPanelProps) {
+  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
   const activeCount =
     query.categories.length +
-    query.healthStatuses.length +
-    query.metadataStatuses.length +
-    (query.network === "bsc-mainnet" ? 0 : 1);
+    countSelectedAgentStatuses(query) +
+    (query.network === "bsc-mainnet" || hiringAvailabilitySelected ? 0 : 1);
 
   return (
     <>

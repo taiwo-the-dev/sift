@@ -7,6 +7,11 @@ import { useState } from "react";
 import { CopyButton } from "@/components/agents/copy-button";
 import { useAltanaSession } from "@/components/altana/altana-session-provider";
 import { Button } from "@/components/ui/button";
+import { HiringErrorNotice } from "@/components/hiring/hiring-error-notice";
+import {
+  describeHiringError,
+  type HiringErrorDescription,
+} from "@/features/hiring/error-presentation";
 import type { HiringExecutionMode } from "@/features/hiring/model";
 import type { HiringChainId } from "@/features/hiring/protocol";
 import { cn } from "@/lib/utils";
@@ -22,7 +27,7 @@ export function HiringMethodSelector({
 }>) {
   const altana = useAltanaSession();
   const [busy, setBusy] = useState<"create" | "recover" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<HiringErrorDescription | null>(null);
 
   async function prepare(action: "create" | "recover"): Promise<void> {
     setBusy(action);
@@ -31,9 +36,7 @@ export function HiringMethodSelector({
       if (action === "create") await altana.createPasskeyWallet();
       else await altana.recoverPasskeyWallet(chainId);
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Sift could not prepare the passkey wallet.",
-      );
+      setError(describeHiringError(caught));
     } finally {
       setBusy(null);
     }
@@ -63,10 +66,13 @@ export function HiringMethodSelector({
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <ShieldCheck className="size-4 text-brand" aria-hidden="true" />
-            Protected session
+            Protected hire
+            <span className="rounded-full bg-brand px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-wider text-brand-foreground">
+              Recommended
+            </span>
           </span>
           <span className="mt-2 block text-xs leading-5 text-muted-foreground">
-            Use an Altana passkey wallet and a one-hour, on-chain permission for one exact budget.
+            Use a passkey wallet with a one-hour limit for this exact job budget.
           </span>
         </button>
         <button
@@ -131,7 +137,7 @@ export function HiringMethodSelector({
               </div>
             </div>
           )}
-          {error ? <p role="alert" className="mt-3 text-xs text-red-200">{error}</p> : null}
+          {error ? <div className="mt-3"><HiringErrorNotice error={error} /></div> : null}
         </div>
       ) : null}
     </section>

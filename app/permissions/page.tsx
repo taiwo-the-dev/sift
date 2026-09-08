@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { AltanaSessionControls } from "@/components/altana/altana-session-controls";
 
 export const metadata: Metadata = {
-  title: "Permissions",
-  description: "Create, inspect, and revoke bounded Altana hiring permissions for Sift.",
+  title: "Wallet safety",
+  description: "Create, inspect, and stop protected hiring permissions for Sift.",
 };
 
 export default function PermissionsPage() {
@@ -13,10 +13,10 @@ export default function PermissionsPage() {
       <header className="mb-8 max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Wallet control</p>
         <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          Agent permissions you can see and stop.
+          Control your protected hiring wallet.
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-          Protected sessions let Sift perform only the hiring actions you approve, within a budget and expiry. Their public authority is registered in Altana KeyStore and can be revoked here.
+          See the wallet address, check its balance, and stop a time-limited hiring permission. For an actual job, create the exact permission from that agent&apos;s hiring flow.
         </p>
       </header>
       <AltanaSessionControls />

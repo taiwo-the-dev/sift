@@ -5,8 +5,8 @@ import { SavedAgents } from "@/components/bookmarks/saved-agents";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Saved agents",
-  description: "Review AI agents saved on this device.",
+  title: "Bookmarked agents",
+  description: "Review AI agents bookmarked on this device.",
   noIndex: true,
   path: "/saved",
 });
@@ -22,13 +22,13 @@ export default function SavedAgentsPage() {
         <div className="relative mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
           <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
             <Bookmark className="size-4" aria-hidden="true" />
-            Saved agents
+            Bookmarks
           </p>
           <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
             Keep your strongest candidates close.
           </h1>
           <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-            Build a shortlist while you browse. Saved agents stay in this
+            Build a shortlist while you browse. Bookmarked agents stay in this
             browser and link back to their current Sift profile.
           </p>
         </div>

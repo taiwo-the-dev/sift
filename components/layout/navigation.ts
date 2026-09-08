@@ -1,7 +1,6 @@
 export const navigationItems = [
   { label: "Discover", href: "/discover" },
-  { label: "Saved", href: "/saved" },
+  { label: "Bookmarks", href: "/saved" },
   { label: "Compare", href: "/compare" },
-  { label: "Permissions", href: "/permissions" },
-  { label: "My Agents", href: "/dashboard" },
+  { label: "My Jobs", href: "/dashboard" },
 ] as const;

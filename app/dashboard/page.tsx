@@ -5,7 +5,7 @@ import { DashboardPageClient } from "@/components/dashboard/dashboard-page-clien
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "My Agents dashboard",
+  title: "My Jobs",
   description:
     "Monitor hired agents, ERC-8183 task status, and linked wallet activity.",
   noIndex: true,
@@ -21,13 +21,14 @@ export default function DashboardPage() {
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               <BriefcaseBusiness className="size-4" aria-hidden="true" />
-              Agent operations
+              My Jobs
             </p>
             <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
-              Monitor verified agent tasks.
+              Follow every job from payment to completion.
             </h1>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-              Track task requirements, ERC-8183 execution state, and wallet activity.
+              See what you hired, what stage each job has reached, and the
+              transactions behind every update.
             </p>
           </div>
           <div className="flex max-w-sm gap-3 rounded-xl border border-brand/20 bg-background/80 p-4">

@@ -12,6 +12,8 @@ import {
   type DiscoveryResult,
   type DiscoveryService,
 } from "@/features/discovery/model";
+import { isHiringAvailabilityQuery } from "@/features/discovery/query";
+import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import type {
   CategoryEvidence,
   CategoryFact,
@@ -100,6 +102,12 @@ export type DiscoveryRepository = Readonly<{
 export type DiscoveryEvidenceSources = Readonly<{
   listHealth(ids: readonly string[]): Promise<readonly TableRow<"agent_health">[]>;
   listScores(ids: readonly string[]): Promise<readonly TableRow<"agent_scores">[]>;
+  listServices(
+    ids: readonly string[],
+  ): Promise<readonly Pick<
+    TableRow<"agent_services">,
+    "agent_db_id" | "endpoint" | "service_type" | "version"
+  >[]>;
 }>;
 
 function isRecord(value: Json): value is Readonly<Record<string, Json | undefined>> {
@@ -118,6 +126,7 @@ function mapServices(value: Json): readonly DiscoveryService[] {
 
     return [
       {
+        endpoint: typeof entry.endpoint === "string" ? entry.endpoint : null,
         serviceType: entry.serviceType,
         version: typeof entry.version === "string" ? entry.version : null,
       },
@@ -280,6 +289,7 @@ function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
     relevance: 0,
     score: null,
     services: row.agent_services.map((service) => ({
+      endpoint: null,
       serviceType: service.service_type,
       version: service.version,
     })),
@@ -314,19 +324,32 @@ export function createDiscoveryRepository(
 
       return data;
     },
+    async listServices(ids) {
+      const { data, error } = await client
+        .from("agent_services")
+        .select("agent_db_id,endpoint,service_type,version")
+        .in("agent_db_id", [...ids]);
+
+      if (error) {
+        throw new DatabaseOperationError("list discovery services", error);
+      }
+
+      return data;
+    },
   },
 ): DiscoveryRepository {
   async function attachEvidence(
     agents: readonly DiscoveryAgent[],
   ): Promise<DiscoveryAgent[]> {
     const ids = agents.map((agent) => agent.agentDbId);
-    const [healthRecords, scoreRecords] =
+    const [healthRecords, scoreRecords, serviceRecords] =
       ids.length > 0
         ? await Promise.all([
             evidenceSources.listHealth(ids),
             evidenceSources.listScores(ids),
+            evidenceSources.listServices(ids),
           ])
-        : [[], []];
+        : [[], [], []];
     const healthById = new Map(
       healthRecords.map((record) => [
         record.agent_db_id,
@@ -339,11 +362,23 @@ export function createDiscoveryRepository(
         mapScoreRecord(record),
       ]),
     );
+    const servicesById = new Map<string, DiscoveryService[]>();
+
+    for (const service of serviceRecords) {
+      const services = servicesById.get(service.agent_db_id) ?? [];
+      services.push({
+        endpoint: service.endpoint,
+        serviceType: service.service_type,
+        version: service.version,
+      });
+      servicesById.set(service.agent_db_id, services);
+    }
 
     return agents.map((agent) => ({
       ...agent,
       health: healthById.get(agent.agentDbId) ?? null,
       score: scoreById.get(agent.agentDbId) ?? null,
+      services: servicesById.get(agent.agentDbId) ?? agent.services,
     }));
   }
 
@@ -385,7 +420,9 @@ export function createDiscoveryRepository(
     };
   }
 
-  async function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
+  async function searchDatabasePage(
+    query: DiscoveryQuery,
+  ): Promise<DiscoveryResult> {
     if (
       query.sort === "recent" &&
       query.effectiveCategories.length === 0 &&
@@ -431,6 +468,52 @@ export function createDiscoveryRepository(
       pageSize: query.pageSize,
       totalCount: null,
     };
+  }
+
+  async function searchHiringAvailableAgents(
+    query: DiscoveryQuery,
+  ): Promise<DiscoveryResult> {
+    const firstRequestedIndex = (query.page - 1) * query.pageSize;
+    const endRequestedIndex = firstRequestedIndex + query.pageSize;
+    const requiredEligibleAgents = endRequestedIndex + 1;
+    const eligibleAgents: DiscoveryAgent[] = [];
+    const sourcePageSize: DiscoveryPageSize = 36;
+    let sourceHasMore = true;
+    let sourcePage = 1;
+
+    while (
+      sourceHasMore &&
+      eligibleAgents.length < requiredEligibleAgents &&
+      sourcePage <= 10_000
+    ) {
+      const sourceResult = await searchDatabasePage({
+        ...query,
+        page: sourcePage,
+        pageSize: sourcePageSize,
+      });
+
+      eligibleAgents.push(
+        ...sourceResult.agents.filter(
+          (agent) => assessHiringCompatibility(agent).compatibility !== null,
+        ),
+      );
+      sourceHasMore = sourceResult.hasNextPage;
+      sourcePage += 1;
+    }
+
+    return {
+      agents: eligibleAgents.slice(firstRequestedIndex, endRequestedIndex),
+      hasNextPage: eligibleAgents.length > endRequestedIndex,
+      page: query.page,
+      pageSize: query.pageSize,
+      totalCount: null,
+    };
+  }
+
+  function search(query: DiscoveryQuery): Promise<DiscoveryResult> {
+    return isHiringAvailabilityQuery(query)
+      ? searchHiringAvailableAgents(query)
+      : searchDatabasePage(query);
   }
 
   return {

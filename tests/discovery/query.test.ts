@@ -5,6 +5,7 @@ import {
   buildDiscoveryHref,
   extractDiscoverySearchTerms,
   inferDiscoveryCategory,
+  isHiringAvailabilityQuery,
   parseDiscoverySearchParams,
 } from "../../features/discovery/query";
 
@@ -140,5 +141,21 @@ describe("discovery query parsing", () => {
     assert.deepEqual(query.networkChainIds, [56]);
     assert.deepEqual(query.healthStatuses, []);
     assert.equal(buildDiscoveryHref(query), "/discover");
+  });
+
+  it("recognizes only the verified ERC-8183 availability shortcut", () => {
+    const availabilityQuery = parseDiscoverySearchParams({
+      metadata: "valid",
+      q: "ERC-8183",
+    });
+
+    assert.equal(isHiringAvailabilityQuery(availabilityQuery), true);
+    assert.deepEqual(availabilityQuery.searchTerms, ["erc", "8183"]);
+    assert.equal(
+      isHiringAvailabilityQuery(
+        parseDiscoverySearchParams({ metadata: "invalid", q: "ERC-8183" }),
+      ),
+      false,
+    );
   });
 });

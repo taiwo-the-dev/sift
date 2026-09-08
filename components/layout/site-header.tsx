@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
@@ -45,6 +45,14 @@ export function SiteHeader() {
             className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
           >
             <Search className="size-4" aria-hidden="true" />
+          </Link>
+          <Link
+            href="/permissions"
+            aria-label="Wallet safety and permissions"
+            title="Wallet safety and permissions"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
+            <ShieldCheck className="size-4" aria-hidden="true" />
           </Link>
           <WalletControl />
         </div>

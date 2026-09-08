@@ -34,6 +34,7 @@ export type AltanaNetwork = Readonly<{
   keyStore: Address;
   keyStoreController: Address;
   networkName: "BSC Mainnet" | "BSC Testnet";
+  publicRpcUrl: string;
   registry: Address;
   sdkBundledPolicy: Address;
 }>;
@@ -63,6 +64,7 @@ export const altanaNetworks: Readonly<Record<HiringChainId, AltanaNetwork>> =
         "0x0834Ee2C9BdC3E3efF0a2dC34393D4B0e546A555",
       ),
       networkName: "BSC Mainnet",
+      publicRpcUrl: "https://bsc-rpc.publicnode.com",
       registry: getAddress("0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"),
       sdkBundledPolicy: getAddress("0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5"),
     }),
@@ -74,6 +76,7 @@ export const altanaNetworks: Readonly<Record<HiringChainId, AltanaNetwork>> =
         "0xb530D1971f5453F3359518343F05D0AedFfF7e12",
       ),
       networkName: "BSC Testnet",
+      publicRpcUrl: "https://bsc-testnet-rpc.publicnode.com",
       registry: getAddress("0x8004A818BFB912233c491871b3d84c89A494BD9e"),
       sdkBundledPolicy: getAddress("0x4F4678D4439feC812Ac7674Bb3Efb4C8f5Fb78A6"),
     }),
@@ -99,6 +102,16 @@ export const altanaKeyStoreAbi = [
       { name: "keyId", type: "bytes32" },
     ],
     outputs: [{ type: "bytes" }],
+  },
+] as const;
+
+export const altanaKeyStoreControllerAbi = [
+  {
+    name: "getRegistrationFeeInWei",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
   },
 ] as const;
 

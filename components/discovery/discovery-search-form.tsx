@@ -4,12 +4,15 @@ import Form from "next/form";
 import { Button } from "@/components/ui/button";
 import { formatCategory } from "@/features/discovery/format";
 import type { DiscoveryQuery } from "@/features/discovery/model";
+import { isHiringAvailabilityQuery } from "@/features/discovery/query";
 
 interface DiscoverySearchFormProps {
   query: DiscoveryQuery;
 }
 
 export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
+  const hiringAvailabilitySelected = isHiringAvailabilityQuery(query);
+
   return (
     <div>
       <Form
@@ -46,7 +49,7 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
             name="q"
             type="search"
             maxLength={180}
-            defaultValue={query.query}
+            defaultValue={hiringAvailabilitySelected ? "" : query.query}
             placeholder="Search by task, protocol, service, or capability"
             className="h-14 w-full rounded-lg border border-input bg-background pl-12 pr-4 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-ring focus:ring-3 focus:ring-ring/15"
           />

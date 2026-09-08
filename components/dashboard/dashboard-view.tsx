@@ -109,7 +109,7 @@ export function DashboardView({
         <div className="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Connected wallet</p>
-            <h2 id="wallet-jobs-heading" className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">Agent tasks</h2>
+            <h2 id="wallet-jobs-heading" className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">Your jobs</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Last refreshed {formatDashboardTimestamp(dashboard.observedAt)}
             </p>
@@ -174,7 +174,7 @@ export function DashboardView({
       </section>
 
       <p className="mt-8 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
-        Activity includes only recorded application events and verified blockchain events.
+        Activity includes only recorded application events and verified blockchain events. This view currently uses a connected wallet; protected passkey-wallet jobs remain available through their confirmation and BscScan links.
       </p>
     </>
   );

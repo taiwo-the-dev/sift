@@ -178,6 +178,13 @@ export function extractDiscoverySearchTerms(query: string): readonly string[] {
     .slice(0, maximumSearchTerms);
 }
 
+export function isHiringAvailabilityQuery(query: DiscoveryQuery): boolean {
+  return (
+    query.query.toLowerCase() === "erc-8183" &&
+    query.metadataStatuses.includes("valid")
+  );
+}
+
 function parsePositiveInteger(value: string | undefined): number {
   if (!value || !/^\d+$/.test(value)) {
     return 1;

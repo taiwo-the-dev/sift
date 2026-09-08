@@ -55,12 +55,11 @@ export default async function HirePage({ params }: HirePageProps) {
             {deployment ? `${deployment.networkName} hiring` : "Agent hiring"}
           </p>
           <h1 className="mt-2 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
-            Set up an ERC-8183 task with clear limits.
+            Set up a task and hire safely.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Request a signed agent-provider quote, review the enforceable
-            execution terms, and explicitly confirm each {deployment?.networkName ?? "BNB network"}{" "}
-            transaction.
+            Describe the work, get a signed price, review the spending limits,
+            and approve the hire on {deployment?.networkName ?? "BNB Chain"}.
           </p>
         </div>
       </div>

@@ -27,6 +27,7 @@ Ready for Development
 - M18 — Blocked Pending Official Phase 2 Criteria
 - M19 — Implemented Locally; Hosted Migration and Human Validation Pending
 - M20 — Implemented Locally; Human Altana Testnet Evidence Pending
+- M21 — Implemented Locally; Browser Validation Pending
 
 ## Priority
 

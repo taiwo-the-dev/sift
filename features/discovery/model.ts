@@ -111,6 +111,7 @@ export type DiscoveryPageSize = (typeof discoveryPageSizes)[number];
 export type CategorySource = CategoryEvidenceSource | null;
 
 export type DiscoveryService = Readonly<{
+  endpoint: string | null;
   serviceType: string;
   version: string | null;
 }>;

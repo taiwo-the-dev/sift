@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useAltanaSession } from "@/components/altana/altana-session-provider";
+import { AltanaWalletFunding } from "@/components/altana/altana-wallet-funding";
 import { Button } from "@/components/ui/button";
+import { HiringErrorNotice } from "@/components/hiring/hiring-error-notice";
 import {
   buildAltanaKeyStoreHref,
   formatAltanaGasCap,
@@ -14,6 +16,10 @@ import {
   getErc8183Deployment,
   type HiringChainId,
 } from "@/features/hiring/protocol";
+import {
+  describeHiringError,
+  type HiringErrorDescription,
+} from "@/features/hiring/error-presentation";
 
 export function altanaSessionCovers(
   record: ReturnType<typeof useAltanaSession>["publicSessions"][HiringChainId],
@@ -42,7 +48,7 @@ export function AltanaHiringPermissions({
   const deployment = getErc8183Deployment(chainId);
   const ready = altanaSessionCovers(record, altana.walletAddress, budget, live);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<HiringErrorDescription | null>(null);
   const [mainnetAccepted, setMainnetAccepted] = useState(false);
 
   async function grant(): Promise<void> {
@@ -51,7 +57,7 @@ export function AltanaHiringPermissions({
     try {
       await altana.grantHiringSession(chainId, budget);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Sift could not create the session.");
+      setError(describeHiringError(caught));
     } finally {
       setBusy(false);
     }
@@ -63,10 +69,10 @@ export function AltanaHiringPermissions({
         <div>
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <ShieldCheck className="size-4 text-brand" aria-hidden="true" />
-            Altana protected permission
+            Protected hire permission
           </p>
           <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
-            Valid for one hour. It can call only create job, register policy, set budget, and fund on the reviewed ERC-8183 contracts.
+            Valid for one hour and limited to creating and funding this reviewed job.
           </p>
         </div>
         {ready ? (
@@ -76,10 +82,13 @@ export function AltanaHiringPermissions({
         ) : (
           <Button type="button" size="sm" onClick={grant} disabled={busy || !altana.walletAddress || record?.status === "active" || (deployment.isMainnet && !mainnetAccepted)}>
             {busy ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
-            {busy ? "Creating permission" : "Create one-hour permission"}
+            {busy ? "Creating permission" : "Create protected permission"}
           </Button>
         )}
       </div>
+      {altana.walletAddress && !ready ? (
+        <AltanaWalletFunding address={altana.walletAddress} chainId={chainId} />
+      ) : null}
       {deployment.isMainnet && !ready ? (
         <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-amber-400/25 bg-amber-400/8 px-3 py-2.5 text-xs leading-5 text-amber-100">
           <input type="checkbox" className="mt-0.5 size-3.5 accent-amber-400" checked={mainnetAccepted} onChange={(event) => setMainnetAccepted(event.target.checked)} />
@@ -98,7 +107,7 @@ export function AltanaHiringPermissions({
           The existing session cannot cover this hire, or its private session key is no longer in memory. Revoke it in <Link className="underline" href="/permissions">Permissions</Link>, then create a fresh one.
         </p>
       ) : null}
-      {error ? <p role="alert" className="mt-3 text-xs text-red-200">{error}</p> : null}
+      {error ? <div className="mt-3"><HiringErrorNotice error={error} /></div> : null}
     </div>
   );
 }

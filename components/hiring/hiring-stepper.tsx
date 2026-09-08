@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 
 const steps: readonly Readonly<{ label: string; value: HiringFlowStep }>[] = [
   { label: "Task", value: "mission" },
-  { label: "Permissions", value: "permissions" },
+  { label: "Price & limits", value: "permissions" },
   { label: "Review", value: "review" },
-  { label: "Wallet", value: "wallet" },
-  { label: "Confirmation", value: "confirmation" },
+  { label: "Payment", value: "wallet" },
+  { label: "Done", value: "confirmation" },
 ];
 
 export function HiringStepper({ current }: Readonly<{ current: HiringFlowStep }>) {

@@ -12,11 +12,14 @@ describe("Altana browser integration boundaries", () => {
 
   it("exposes create, inspect, and revoke controls", async () => {
     const source = await readFile("components/altana/altana-session-controls.tsx", "utf8");
-    assert.match(source, /Create one-hour permission/);
+    const fundingSource = await readFile("components/altana/altana-wallet-funding.tsx", "utf8");
+    assert.match(source, /Create protected permission/);
     assert.match(source, /Check on-chain status/);
     assert.match(source, /Revoke permission/);
-    assert.match(source, /Passkey wallet funding address/);
-    assert.match(source, /CopyButton/);
+    assert.match(fundingSource, /Fund your passkey wallet/);
+    assert.match(fundingSource, /CopyButton/);
+    assert.match(fundingSource, /Check balances/);
+    assert.match(fundingSource, /Get test BNB/);
     assert.match(source, /Token approval is intentionally excluded/);
   });
 

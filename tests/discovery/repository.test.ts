@@ -41,7 +41,7 @@ const fixtureRows: readonly SearchAgentRow[] = [
     relevance: 0.8,
     resolved_categories: ["grid-trading"],
     result_page: 2,
-    services: [{ serviceType: "A2A", version: "1.0" }],
+    services: [{ endpoint: null, serviceType: "A2A", version: "1.0" }],
     x402_supported: null,
   },
   {
@@ -72,6 +72,7 @@ const fixtureRows: readonly SearchAgentRow[] = [
 const noEvidence = {
   listHealth: async () => [],
   listScores: async () => [],
+  listServices: async () => [],
 };
 
 describe("discovery repository integration boundary", () => {
@@ -146,7 +147,7 @@ describe("discovery repository integration boundary", () => {
     assert.equal(result.agents[0]?.agentId, "205");
     assert.deepEqual(result.agents[0]?.categories, ["grid-trading"]);
     assert.deepEqual(result.agents[0]?.services, [
-      { serviceType: "A2A", version: "1.0" },
+      { endpoint: null, serviceType: "A2A", version: "1.0" },
     ]);
     assert.deepEqual(calls.slice(0, 3), [
       { operation: "from", table: "agents" },
@@ -230,6 +231,80 @@ describe("discovery repository integration boundary", () => {
     ]);
   });
 
+  it("paginates after applying the exact hiring availability checks", async () => {
+    const calls: Readonly<{ page: number; pageSize: number }>[] = [];
+    const firstBatch = Array.from({ length: 12 }, (_, index) => ({
+      ...fixtureRows[0]!,
+      agent_db_id: `10000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+      agent_id: String(100 + index),
+      has_more: true,
+      services: [
+        { endpoint: null, serviceType: "ERC-8183", version: "1.0" },
+      ],
+    }));
+    const secondBatch = Array.from({ length: 12 }, (_, index) => ({
+      ...fixtureRows[0]!,
+      agent_db_id: `20000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+      agent_id: String(200 + index),
+      has_more: false,
+      services: [
+        { endpoint: null, serviceType: "ERC-8183", version: "1.0" },
+      ],
+    }));
+    const eligibleIds = new Set([
+      firstBatch[0]!.agent_db_id,
+      ...secondBatch.map((agent) => agent.agent_db_id),
+    ]);
+    const client = {
+      async rpc(
+        _name: string,
+        parameters: Readonly<{ p_page: number; p_page_size: number }>,
+      ) {
+        calls.push({
+          page: parameters.p_page,
+          pageSize: parameters.p_page_size,
+        });
+        return {
+          data: parameters.p_page === 1 ? firstBatch : secondBatch,
+          error: null,
+        };
+      },
+    } as unknown as SupabaseClient<Database>;
+    const evidence = {
+      listHealth: async () => [],
+      listScores: async () => [],
+      listServices: async (ids: readonly string[]) =>
+        ids.map((id) => ({
+          agent_db_id: id,
+          endpoint: eligibleIds.has(id)
+            ? "https://hiring.sift-agent.dev/erc8183"
+            : null,
+          service_type: "ERC-8183",
+          version: "1.0",
+        })),
+    };
+    const query = parseDiscoverySearchParams({
+      metadata: "valid",
+      network: "all",
+      q: "ERC-8183",
+      size: "12",
+    });
+
+    const result = await createDiscoveryRepository(client, evidence).search(
+      query,
+    );
+
+    assert.deepEqual(calls, [
+      { page: 1, pageSize: 36 },
+      { page: 2, pageSize: 36 },
+    ]);
+    assert.equal(result.agents.length, 12);
+    assert.equal(result.agents[0]?.agentId, "100");
+    assert.equal(result.agents.at(-1)?.agentId, "210");
+    assert.equal(result.hasNextPage, true);
+    assert.equal(result.page, 1);
+  });
+
   it("preserves stable database order and maps service/category fixtures", async () => {
     const client = {
       async rpc() {
@@ -246,7 +321,7 @@ describe("discovery repository integration boundary", () => {
     );
     assert.deepEqual(result.agents[0]?.categories, ["grid-trading"]);
     assert.deepEqual(result.agents[0]?.services, [
-      { serviceType: "A2A", version: "1.0" },
+      { endpoint: null, serviceType: "A2A", version: "1.0" },
     ]);
     assert.equal(result.agents[1]?.name, null);
   });

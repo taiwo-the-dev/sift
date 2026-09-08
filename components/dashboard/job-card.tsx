@@ -48,9 +48,20 @@ function Identifier({ label, value }: Readonly<{ label: string; value: string | 
   );
 }
 
+const jobStages = ["Created", "Funded", "Submitted", "Completed"] as const;
+
+function completedStageCount(job: DashboardJob): number {
+  if (job.protocolStatus === "completed") return 4;
+  if (job.protocolStatus === "submitted") return 3;
+  if (job.protocolStatus === "funded") return 2;
+  if (job.protocolStatus === "open") return 1;
+  return job.onchainJobId ? 1 : 0;
+}
+
 export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
   const StatusIcon = categoryIcons[job.category];
   const finalTransactionHref = dashboardTransactionHref(job.transactionHash);
+  const stageCount = completedStageCount(job);
 
   return (
     <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm shadow-black/10">
@@ -121,6 +132,23 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div className="border-t border-border px-5 py-4 sm:px-6">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Job progress
+        </p>
+        <ol className="mt-3 grid grid-cols-4 gap-2" aria-label={`Job progress: ${job.statusLabel}`}>
+          {jobStages.map((stage, index) => {
+            const reached = index < stageCount;
+            return (
+              <li key={stage} className="min-w-0">
+                <span className={cn("block h-1.5 rounded-full", reached ? "bg-brand" : "bg-secondary")} aria-hidden="true" />
+                <span className={cn("mt-2 block truncate text-[0.68rem] font-medium", reached ? "text-foreground" : "text-muted-foreground")}>{stage}</span>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
       <details className="group border-t border-border">

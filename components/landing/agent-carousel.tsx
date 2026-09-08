@@ -112,7 +112,7 @@ export function AgentCarousel({ children, live }: AgentCarouselProps) {
       <div className="flex items-center justify-between gap-4 border-b border-border pb-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <p className="text-sm font-semibold text-foreground">
-            Latest registrations
+            Agent showcase
           </p>
           {live ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300">
@@ -154,7 +154,7 @@ export function AgentCarousel({ children, live }: AgentCarouselProps) {
         onTouchEnd={() => setIsPaused(false)}
         onTouchCancel={() => setIsPaused(false)}
         role="region"
-        aria-label="Ten latest registered agents"
+        aria-label="Featured agents"
         aria-roledescription="carousel"
         tabIndex={0}
         className="-mx-4 mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 outline-none [scrollbar-width:none] focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"

@@ -83,7 +83,7 @@ export function ConfirmationStep({
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
         {executionMode === "wallet" ? (
           <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }))}>
-            Monitor in dashboard
+            View my jobs
             <LayoutDashboard className="size-4" aria-hidden="true" />
           </Link>
         ) : (
@@ -101,7 +101,7 @@ export function ConfirmationStep({
         </Link>
         {executionMode === "wallet" ? (
           <Link href="/permissions" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-            Permissions
+            Wallet safety
             <ShieldCheck className="size-4" aria-hidden="true" />
           </Link>
         ) : null}

@@ -1,6 +1,7 @@
 import { CircleHelp, Gauge, History } from "lucide-react";
 
 import { formatProfileTimestamp } from "@/features/agents/format";
+import type { AgentProfile } from "@/features/agents/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
 import {
   describeScoreConfidence,
@@ -10,11 +11,22 @@ import {
 } from "@/features/scoring/presentation";
 
 interface ScoreExplanationProps {
+  profile: Pick<
+    AgentProfile,
+    "health" | "metadataStatus" | "reputation" | "services"
+  >;
   score: PersistedSiftScore | null;
 }
 
-export function ScoreExplanation({ score }: ScoreExplanationProps) {
+export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
   if (!score) {
+    const missingEvidence = [
+      profile.metadataStatus !== "valid" ? "a verified profile" : null,
+      profile.services.length === 0 ? "service details" : null,
+      profile.health === null ? "a completed health check" : null,
+      profile.reputation === null ? "reputation or task history" : null,
+    ].filter((value): value is string => value !== null);
+
     return (
       <article className="rounded-xl border border-dashed border-border bg-card px-5 py-7 sm:px-6">
         <CircleHelp className="size-5 text-muted-foreground" aria-hidden="true" />
@@ -22,7 +34,13 @@ export function ScoreExplanation({ score }: ScoreExplanationProps) {
           Sift Score not calculated yet
         </h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          No Sift Score is available for this agent.
+          Sift only publishes a score after enough current, verifiable evidence
+          has been recorded. It never fills missing evidence with estimates.
+        </p>
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          {missingEvidence.length > 0
+            ? `Still needed: ${missingEvidence.join(", ")}.`
+            : "The evidence is available, but the scheduled score calculation has not completed yet."}
         </p>
       </article>
     );

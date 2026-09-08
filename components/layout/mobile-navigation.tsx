@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog } from "@base-ui/react/dialog";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -71,6 +71,14 @@ export function MobileNavigation() {
               >
                 <Search className="size-4" aria-hidden="true" />
                 Search agents
+              </Link>
+              <Link
+                href="/permissions"
+                onClick={() => setIsOpen(false)}
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-1")}
+              >
+                <ShieldCheck className="size-4" aria-hidden="true" />
+                Wallet safety
               </Link>
               <WalletControl
                 mobile

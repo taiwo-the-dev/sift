@@ -2,20 +2,26 @@ import { connection } from "next/server";
 
 import { AgentCollectionsSection } from "@/components/landing/agent-collections-section";
 import type { DiscoveryAgent } from "@/features/discovery/model";
+import { parseDiscoverySearchParams } from "@/features/discovery/query";
 import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
 
 export async function AgentCollectionsData() {
   await connection();
 
   let catalogueAvailable = true;
-  let catalogueCount: number | null = null;
-  let recentAgents: DiscoveryAgent[] = [];
+  let featuredAgents: DiscoveryAgent[] = [];
 
+  const repository = createDiscoveryRepository();
   try {
-    const catalogueResult =
-      await createDiscoveryRepository().listRecentlyRegistered();
-    catalogueCount = catalogueResult.totalCount;
-    recentAgents = [...catalogueResult.agents.slice(0, 10)];
+    const result = await repository.search(
+      parseDiscoverySearchParams({
+        metadata: "valid",
+        network: "all",
+        q: "ERC-8183",
+        size: "24",
+      }),
+    );
+    featuredAgents = result.agents.slice(0, 10);
   } catch {
     catalogueAvailable = false;
   }
@@ -23,8 +29,7 @@ export async function AgentCollectionsData() {
   return (
     <AgentCollectionsSection
       catalogueAvailable={catalogueAvailable}
-      catalogueCount={catalogueCount}
-      recentAgents={recentAgents}
+      featuredAgents={featuredAgents}
     />
   );
 }

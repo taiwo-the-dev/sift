@@ -35,17 +35,17 @@ export function BookmarkToggle({
       aria-pressed={saved}
       aria-label={
         saved
-          ? `Remove agent ${agent.agentId} from saved agents`
+          ? `Remove bookmark for agent ${agent.agentId}`
           : unavailable
-            ? `Saved agents limit reached at ${maximumBookmarkedAgents}`
-            : `Save agent ${agent.agentId}`
+            ? `Bookmark limit reached at ${maximumBookmarkedAgents}`
+            : `Bookmark agent ${agent.agentId}`
       }
       title={
         unavailable
-          ? `Remove a saved agent before adding another (maximum ${maximumBookmarkedAgents})`
+          ? `Remove a bookmark before adding another (maximum ${maximumBookmarkedAgents})`
           : saved
-            ? "Remove from saved agents"
-            : "Save agent"
+            ? "Remove bookmark"
+            : "Bookmark agent"
       }
       className={cn(
         saved && "border-brand/35 bg-brand/8 text-brand hover:bg-brand/12",
@@ -55,8 +55,8 @@ export function BookmarkToggle({
         bookmarks.toggle(agent);
         setAnnouncement(
           saved
-            ? `Agent ${agent.agentId} removed from saved agents.`
-            : `Agent ${agent.agentId} saved on this device.`,
+            ? `Bookmark removed for agent ${agent.agentId}.`
+            : `Agent ${agent.agentId} bookmarked on this device.`,
         );
       }}
     >
@@ -65,7 +65,7 @@ export function BookmarkToggle({
       ) : (
         <Bookmark className="size-3.5" aria-hidden="true" />
       )}
-      {iconOnly ? null : saved ? "Saved" : "Save"}
+      {iconOnly ? null : saved ? "Bookmarked" : "Bookmark"}
       <span className="sr-only" aria-live="polite">
         {announcement}
       </span>
