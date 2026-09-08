@@ -6,13 +6,15 @@ import { cn } from "@/lib/utils";
 interface BrandProps {
   className?: string;
   inverse?: boolean;
+  onClick?: () => void;
 }
 
-export function Brand({ className, inverse = false }: BrandProps) {
+export function Brand({ className, inverse = false, onClick }: BrandProps) {
   return (
     <Link
       href="/"
       aria-label="Sift home"
+      onClick={onClick}
       className={cn(
         "group inline-flex items-center gap-2.5 rounded-md font-semibold tracking-[-0.02em] outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
         inverse ? "text-white" : "text-foreground",

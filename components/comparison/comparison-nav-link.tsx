@@ -7,12 +7,14 @@ import { useComparisonSelection } from "@/components/comparison/use-comparison-s
 import { cn } from "@/lib/utils";
 
 interface ComparisonNavLinkProps {
+  active?: boolean;
   className?: string;
   mobile?: boolean;
   onNavigate?: () => void;
 }
 
 export function ComparisonNavLink({
+  active = false,
   className,
   mobile = false,
   onNavigate,
@@ -26,6 +28,7 @@ export function ComparisonNavLink({
       onClick={onNavigate}
       className={cn(className)}
       aria-label={count > 0 ? `Compare ${count} selected agents` : "Compare agents"}
+      aria-current={active ? "page" : undefined}
     >
       {mobile ? <Scale className="size-4 text-brand" aria-hidden="true" /> : null}
       Compare
