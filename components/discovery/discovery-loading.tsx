@@ -43,24 +43,33 @@ export function DiscoveryResultsLoading() {
         {Array.from({ length: 5 }, (_, index) => (
           <div
             key={index}
-            className="grid grid-cols-[4rem_minmax(0,1fr)] items-start gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-5 sm:p-5"
+            className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[10.75rem_minmax(0,1fr)]"
           >
-            <Skeleton className="size-16 rounded-full sm:size-[4.5rem]" />
-            <div className="min-w-0">
+            <div className="flex items-center gap-4 border-b border-border bg-secondary/25 p-4 md:min-h-52 md:flex-col md:border-r md:border-b-0 md:p-5">
+              <Skeleton className="h-5 w-24 rounded-full md:self-start" />
+              <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
+              <Skeleton className="ml-auto h-3 w-20 md:mt-auto md:ml-0" />
+            </div>
+            <div className="min-w-0 p-4 sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="w-3/5">
-                  <Skeleton className="h-3 w-32 max-w-full" />
-                  <Skeleton className="mt-2 h-6 w-full" />
-                  <Skeleton className="mt-2 h-3 w-24" />
+                  <Skeleton className="h-7 w-56 max-w-full" />
+                  <div className="mt-2 flex gap-2">
+                    <Skeleton className="h-6 w-28 rounded-md" />
+                    <Skeleton className="h-6 w-24 rounded-md" />
+                  </div>
                 </div>
-                <Skeleton className="hidden h-6 w-28 rounded-full sm:block" />
+                <div className="hidden gap-2 sm:flex">
+                  <Skeleton className="size-9 rounded-lg" />
+                  <Skeleton className="h-8 w-24 rounded-lg" />
+                </div>
               </div>
-              <Skeleton className="mt-3 h-4 w-full" />
+              <Skeleton className="mt-5 h-4 w-full" />
               <Skeleton className="mt-2 h-4 w-4/5" />
-              <div className="mt-4 flex gap-2 border-t border-border/70 pt-3">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="ml-auto h-5 w-24" />
+              <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border/70 pt-4 sm:grid-cols-3">
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-8 w-20" />
               </div>
             </div>
           </div>
