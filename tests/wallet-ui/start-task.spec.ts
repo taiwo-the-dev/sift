@@ -53,6 +53,25 @@ describe("start task forms", () => {
     assert.match(html, /<button[^>]*type="submit"[^>]*>[\s\S]*Run tool/);
     assert.match(html, />Inspect</);
     assert.doesNotMatch(html, /Inspect —/);
-    assert.match(html, /Sift blocks tools that can make changes or move funds/);
+    assert.match(html, /Read-only tools run after your click/);
+  });
+
+  it("requires confirmation for an MCP tool without a read-only marker", () => {
+    const html = render({
+      activationMethod: "mcp",
+      availabilityStatus: "available",
+      capabilitySummary: {
+        tools: [{ inputSchema: { type: "object" }, name: "borrow", readOnly: false }],
+      },
+      endpoint: "https://agent.example/mcp",
+      id: "00000000-0000-4000-8000-000000000003",
+      metadata: null,
+      serviceType: "MCP",
+      version: "2025-06-18",
+    });
+
+    assert.match(html, /Confirmation required/);
+    assert.match(html, /Prepare action/);
+    assert.match(html, /will not sign or send a wallet transaction automatically/);
   });
 });

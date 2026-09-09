@@ -29,6 +29,7 @@ Ready for Development
 - M20 — Implemented Locally; Human Altana Testnet Evidence Pending
 - M21 — Implemented Locally; Browser Validation Pending
 - M22 — Implemented Locally; Hosted Migration and Live Service Validation Pending
+- M23 — Implemented Locally; Hosted Migration and Human Wallet Validation Pending
 
 ## Priority
 

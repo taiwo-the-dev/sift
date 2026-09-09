@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import type { SiftScoreAssessment } from "../../features/scoring/model";
 import {
+  batchScoreCandidateIds,
   createScoreRepository,
   mapScoreRecord,
   type ScoreRepositorySources,
@@ -122,6 +123,14 @@ function sources(
 }
 
 describe("score repository integration boundary", () => {
+  it("keeps large evidence lookups below database URL limits", () => {
+    const ids = Array.from({ length: 251 }, (_, index) => `agent-${index}`);
+    const batches = batchScoreCandidateIds(ids);
+
+    assert.deepEqual(batches.map((batch) => batch.length), [100, 100, 51]);
+    assert.deepEqual(batches.flat(), ids);
+  });
+
   it("composes candidates from bounded bulk evidence queries", async () => {
     const calls: string[] = [];
     const repository = createScoreRepository(

@@ -13,7 +13,7 @@ export const activationAvailabilityStatuses = [
 export type ActivationAvailabilityStatus =
   (typeof activationAvailabilityStatuses)[number];
 
-export const ACTIVATION_VALIDATION_VERSION = "sift-activation-v1.0.0";
+export const ACTIVATION_VALIDATION_VERSION = "sift-activation-v1.1.0";
 export const ACTIVATION_FRESHNESS_HOURS = 24;
 
 export type ActivationServiceEvidence = Readonly<{
@@ -93,6 +93,47 @@ export function isActivationEvidenceCurrent(
   return (
     Number.isFinite(observedAt) &&
     now - observedAt <= ACTIVATION_FRESHNESS_HOURS * 60 * 60 * 1_000
+  );
+}
+
+/**
+ * Backward-compatible evidence check for the M23 rollout. The former policy
+ * labelled a successfully inspected MCP server as unsupported solely when its
+ * tools omitted readOnlyHint. Reusing that exact, fresh observation is honest;
+ * every tool is still re-inspected before it can be called.
+ */
+export function isUsableActivationEvidence(
+  evidence: Readonly<{
+    checkedAt?: string | null;
+    failureCode?: string | null;
+    lastSuccessAt?: string | null;
+    method?: ActivationMethod | null;
+    status?: ActivationAvailabilityStatus;
+    summary?: Json | null;
+  }>,
+  now: number = Date.now(),
+): boolean {
+  if (isActivationEvidenceCurrent(evidence, now)) return true;
+  if (
+    evidence.method !== "mcp" ||
+    evidence.status !== "unsupported" ||
+    evidence.failureCode !== "no-read-only-tools" ||
+    typeof evidence.summary !== "object" ||
+    evidence.summary === null ||
+    Array.isArray(evidence.summary)
+  ) {
+    return false;
+  }
+
+  const tools = (evidence.summary as Readonly<Record<string, Json | undefined>>)
+    .tools;
+  return (
+    Array.isArray(tools) &&
+    tools.length > 0 &&
+    isActivationEvidenceCurrent(
+      { lastSuccessAt: evidence.checkedAt, status: "available" },
+      now,
+    )
   );
 }
 

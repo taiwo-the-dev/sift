@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { isActivationEvidenceCurrent, parseActivationStatus } from "@/features/activation/model";
-import { callReadOnlyMcpTool } from "@/features/activation/protocol";
+import { isUsableActivationEvidence, parseActivationStatus } from "@/features/activation/model";
+import { callMcpTool } from "@/features/activation/protocol";
 import { ActivationRemoteError } from "@/features/activation/remote";
 import { mcpToolCallSchema } from "@/features/activation/schema";
 import { createActivationRepository } from "@/lib/db/activation-repository";
@@ -26,9 +26,13 @@ export async function POST(request: NextRequest) {
       service.activation_method !== "mcp" ||
       !service.endpoint ||
       !(await repository.isServiceAgentEligible(service.agent_db_id)) ||
-      !isActivationEvidenceCurrent({
+      !isUsableActivationEvidence({
+        checkedAt: service.availability_checked_at,
+        failureCode: service.availability_failure_code,
         lastSuccessAt: service.availability_last_success_at,
+        method: "mcp",
         status: parseActivationStatus(service.availability_status),
+        summary: service.capability_summary,
       })
     ) {
       return NextResponse.json(
@@ -37,9 +41,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await callReadOnlyMcpTool({
+    const result = await callMcpTool({
       arguments: input.arguments,
+      confirmedSideEffects: input.confirmedSideEffects,
       endpoint: service.endpoint,
+      expectedChainId:
+        (await repository.findAgentIdentity(service.agent_db_id))?.chainId ?? 0,
       maxBytes: 65_536,
       timeoutMs: 12_000,
       toolName: input.toolName,

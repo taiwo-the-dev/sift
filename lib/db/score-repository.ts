@@ -27,6 +27,34 @@ type ReputationRecord = TableRow<"agent_reputation">;
 type ScoreRecord = TableRow<"agent_scores">;
 type ServiceRecord = TableRow<"agent_services">;
 
+const SCORE_EVIDENCE_QUERY_BATCH_SIZE = 100;
+
+export function batchScoreCandidateIds(
+  ids: readonly string[],
+): readonly (readonly string[])[] {
+  const batches: string[][] = [];
+  for (let index = 0; index < ids.length; index += SCORE_EVIDENCE_QUERY_BATCH_SIZE) {
+    batches.push(ids.slice(index, index + SCORE_EVIDENCE_QUERY_BATCH_SIZE));
+  }
+  return batches;
+}
+
+async function loadScoreEvidenceBatches<T>(
+  ids: readonly string[],
+  operation: string,
+  load: (
+    batch: readonly string[],
+  ) => Promise<Readonly<{ data: readonly T[] | null; error: unknown }>>,
+): Promise<readonly T[]> {
+  const records: T[] = [];
+  for (const batch of batchScoreCandidateIds(ids)) {
+    const { data, error } = await load(batch);
+    if (error) throw new DatabaseOperationError(operation, error);
+    if (data) records.push(...data);
+  }
+  return records;
+}
+
 export type ScoreRepositorySources = Readonly<{
   listAgentRecords(ids: readonly string[]): Promise<readonly AgentRecord[]>;
   listCandidateIds(
@@ -104,52 +132,56 @@ function createSupabaseSources(
       return data.map((row) => row.agent_db_id);
     },
     async listAgentRecords(ids) {
-      const { data, error } = await client
-        .from("agents")
-        .select("*")
-        .in("id", [...ids]);
-
-      if (error) {
-        throw new DatabaseOperationError("list scoring agents", error);
-      }
-
-      return data;
+      return loadScoreEvidenceBatches<AgentRecord>(
+        ids,
+        "list scoring agents",
+        async (batch) => {
+          const { data, error } = await client
+            .from("agents")
+            .select("*")
+            .in("id", [...batch]);
+          return { data, error };
+        },
+      );
     },
     async listHealthRecords(ids) {
-      const { data, error } = await client
-        .from("agent_health")
-        .select("*")
-        .in("agent_db_id", [...ids]);
-
-      if (error) {
-        throw new DatabaseOperationError("list scoring health", error);
-      }
-
-      return data;
+      return loadScoreEvidenceBatches<HealthRecord>(
+        ids,
+        "list scoring health",
+        async (batch) => {
+          const { data, error } = await client
+            .from("agent_health")
+            .select("*")
+            .in("agent_db_id", [...batch]);
+          return { data, error };
+        },
+      );
     },
     async listReputationRecords(ids) {
-      const { data, error } = await client
-        .from("agent_reputation")
-        .select("*")
-        .in("agent_db_id", [...ids]);
-
-      if (error) {
-        throw new DatabaseOperationError("list scoring reputation", error);
-      }
-
-      return data;
+      return loadScoreEvidenceBatches<ReputationRecord>(
+        ids,
+        "list scoring reputation",
+        async (batch) => {
+          const { data, error } = await client
+            .from("agent_reputation")
+            .select("*")
+            .in("agent_db_id", [...batch]);
+          return { data, error };
+        },
+      );
     },
     async listServiceRecords(ids) {
-      const { data, error } = await client
-        .from("agent_services")
-        .select("*")
-        .in("agent_db_id", [...ids]);
-
-      if (error) {
-        throw new DatabaseOperationError("list scoring services", error);
-      }
-
-      return data;
+      return loadScoreEvidenceBatches<ServiceRecord>(
+        ids,
+        "list scoring services",
+        async (batch) => {
+          const { data, error } = await client
+            .from("agent_services")
+            .select("*")
+            .in("agent_db_id", [...batch]);
+          return { data, error };
+        },
+      );
     },
     async upsertScores(records) {
       const { error } = await client

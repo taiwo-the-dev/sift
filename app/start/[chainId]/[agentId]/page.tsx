@@ -4,8 +4,14 @@ import { notFound } from "next/navigation";
 import { StartTaskFlow } from "@/components/activation/start-task-flow";
 import { parseAgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
-import { formatAgentName } from "@/features/discovery/format";
-import { currentActivationServices } from "@/features/activation/service";
+import {
+  formatAgentName,
+  formatServiceType,
+} from "@/features/discovery/format";
+import {
+  currentActivationServices,
+  externalAgentServices,
+} from "@/features/activation/service";
 import { createPageMetadata } from "@/lib/metadata";
 
 type Props = Readonly<{
@@ -29,6 +35,9 @@ export default async function StartTaskPage({ params }: Props) {
   const profile = await getAgentProfile(identity.chainId, identity.agentId);
   if (!profile) notFound();
 
+  const agentCanBeUsed =
+    profile.metadataStatus === "valid" && profile.active !== false;
+
   return (
     <StartTaskFlow
       agent={{
@@ -36,7 +45,15 @@ export default async function StartTaskPage({ params }: Props) {
         chainId: profile.chainId,
         name: formatAgentName(profile.name, profile.agentId),
       }}
-      services={currentActivationServices(profile.services)}
+      externalServices={
+        agentCanBeUsed
+          ? externalAgentServices(profile.services).map((service) => ({
+              href: service.href,
+              label: formatServiceType(service.serviceType),
+            }))
+          : []
+      }
+      services={agentCanBeUsed ? currentActivationServices(profile.services) : []}
     />
   );
 }

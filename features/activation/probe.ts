@@ -126,19 +126,22 @@ export async function probeActivationService(
     if (candidate.method === "mcp") {
       const inspection = await inspectMcpService(candidate.endpoint, options);
       const tools = inspection.tools.map((tool) => ({
+        destructive: tool.destructive,
         description: tool.description,
+        idempotent: tool.idempotent,
         inputSchema: tool.inputSchema,
         name: tool.name,
+        openWorld: tool.openWorld,
         readOnly: tool.readOnly,
       }));
-      const hasReadOnlyTool = tools.some((tool) => tool.readOnly);
+      const hasTools = tools.length > 0;
       return {
         capabilitySummary: json({ tools }),
-        failureCode: hasReadOnlyTool ? null : "no-read-only-tools",
+        failureCode: hasTools ? null : "no-tools",
         method: candidate.method,
         responseTimeMs: inspection.responseTimeMs,
         serviceId: candidate.serviceId,
-        status: hasReadOnlyTool ? "available" : "unsupported",
+        status: hasTools ? "available" : "unsupported",
       };
     }
 

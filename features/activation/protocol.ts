@@ -1,4 +1,4 @@
-import { isAddress } from "viem";
+import { getAddress, isAddress, isHex, type Address, type Hex } from "viem";
 import { z } from "zod";
 
 import type { Json } from "@/lib/db/database.types";
@@ -19,7 +19,12 @@ const jsonRpcEnvelopeSchema = z.object({
 
 const mcpToolSchema = z.object({
   annotations: z
-    .object({ readOnlyHint: z.boolean().optional() })
+    .object({
+      destructiveHint: z.boolean().optional(),
+      idempotentHint: z.boolean().optional(),
+      openWorldHint: z.boolean().optional(),
+      readOnlyHint: z.boolean().optional(),
+    })
     .loose()
     .optional(),
   description: z.string().max(1_000).optional(),
@@ -88,9 +93,26 @@ function parseRpcResult(value: unknown): unknown {
 
 export type McpToolSummary = Readonly<{
   description: string | null;
+  destructive: boolean;
+  idempotent: boolean;
   inputSchema: Readonly<Record<string, unknown>>;
   name: string;
+  openWorld: boolean;
   readOnly: boolean;
+}>;
+
+export type PreparedEvmTransaction = Readonly<{
+  chainId: 56 | 97;
+  data: Hex;
+  from: Address | null;
+  to: Address;
+  value: string;
+}>;
+
+export type McpToolCallResult = Readonly<{
+  result: Json;
+  tool: McpToolSummary;
+  transactions: readonly PreparedEvmTransaction[];
 }>;
 
 export type McpInspection = Readonly<{
@@ -199,28 +221,194 @@ export async function inspectMcpService(
     sessionId,
     tools: result.tools.map((tool) => ({
       description: tool.description ?? null,
+      destructive: tool.annotations?.destructiveHint === true,
+      idempotent: tool.annotations?.idempotentHint === true,
       inputSchema: tool.inputSchema ?? {},
       name: tool.name,
+      openWorld: tool.annotations?.openWorldHint === true,
       readOnly: tool.annotations?.readOnlyHint === true,
     })),
   };
 }
 
-export async function callReadOnlyMcpTool(input: Readonly<{
+function parseTransactionChainId(value: unknown): number | null {
+  if (typeof value === "number" && Number.isSafeInteger(value)) return value;
+  if (typeof value !== "string" || !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value)) {
+    return null;
+  }
+
+  const parsed = Number(BigInt(value));
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+function parseTransactionValue(value: unknown): string | null {
+  if (value === undefined || value === null || value === "") return "0";
+  if (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0
+  ) {
+    return String(value);
+  }
+  if (
+    typeof value !== "string" ||
+    !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value)
+  ) {
+    return null;
+  }
+
+  try {
+    const parsed = BigInt(value);
+    return parsed >= 0n && parsed < 2n ** 256n ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function nestedJsonValues(value: unknown): readonly unknown[] {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !Array.isArray((value as Readonly<Record<string, unknown>>).content)
+  ) {
+    return [];
+  }
+
+  return (value as Readonly<{ content: readonly unknown[] }>).content.flatMap(
+    (item) => {
+      if (typeof item !== "object" || item === null || Array.isArray(item)) {
+        return [];
+      }
+      const text = (item as Readonly<Record<string, unknown>>).text;
+      if (typeof text !== "string" || text.length > 65_536) return [];
+      try {
+        return [JSON.parse(text) as unknown];
+      } catch {
+        return [];
+      }
+    },
+  );
+}
+
+/**
+ * Extract only bounded, structurally valid EVM requests from an untrusted MCP
+ * response. The caller still has to simulate, review, and approve every request
+ * in their wallet; this function never executes anything.
+ */
+export function extractPreparedEvmTransactions(
+  value: unknown,
+  expectedChainId: number,
+): readonly PreparedEvmTransaction[] {
+  if (expectedChainId !== 56 && expectedChainId !== 97) return [];
+  const supportedChainId: 56 | 97 = expectedChainId;
+
+  const queue: Readonly<{ depth: number; value: unknown }>[] = [
+    { depth: 0, value },
+    ...nestedJsonValues(value).map((nested) => ({ depth: 0, value: nested })),
+  ];
+  const transactions: PreparedEvmTransaction[] = [];
+  const seen = new Set<string>();
+  let inspected = 0;
+
+  while (queue.length > 0 && inspected < 500 && transactions.length < 10) {
+    const current = queue.shift();
+    if (!current) break;
+    inspected += 1;
+    if (current.depth > 7) continue;
+
+    if (Array.isArray(current.value)) {
+      queue.push(
+        ...current.value.slice(0, 50).map((item) => ({
+          depth: current.depth + 1,
+          value: item,
+        })),
+      );
+      continue;
+    }
+    if (
+      typeof current.value !== "object" ||
+      current.value === null
+    ) {
+      continue;
+    }
+
+    const candidate = current.value as Readonly<Record<string, unknown>>;
+    const rawData = candidate.data ?? candidate.calldata;
+    const chainId: number | null =
+      candidate.chainId === undefined
+        ? supportedChainId
+        : parseTransactionChainId(candidate.chainId);
+    const valueAmount = parseTransactionValue(candidate.value);
+    const data =
+      typeof rawData === "string" && isHex(rawData, { strict: true })
+        ? rawData
+        : rawData === undefined
+          ? "0x"
+          : null;
+    const from =
+      candidate.from === undefined
+        ? null
+        : typeof candidate.from === "string" && isAddress(candidate.from)
+          ? getAddress(candidate.from)
+          : undefined;
+
+    if (
+      typeof candidate.to === "string" &&
+      isAddress(candidate.to) &&
+      chainId === supportedChainId &&
+      valueAmount !== null &&
+      data !== null &&
+      from !== undefined &&
+      (data !== "0x" || valueAmount !== "0")
+    ) {
+      const transaction = {
+        chainId: supportedChainId,
+        data,
+        from,
+        to: getAddress(candidate.to),
+        value: valueAmount,
+      } as const;
+      const key = `${transaction.chainId}:${transaction.to}:${transaction.data}:${transaction.value}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        transactions.push(transaction);
+      }
+    }
+
+    queue.push(
+      ...Object.values(candidate).slice(0, 50).map((item) => ({
+        depth: current.depth + 1,
+        value: item,
+      })),
+    );
+  }
+
+  return transactions;
+}
+
+export async function callMcpTool(input: Readonly<{
   arguments: Readonly<Record<string, unknown>>;
+  confirmedSideEffects: boolean;
   endpoint: string;
+  expectedChainId: number;
   fetchImpl?: typeof fetch;
   maxBytes?: number;
   resolveHost?: HostResolver;
   timeoutMs?: number;
   toolName: string;
-}>): Promise<Json> {
+}>): Promise<McpToolCallResult> {
   const inspection = await inspectMcpService(input.endpoint, input);
   const tool = inspection.tools.find((candidate) => candidate.name === input.toolName);
-  if (!tool || !tool.readOnly) {
+  if (!tool) {
     throw new ActivationRemoteError(
       "invalid-response",
-      "Sift only runs tools that the live MCP service marks as read-only.",
+      "The selected tool is no longer published by this agent.",
+    );
+  }
+  if (!tool.readOnly && !input.confirmedSideEffects) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      "Confirm this external action before Sift sends it to the agent.",
     );
   }
   if (!argumentsMatchSchema(input.arguments, tool.inputSchema)) {
@@ -251,7 +439,38 @@ export async function callReadOnlyMcpTool(input: Readonly<{
   if (response.status < 200 || response.status >= 300) {
     throw new ActivationRemoteError("http-error", "The MCP tool call failed.");
   }
-  return json(parseRpcResult(parseJsonOrSse(response.body)));
+  const result = json(parseRpcResult(parseJsonOrSse(response.body)));
+  return {
+    result,
+    tool,
+    transactions: extractPreparedEvmTransactions(
+      result,
+      input.expectedChainId,
+    ),
+  };
+}
+
+export async function callReadOnlyMcpTool(input: Readonly<{
+  arguments: Readonly<Record<string, unknown>>;
+  endpoint: string;
+  fetchImpl?: typeof fetch;
+  maxBytes?: number;
+  resolveHost?: HostResolver;
+  timeoutMs?: number;
+  toolName: string;
+}>): Promise<Json> {
+  const result = await callMcpTool({
+    ...input,
+    confirmedSideEffects: false,
+    expectedChainId: 56,
+  });
+  if (!result.tool.readOnly) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      "Sift only runs this tool through the confirmed action flow.",
+    );
+  }
+  return result.result;
 }
 
 export function a2aCardUrl(endpoint: string): string {

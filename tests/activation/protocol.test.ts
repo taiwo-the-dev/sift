@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  callMcpTool,
   callReadOnlyMcpTool,
+  extractPreparedEvmTransactions,
   inspectA2aService,
   inspectMcpService,
   inspectX402Service,
@@ -53,7 +55,52 @@ describe("bounded agent task protocols", () => {
         resolveHost: resolvePublicTestHost,
         toolName: "trade",
       }),
-      /read-only/,
+      /Confirm this external action/,
+    );
+  });
+
+  it("runs a non-read-only MCP tool only after explicit confirmation", async () => {
+    const responses = [
+      rpc({ protocolVersion: "2025-06-18" }),
+      new Response(null, { status: 202 }),
+      rpc({ tools: [{ inputSchema: { type: "object" }, name: "prepare" }] }, 2),
+      rpc({
+        content: [{
+          text: JSON.stringify({
+            chainId: 56,
+            data: "0x1234",
+            to: "0x1111111111111111111111111111111111111111",
+            value: "0",
+          }),
+          type: "text",
+        }],
+      }, 3),
+    ];
+    const result = await callMcpTool({
+      arguments: {},
+      confirmedSideEffects: true,
+      endpoint: "https://agent.example/mcp",
+      expectedChainId: 56,
+      fetchImpl: async () => responses.shift()!,
+      resolveHost: resolvePublicTestHost,
+      toolName: "prepare",
+    });
+    assert.equal(result.tool.readOnly, false);
+    assert.equal(result.transactions.length, 1);
+    assert.equal(result.transactions[0]?.chainId, 56);
+  });
+
+  it("rejects prepared transactions for a different chain", () => {
+    assert.deepEqual(
+      extractPreparedEvmTransactions(
+        {
+          chainId: 1,
+          data: "0x1234",
+          to: "0x1111111111111111111111111111111111111111",
+        },
+        56,
+      ),
+      [],
     );
   });
 

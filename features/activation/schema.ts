@@ -25,6 +25,7 @@ export const a2aTaskSchema = z
 export const mcpToolCallSchema = z
   .object({
     arguments: z.record(z.string(), z.unknown()),
+    confirmedSideEffects: z.boolean(),
     serviceId: z.uuid(),
     toolName: z.string().trim().min(1).max(128),
   })

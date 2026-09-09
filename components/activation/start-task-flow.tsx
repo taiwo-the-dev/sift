@@ -6,6 +6,8 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   CircleDollarSign,
+  ExternalLink,
+  Globe2,
   LoaderCircle,
   Send,
   ShieldCheck,
@@ -15,6 +17,7 @@ import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { McpTransactionReview } from "@/components/activation/mcp-transaction-review";
 import { SelectField } from "@/components/ui/select-field";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfileService } from "@/features/agents/model";
@@ -22,9 +25,14 @@ import {
   formatActivationMethod,
   type ActivationMethod,
 } from "@/features/activation/model";
+import type { PreparedEvmTransaction } from "@/features/activation/protocol";
 import { cn } from "@/lib/utils";
 
 type Agent = Readonly<{ agentId: string; chainId: number; name: string }>;
+type ExternalService = Readonly<{
+  href: string;
+  label: string;
+}>;
 
 const methodDetails = {
   a2a: {
@@ -36,7 +44,7 @@ const methodDetails = {
     icon: ShieldCheck,
   },
   mcp: {
-    description: "Run a tool only when the live MCP server marks it as read-only.",
+    description: "Run a published tool with confirmation and wallet review when needed.",
     icon: Wrench,
   },
   x402: {
@@ -57,14 +65,55 @@ function mcpTools(service: AgentProfileService) {
   return summary.tools.flatMap((item) => {
     const tool = record(item);
     return tool &&
-      typeof tool.name === "string" &&
-      tool.readOnly === true
+      typeof tool.name === "string"
       ? [{
+          destructive: tool.destructive === true,
           description: typeof tool.description === "string" ? tool.description : null,
+          inputSchema: record(tool.inputSchema) ?? {},
           name: tool.name,
+          openWorld: tool.openWorld === true,
+          readOnly: tool.readOnly === true,
         }]
       : [];
   });
+}
+
+function toolArgumentTemplate(
+  inputSchema: Readonly<Record<string, unknown>>,
+  chainId: number,
+): string {
+  const properties = record(inputSchema.properties);
+  const required = Array.isArray(inputSchema.required)
+    ? inputSchema.required.filter((key): key is string => typeof key === "string")
+    : [];
+  if (!properties) return "{}";
+
+  const result: Record<string, unknown> = {};
+  for (const key of required) {
+    const rule = record(properties[key]);
+    const values = Array.isArray(rule?.enum)
+      ? rule.enum.filter((value): value is string => typeof value === "string")
+      : [];
+    const normalizedKey = key.toLowerCase();
+    if (normalizedKey.includes("chain") && values.includes("bsc")) {
+      result[key] = "bsc";
+    } else if (normalizedKey.includes("chainid")) {
+      result[key] = chainId;
+    } else if (values.length > 0) {
+      result[key] = values[0];
+    } else if (rule?.type === "boolean") {
+      result[key] = false;
+    } else if (rule?.type === "number" || rule?.type === "integer") {
+      result[key] = 0;
+    } else if (rule?.type === "array") {
+      result[key] = [];
+    } else if (rule?.type === "object") {
+      result[key] = {};
+    } else {
+      result[key] = "";
+    }
+  }
+  return JSON.stringify(result, null, 2);
 }
 
 function formatToolName(name: string): string {
@@ -108,8 +157,13 @@ async function readApiResult(response: Response): Promise<unknown> {
 
 export function StartTaskFlow({
   agent,
+  externalServices = [],
   services,
-}: Readonly<{ agent: Agent; services: readonly AgentProfileService[] }>) {
+}: Readonly<{
+  agent: Agent;
+  externalServices?: readonly ExternalService[];
+  services: readonly AgentProfileService[];
+}>) {
   const methods = useMemo(
     () =>
       services.reduce<AgentProfileService[]>((result, service) => {
@@ -128,11 +182,25 @@ export function StartTaskFlow({
   );
   const [message, setMessage] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [toolName, setToolName] = useState("");
-  const [toolArguments, setToolArguments] = useState("{}");
+  const initialMcpService = methods.find(
+    (item) => item.activationMethod === "mcp",
+  );
+  const initialMcpTool = initialMcpService
+    ? mcpTools(initialMcpService)[0] ?? null
+    : null;
+  const [toolName, setToolName] = useState(initialMcpTool?.name ?? "");
+  const [toolArguments, setToolArguments] = useState(() =>
+    initialMcpTool
+      ? toolArgumentTemplate(initialMcpTool.inputSchema, agent.chainId)
+      : "{}",
+  );
+  const [mcpConfirmed, setMcpConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<unknown>(null);
+  const [transactions, setTransactions] = useState<
+    readonly PreparedEvmTransaction[]
+  >([]);
   const service = methods.find((item) => item.activationMethod === method) ?? null;
   const tools = service?.activationMethod === "mcp" ? mcpTools(service) : [];
   const quotes = service?.activationMethod === "x402" ? x402Options(service) : [];
@@ -146,6 +214,7 @@ export function StartTaskFlow({
     setBusy(true);
     setError(null);
     setResult(null);
+    setTransactions([]);
     try {
       const response = await fetch("/api/activation/a2a", {
         body: JSON.stringify({ message, serviceId: service.id ?? "" }),
@@ -166,19 +235,29 @@ export function StartTaskFlow({
     setBusy(true);
     setError(null);
     setResult(null);
+    setTransactions([]);
     try {
       const parsed = JSON.parse(toolArguments) as unknown;
       if (!record(parsed)) throw new Error("Tool arguments must be a JSON object.");
       const response = await fetch("/api/activation/mcp", {
         body: JSON.stringify({
           arguments: parsed,
+          confirmedSideEffects:
+            selectedToolDetails?.readOnly === true ? false : mcpConfirmed,
           serviceId: service.id ?? "",
           toolName: selectedTool,
         }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
-      setResult(await readApiResult(response));
+      const payload = await readApiResult(response);
+      const responseRecord = record(payload);
+      setResult(responseRecord?.result ?? payload);
+      setTransactions(
+        Array.isArray(responseRecord?.transactions)
+          ? (responseRecord.transactions as unknown as readonly PreparedEvmTransaction[])
+          : [],
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The tool could not run.");
     } finally {
@@ -235,6 +314,8 @@ export function StartTaskFlow({
                     setMethod(itemMethod);
                     setError(null);
                     setResult(null);
+                    setTransactions([]);
+                    setMcpConfirmed(false);
                   }}
                   className={cn(
                     "flex w-full items-start gap-3 rounded-xl border p-3 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/30",
@@ -261,13 +342,64 @@ export function StartTaskFlow({
               );
             })}
           </div>
+          {externalServices.length > 0 ? (
+            <div className="mt-4 border-t border-border px-3 pt-4 pb-2">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Published links
+              </p>
+              <div className="mt-3 space-y-2">
+                {externalServices.map((item) => (
+                  <a
+                    key={`${item.label}:${item.href}`}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/50 px-3 py-2 text-xs font-semibold text-foreground outline-none transition-colors hover:border-brand/30 hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
+                  >
+                    <span className="truncate">{item.label}</span>
+                    <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </aside>
 
         <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-7">
-          {!service ? (
+          {!service && externalServices.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No recently checked task method is available for this agent.
+              This agent has not published a working service that Sift can use.
             </p>
+          ) : null}
+
+          {!service && externalServices.length > 0 ? (
+            <div>
+              <span className="grid size-11 place-items-center rounded-xl border border-sky-400/25 bg-sky-400/8 text-sky-200">
+                <Globe2 className="size-5" aria-hidden="true" />
+              </span>
+              <h2 className="mt-5 text-2xl font-semibold text-foreground">
+                Open a published service
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                This agent has not published a checked task protocol, but it does
+                list external services. They open outside Sift and follow the
+                provider’s own permissions and payment rules.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {externalServices.map((item) => (
+                  <a
+                    key={`${item.label}:${item.href}:main`}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className={cn(buttonVariants({ variant: "outline", size: "lg" }), "gap-2")}
+                  >
+                    {item.label}
+                    <ExternalLink className="size-4" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+            </div>
           ) : null}
 
           {service?.activationMethod === "erc8183" ? (
@@ -335,9 +467,11 @@ export function StartTaskFlow({
 
           {service?.activationMethod === "mcp" ? (
             <form className="min-w-0" onSubmit={submitMcp}>
-              <h2 className="text-2xl font-semibold text-foreground">Run a safe tool</h2>
+              <h2 className="text-2xl font-semibold text-foreground">Run an agent tool</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Choose a read-only action. Sift blocks tools that can make changes or move funds.
+                Read-only tools run after your click. Other tools require an extra
+                confirmation, and any blockchain transaction must still be reviewed
+                in your wallet.
               </p>
               <div className="mt-6 min-w-0 max-w-full">
                 <SelectField
@@ -349,10 +483,22 @@ export function StartTaskFlow({
                   }))}
                   triggerClassName="h-10 rounded-xl"
                   value={selectedTool}
-                  onValueChange={(value) => setToolName(value)}
+                  onValueChange={(value) => {
+                    setToolName(value);
+                    const nextTool = tools.find((tool) => tool.name === value);
+                    setToolArguments(
+                      nextTool
+                        ? toolArgumentTemplate(nextTool.inputSchema, agent.chainId)
+                        : "{}",
+                    );
+                    setMcpConfirmed(false);
+                    setError(null);
+                    setResult(null);
+                    setTransactions([]);
+                  }}
                 />
                 <span id="mcp-tool-label" className="sr-only">
-                  Read-only MCP tool
+                  MCP tool
                 </span>
               </div>
               {selectedToolDetails ? (
@@ -361,8 +507,17 @@ export function StartTaskFlow({
                     <code className="break-all text-xs font-semibold text-foreground">
                       {selectedToolDetails.name}
                     </code>
-                    <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-300">
-                      Read only
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                        selectedToolDetails.readOnly
+                          ? "bg-emerald-400/10 text-emerald-300"
+                          : "bg-amber-400/10 text-amber-200",
+                      )}
+                    >
+                      {selectedToolDetails.readOnly
+                        ? "Read only"
+                        : "Confirmation required"}
                     </span>
                   </div>
                   {selectedToolDetails.description ? (
@@ -384,15 +539,36 @@ export function StartTaskFlow({
                 spellCheck={false}
                 className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-4 py-3 font-mono text-xs leading-6 text-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/15"
               />
+              {selectedToolDetails && !selectedToolDetails.readOnly ? (
+                <label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/6 p-4 text-xs leading-5 text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={mcpConfirmed}
+                    onChange={(event) => setMcpConfirmed(event.target.checked)}
+                    className="mt-1 accent-brand"
+                  />
+                  <span>
+                    I understand this sends one request to an external agent. It
+                    may prepare a transaction or change external data. Sift will
+                    not sign or send a wallet transaction automatically.
+                  </span>
+                </label>
+              ) : null}
               <Button
                 type="submit"
                 className="mt-5"
                 variant="brand"
                 size="lg"
-                disabled={!selectedTool || busy}
+                disabled={
+                  !selectedTool ||
+                  busy ||
+                  (selectedToolDetails?.readOnly === false && !mcpConfirmed)
+                }
               >
                 {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Wrench className="size-4" />}
-                Run tool
+                {selectedToolDetails?.readOnly === false
+                  ? "Prepare action"
+                  : "Run tool"}
               </Button>
             </form>
           ) : null}
@@ -432,6 +608,7 @@ export function StartTaskFlow({
               </pre>
             </div>
           ) : null}
+          <McpTransactionReview transactions={transactions} />
         </section>
       </div>
     </main>

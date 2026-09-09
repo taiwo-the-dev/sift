@@ -31,7 +31,11 @@ import {
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
-import { currentActivationServices } from "@/features/activation/service";
+import {
+  currentActivationServices,
+  externalAgentServices,
+} from "@/features/activation/service";
+import { formatActivationMethod } from "@/features/activation/model";
 
 interface ProfileHeaderProps {
   comparisonGoal?: string;
@@ -101,10 +105,13 @@ export function ProfileHeader({
   const hiring = assessHiringCompatibility(profile);
   const hireable = hiring.compatibility !== null;
   const taskServices = currentActivationServices(profile.services);
-  const taskReady =
+  const externalServices = externalAgentServices(profile.services);
+  const agentCanBeUsed =
     profile.metadataStatus === "valid" &&
-    profile.active !== false &&
-    taskServices.length > 0;
+    profile.active !== false;
+  const taskReady = agentCanBeUsed && taskServices.length > 0;
+  const externalReady = agentCanBeUsed && externalServices.length > 0;
+  const canUseAgent = taskReady || externalReady;
   const showOtherCategory = shouldShowOtherCategory(
     profile.metadataStatus,
     profile.categories,
@@ -205,7 +212,7 @@ export function ProfileHeader({
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
             <BookmarkToggle agent={profile} />
-            {taskReady ? (
+            {canUseAgent ? (
               <Link
                 href={`/start/${profile.chainId}/${profile.agentId}`}
                 className={cn(buttonVariants({ variant: "brand" }), "gap-2")}
@@ -263,11 +270,19 @@ export function ProfileHeader({
           <EvidenceStat
             icon={<BriefcaseBusiness className="size-4 text-violet-300" aria-hidden="true" />}
             label="Task access"
-            value={taskReady ? "Available" : "Unavailable"}
+            value={
+              taskReady
+                ? "Available"
+                : externalReady
+                  ? "External access"
+                  : "Unavailable"
+            }
             detail={
               taskReady
                 ? `${taskServices.length} recently checked ${taskServices.length === 1 ? "method" : "methods"}`
-                : "No supported service has a current successful check"
+                : externalReady
+                  ? `${externalServices.length} published external ${externalServices.length === 1 ? "service" : "services"}`
+                  : "No supported service has a current successful check"
             }
           />
         </dl>
@@ -297,7 +312,11 @@ export function ProfileHeader({
           <span className="font-semibold text-foreground">Hiring availability: </span>
           {hireable
             ? `This profile lists supported hiring on ${formatChainName(profile.chainId)}. Sift will check the live service and signed price before you can pay.`
-            : hiring.explanation}
+            : taskReady
+              ? `This agent can be used through ${taskServices.map((service) => service.activationMethod ? formatActivationMethod(service.activationMethod) : "a checked service").join(", ")}. It has not published a compatible protected-hiring service.`
+              : externalReady
+                ? "This agent publishes external services. Sift can open them, but their permissions and payments are controlled by the external provider."
+                : hiring.explanation}
         </div>
       </div>
     </header>
