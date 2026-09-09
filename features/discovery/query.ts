@@ -5,14 +5,12 @@ import {
   discoveryNetworkOptions,
   discoveryPageSizes,
   discoverySortOptions,
-  discoveryViews,
   getDiscoveryChainIds,
   type DiscoveryCategory,
   type DiscoveryNetworkScope,
   type DiscoveryPageSize,
   type DiscoveryQuery,
   type DiscoverySort,
-  type DiscoveryView,
 } from "@/features/discovery/model";
 import type { HealthStatus } from "@/features/health/model";
 import type { MetadataStatus } from "@/lib/db/validation";
@@ -24,7 +22,6 @@ export type DiscoverySearchParams = Readonly<
 const maximumQueryLength = 180;
 const maximumSearchTerms = 10;
 const defaultPageSize: DiscoveryPageSize = 12;
-const defaultDiscoveryView: DiscoveryView = "grid";
 export const defaultDiscoveryNetwork: DiscoveryNetworkScope = "bsc-mainnet";
 
 const stopWords = new Set([
@@ -247,11 +244,6 @@ export function parseDiscoverySearchParams(
   const taskAvailability = firstValue(params.availability) === "ready"
     ? "ready"
     : null;
-  const view = discoveryViews.includes(
-    firstValue(params.view) as DiscoveryView,
-  )
-    ? (firstValue(params.view) as DiscoveryView)
-    : defaultDiscoveryView;
 
   return {
     categories,
@@ -272,7 +264,6 @@ export function parseDiscoverySearchParams(
     searchTerms: extractDiscoverySearchTerms(query),
     sort: parseSort(firstValue(params.sort), query.length > 0),
     taskAvailability,
-    view,
   };
 }
 
@@ -286,7 +277,6 @@ export type DiscoveryQueryOverrides = Readonly<{
   query?: string;
   sort?: DiscoverySort;
   taskAvailability?: "ready" | null;
-  view?: DiscoveryView;
 }>;
 
 export function buildDiscoveryHref(
@@ -305,7 +295,6 @@ export function buildDiscoveryHref(
     overrides.taskAvailability === undefined
       ? query.taskAvailability
       : overrides.taskAvailability;
-  const nextView = overrides.view ?? query.view;
   const params = new URLSearchParams();
 
   if (nextQuery) {
@@ -326,10 +315,6 @@ export function buildDiscoveryHref(
 
   if (nextTaskAvailability === "ready") {
     params.set("availability", "ready");
-  }
-
-  if (nextView !== defaultDiscoveryView) {
-    params.set("view", nextView);
   }
 
   if (nextNetwork !== defaultDiscoveryNetwork) {

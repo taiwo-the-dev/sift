@@ -52,7 +52,6 @@ describe("discovery query parsing", () => {
       q: "  grid   trading  ",
       size: "24",
       sort: "name-asc",
-      view: "landscape",
     });
 
     assert.equal(query.query, "grid trading");
@@ -65,7 +64,6 @@ describe("discovery query parsing", () => {
     assert.equal(query.page, 7);
     assert.equal(query.pageSize, 24);
     assert.equal(query.sort, "name-asc");
-    assert.equal(query.view, "landscape");
   });
 
   it("uses the mapped intent only when no explicit category overrides it", () => {
@@ -94,7 +92,6 @@ describe("discovery query parsing", () => {
     assert.equal(query.network, "bsc-mainnet");
     assert.deepEqual(query.networkChainIds, [56]);
     assert.equal(query.sort, "relevance");
-    assert.equal(query.view, "grid");
   });
 
   it("accepts the extended catalogue sort options", () => {
@@ -135,16 +132,6 @@ describe("discovery query parsing", () => {
     assert.equal(url.searchParams.get("sort"), "recent");
     assert.equal(url.searchParams.get("size"), "24");
     assert.equal(url.searchParams.get("page"), "3");
-    assert.equal(url.searchParams.get("view"), null);
-  });
-
-  it("keeps the selected result view in a shareable URL", () => {
-    const query = parseDiscoverySearchParams({ view: "landscape" });
-    const url = new URL(buildDiscoveryHref(query), "https://sift.example");
-
-    assert.equal(query.view, "landscape");
-    assert.equal(url.searchParams.get("view"), "landscape");
-    assert.equal(parseDiscoverySearchParams({ view: "invalid" }).view, "grid");
   });
 
   it("keeps BSC mainnet as the clean default judge journey", () => {

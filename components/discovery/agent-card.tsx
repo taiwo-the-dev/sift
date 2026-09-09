@@ -28,11 +28,8 @@ import {
   formatChainName,
   formatMetadataStatus,
 } from "@/features/discovery/format";
-import type {
-  DiscoveryAgent,
-  DiscoveryView,
-} from "@/features/discovery/model";
-import { isHealthStale } from "@/features/health/presentation";
+import type { DiscoveryAgent } from "@/features/discovery/model";
+import { formatHealthCheckTime } from "@/features/health/presentation";
 import {
   describeScoreConfidence,
   isScoreStale,
@@ -42,7 +39,6 @@ import { cn } from "@/lib/utils";
 interface AgentCardProps {
   agent: DiscoveryAgent;
   comparisonGoal?: string;
-  layout?: DiscoveryView;
 }
 
 const metadataStatusStyles = {
@@ -93,18 +89,17 @@ function Signal({
       >
         {value}
       </dd>
-      <dd className="mt-0.5 truncate text-[0.65rem] text-muted-foreground">
+      <dd
+        className="mt-0.5 truncate text-[0.65rem] text-muted-foreground"
+        title={detail}
+      >
         {detail}
       </dd>
     </div>
   );
 }
 
-export function AgentCard({
-  agent,
-  comparisonGoal = "",
-  layout = "grid",
-}: AgentCardProps) {
+export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
   const agentName = formatAgentName(agent.name, agent.agentId);
   const baseProfileHref = buildAgentProfileHref(agent.chainId, agent.agentId);
   const profileHref =
@@ -159,15 +154,13 @@ export function AgentCard({
             ? "View paid access"
             : "View agent";
   const healthStatus = agent.health?.status ?? "unknown";
-  const healthIsStale = agent.health ? isHealthStale(agent.health) : false;
   const healthValue = !agent.health
     ? "Not checked"
-    : healthIsStale
-      ? "Check expired"
-      : agent.health.status.charAt(0).toUpperCase() + agent.health.status.slice(1);
-  const healthStyle = healthIsStale
-    ? healthValueStyles.degraded
-    : healthValueStyles[healthStatus];
+    : agent.health.status.charAt(0).toUpperCase() + agent.health.status.slice(1);
+  const healthDetail = agent.health
+    ? `Checked ${formatHealthCheckTime(agent.health.lastCheckedAt)}`
+    : "No health check";
+  const healthStyle = healthValueStyles[healthStatus];
   const scoreIsStale = agent.score
     ? isScoreStale(agent.score.calculatedAt)
     : false;
@@ -237,7 +230,7 @@ export function AgentCard({
         icon={<RadioTower className="size-3" aria-hidden="true" />}
         label="Health"
         value={healthValue}
-        detail={healthIsStale ? "Refresh needed" : "Latest check"}
+        detail={healthDetail}
         valueClassName={healthStyle}
       />
       <Signal
@@ -248,97 +241,6 @@ export function AgentCard({
       />
     </>
   );
-
-  if (layout === "landscape") {
-    return (
-      <article className="sift-card-reveal group relative min-w-0 overflow-hidden rounded-2xl border border-border bg-card p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_18px_44px_rgba(0,0,0,0.22)] motion-reduce:transform-none sm:p-6">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-[radial-gradient(circle_at_0%_20%,rgba(240,185,11,0.15),transparent_11rem)]"
-        />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.09em] text-muted-foreground">
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-brand">
-              <Database className="size-3" aria-hidden="true" />
-              {formatChainName(agent.chainId)}
-            </span>
-            <span className="size-1 shrink-0 rounded-full bg-border" aria-hidden="true" />
-            <span className="truncate font-mono normal-case tracking-normal">
-              Agent #{agent.agentId}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BookmarkToggle agent={agent} variant="icon" />
-            <ComparisonToggle
-              className="border-border bg-background text-foreground hover:border-input hover:bg-muted hover:text-foreground"
-              reference={{ agentId: agent.agentId, chainId: agent.chainId }}
-              goal={comparisonGoal}
-              variant="compact"
-            />
-          </div>
-        </div>
-
-        <div className="relative mt-5 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="relative shrink-0 rounded-full bg-background p-1 ring-1 ring-border">
-                <AgentAvatar
-                  agentId={agent.agentId}
-                  imageUrl={agent.imageUrl}
-                  name={agentName}
-                />
-                {taskReady ? (
-                  <span className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full border-2 border-card bg-emerald-400">
-                    <span className="sr-only">Available for tasks</span>
-                  </span>
-                ) : null}
-              </div>
-              <div className="min-w-0">
-                <h2 className="truncate text-2xl font-semibold tracking-[-0.035em] text-foreground">
-                  {profileHref ? (
-                    <Link
-                      href={profileHref}
-                      prefetch={false}
-                      className="rounded-sm outline-none transition-colors hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
-                    >
-                      {agentName}
-                    </Link>
-                  ) : (
-                    agentName
-                  )}
-                </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {taskReady ? taskMethodSummary : "Profile available for review"}
-                </p>
-              </div>
-            </div>
-
-            <p className="mt-4 line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {formatAgentDescription(agent.description)}
-            </p>
-            <div className="mt-4">{identityTags}</div>
-          </div>
-
-          <div className="border-t border-border pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
-            <dl className="grid grid-cols-3 divide-x divide-border lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
-              {decisionSignals}
-            </dl>
-            {actionHref ? (
-              <Link
-                href={actionHref}
-                prefetch={false}
-                className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-4 text-xs font-semibold text-brand-foreground outline-none transition-[background-color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none"
-              >
-                {actionLabel}
-                <ArrowUpRight className="size-3.5" aria-hidden="true" />
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </article>
-    );
-  }
 
   return (
     <article className="sift-card-reveal group relative flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">

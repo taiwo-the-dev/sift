@@ -112,9 +112,6 @@ export function getDiscoveryChainIds(
 export const discoveryPageSizes = [12, 24, 36] as const;
 export type DiscoveryPageSize = (typeof discoveryPageSizes)[number];
 
-export const discoveryViews = ["grid", "landscape"] as const;
-export type DiscoveryView = (typeof discoveryViews)[number];
-
 export type CategorySource = CategoryEvidenceSource | null;
 
 export type DiscoveryService = Readonly<{
@@ -165,7 +162,6 @@ export type DiscoveryQuery = Readonly<{
   searchTerms: readonly string[];
   sort: DiscoverySort;
   taskAvailability: "ready" | null;
-  view: DiscoveryView;
 }>;
 
 export type DiscoveryResult = Readonly<{

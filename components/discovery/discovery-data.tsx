@@ -45,19 +45,12 @@ export async function DiscoveryResults({ query }: DiscoveryDataProps) {
 
       {result.agents.length > 0 ? (
         <>
-          <div
-            className={
-              query.view === "grid"
-                ? "mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3"
-                : "mt-6 grid grid-cols-1 gap-3"
-            }
-          >
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
             {result.agents.map((agent) => (
               <AgentCard
                 key={agent.agentDbId}
                 agent={agent}
                 comparisonGoal={query.query}
-                layout={query.view}
               />
             ))}
           </div>

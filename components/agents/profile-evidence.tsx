@@ -9,10 +9,7 @@ import {
   formatResponseTime,
 } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
-import {
-  describeHealthOutcome,
-  isHealthStale,
-} from "@/features/health/presentation";
+import { describeHealthOutcome } from "@/features/health/presentation";
 
 interface ProfileEvidenceProps {
   profile: AgentProfile;
@@ -55,7 +52,6 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
                 <Activity className="size-4" aria-hidden="true" />
               </span>
               <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold capitalize text-foreground">
-                {isHealthStale(profile.health) ? "Out of date" : "Checked"}{" "}
                 {profile.health.status}
               </span>
             </div>

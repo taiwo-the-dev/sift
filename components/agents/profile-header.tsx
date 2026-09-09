@@ -28,7 +28,6 @@ import {
   formatChainName,
   formatMetadataStatus,
 } from "@/features/discovery/format";
-import { isHealthStale } from "@/features/health/presentation";
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
@@ -94,7 +93,7 @@ export function ProfileHeader({
       ? `${describeScoreConfidence(profile.score.confidence)} · insufficient evidence`
       : describeScoreConfidence(profile.score.confidence);
   const healthValue = profile.health
-    ? `${isHealthStale(profile.health) ? "Stale " : ""}${profile.health.status}`
+    ? profile.health.status
     : "Not checked";
   const healthDetail = profile.health
     ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`

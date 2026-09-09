@@ -74,7 +74,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <div className="min-w-0">
             <Suspense
               key={buildDiscoveryHref(query)}
-              fallback={<DiscoveryResultsLoading view={query.view} />}
+              fallback={<DiscoveryResultsLoading />}
             >
               <DiscoveryResults query={query} />
             </Suspense>

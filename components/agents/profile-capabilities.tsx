@@ -23,7 +23,6 @@ import {
   describeDeclaredService,
 } from "@/features/agents/presentation";
 import { formatServiceType } from "@/features/discovery/format";
-import { isHealthStale } from "@/features/health/presentation";
 import { cn } from "@/lib/utils";
 
 interface ProfileCapabilitiesProps {
@@ -96,7 +95,7 @@ function serviceHealth(
   return {
     lastChecked: formatProfileTimestamp(health.lastCheckedAt),
     latency: formatResponseTime(health.responseTimeMs),
-    status: `${isHealthStale(health) ? "Stale " : ""}${health.status}`,
+    status: health.status,
   };
 }
 

@@ -27,10 +27,7 @@ import {
   formatMetadataStatus,
   formatServiceType,
 } from "@/features/discovery/format";
-import {
-  describeHealthOutcome,
-  isHealthStale,
-} from "@/features/health/presentation";
+import { describeHealthOutcome } from "@/features/health/presentation";
 import {
   describeScoreConfidence,
   formatScoreConfidence,
@@ -169,7 +166,7 @@ function HealthValue({ agent }: Readonly<{ agent: AgentProfile }>) {
     <div className="text-sm leading-6">
       <p className="inline-flex items-center gap-2 font-semibold capitalize text-foreground">
         <RadioTower className="size-4 text-brand" aria-hidden="true" />
-        {isHealthStale(health) ? "Stale " : ""}{health.status}
+        {health.status}
       </p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
         {describeHealthOutcome(health.outcome)}

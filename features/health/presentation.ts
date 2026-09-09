@@ -19,6 +19,23 @@ const outcomeLabels: Readonly<Record<HealthOutcome, string>> = {
   "unsupported-service": "Service type is not safely checkable",
 };
 
+const healthCheckTimeFormatter = new Intl.DateTimeFormat("en", {
+  day: "numeric",
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+});
+
+export function formatHealthCheckTime(value: string): string {
+  const checkedAt = new Date(value);
+
+  return Number.isNaN(checkedAt.getTime())
+    ? "time unavailable"
+    : `${healthCheckTimeFormatter.format(checkedAt)} UTC`;
+}
+
 export function describeHealthOutcome(
   outcome: HealthOutcome | null,
 ): string {
