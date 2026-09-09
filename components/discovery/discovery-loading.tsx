@@ -1,6 +1,7 @@
 import { LoaderCircle } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import type { DiscoveryView } from "@/features/discovery/model";
 
 export function NetworkStatusLoading() {
   return (
@@ -18,7 +19,87 @@ export function NetworkStatusLoading() {
   );
 }
 
-export function DiscoveryResultsLoading() {
+function GridCardSkeleton() {
+  return (
+    <div className="flex min-h-[24rem] flex-col rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-3 w-36" />
+        <Skeleton className="size-9 rounded-lg" />
+      </div>
+      <div className="mt-5 flex items-center gap-4">
+        <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
+        <div className="min-w-0 flex-1">
+          <Skeleton className="h-6 w-48 max-w-full" />
+          <Skeleton className="mt-2 h-3 w-32 max-w-full" />
+        </div>
+      </div>
+      <div className="mt-5">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="mt-2 h-4 w-full" />
+        <Skeleton className="mt-2 h-4 w-4/5" />
+      </div>
+      <div className="mt-4 flex gap-2">
+        <Skeleton className="h-7 w-28 rounded-md" />
+        <Skeleton className="h-7 w-24 rounded-md" />
+      </div>
+      <div className="mt-5 grid grid-cols-3 divide-x divide-border border-y border-border py-3">
+        {Array.from({ length: 3 }, (_, signalIndex) => (
+          <div key={signalIndex} className="px-3 first:pl-0 last:pr-0">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="mt-2 h-4 w-16 max-w-full" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-auto flex gap-2 pt-5">
+        <Skeleton className="h-9 w-24 rounded-lg" />
+        <Skeleton className="h-9 flex-1 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+function LandscapeCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-3 w-36" />
+        <div className="flex gap-2">
+          <Skeleton className="size-9 rounded-lg" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+        </div>
+      </div>
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        <div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
+            <div className="min-w-0 flex-1">
+              <Skeleton className="h-7 w-56 max-w-full" />
+              <Skeleton className="mt-2 h-3 w-36 max-w-full" />
+            </div>
+          </div>
+          <Skeleton className="mt-4 h-4 w-full" />
+          <Skeleton className="mt-2 h-4 w-4/5" />
+          <div className="mt-4 flex gap-2">
+            <Skeleton className="h-7 w-28 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-md" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-border border-t border-border pt-4 lg:grid-cols-1 lg:divide-x-0 lg:divide-y lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+          {Array.from({ length: 3 }, (_, signalIndex) => (
+            <div key={signalIndex} className="px-3 py-2 lg:px-0">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="mt-2 h-4 w-20 max-w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DiscoveryResultsLoading({
+  view = "grid",
+}: Readonly<{ view?: DiscoveryView }>) {
   return (
     <div aria-label="Loading matching agents" aria-busy="true">
       <div className="flex items-end justify-between gap-4 border-b border-border pb-5">
@@ -39,39 +120,20 @@ export function DiscoveryResultsLoading() {
           <Skeleton className="h-11 w-40 rounded-lg" />
         </div>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-3">
+      <div
+        className={
+          view === "grid"
+            ? "mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3"
+            : "mt-6 grid grid-cols-1 gap-3"
+        }
+      >
         {Array.from({ length: 5 }, (_, index) => (
-          <div
-            key={index}
-            className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[10.75rem_minmax(0,1fr)]"
-          >
-            <div className="flex items-center gap-4 border-b border-border bg-secondary/25 p-4 md:min-h-52 md:flex-col md:border-r md:border-b-0 md:p-5">
-              <Skeleton className="h-5 w-24 rounded-full md:self-start" />
-              <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
-              <Skeleton className="ml-auto h-3 w-20 md:mt-auto md:ml-0" />
-            </div>
-            <div className="min-w-0 p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="w-3/5">
-                  <Skeleton className="h-7 w-56 max-w-full" />
-                  <div className="mt-2 flex gap-2">
-                    <Skeleton className="h-6 w-28 rounded-md" />
-                    <Skeleton className="h-6 w-24 rounded-md" />
-                  </div>
-                </div>
-                <div className="hidden gap-2 sm:flex">
-                  <Skeleton className="size-9 rounded-lg" />
-                  <Skeleton className="h-8 w-24 rounded-lg" />
-                </div>
-              </div>
-              <Skeleton className="mt-5 h-4 w-full" />
-              <Skeleton className="mt-2 h-4 w-4/5" />
-              <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border/70 pt-4 sm:grid-cols-3">
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-20" />
-              </div>
-            </div>
+          <div key={index}>
+            {view === "grid" ? (
+              <GridCardSkeleton />
+            ) : (
+              <LandscapeCardSkeleton />
+            )}
           </div>
         ))}
       </div>

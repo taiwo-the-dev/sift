@@ -536,6 +536,7 @@ export function createDiscoveryRepository(
         searchTerms: [],
         sort: "recent",
         taskAvailability: null,
+        view: "grid",
       });
     },
     search,
