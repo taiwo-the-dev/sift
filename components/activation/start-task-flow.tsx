@@ -67,6 +67,12 @@ function mcpTools(service: AgentProfileService) {
   });
 }
 
+function formatToolName(name: string): string {
+  return name
+    .replaceAll(/[-_]+/g, " ")
+    .replaceAll(/\b\w/g, (character) => character.toUpperCase());
+}
+
 function x402Options(service: AgentProfileService) {
   const summary = record(service.capabilitySummary);
   if (!summary || !Array.isArray(summary.options)) return [];
@@ -131,6 +137,8 @@ export function StartTaskFlow({
   const tools = service?.activationMethod === "mcp" ? mcpTools(service) : [];
   const quotes = service?.activationMethod === "x402" ? x402Options(service) : [];
   const selectedTool = toolName || tools[0]?.name || "";
+  const selectedToolDetails =
+    tools.find((tool) => tool.name === selectedTool) ?? null;
 
   async function submitA2a(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -255,7 +263,7 @@ export function StartTaskFlow({
           </div>
         </aside>
 
-        <section className="min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-7">
+        <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-7">
           {!service ? (
             <p className="text-sm text-muted-foreground">
               No recently checked task method is available for this agent.
@@ -312,7 +320,13 @@ export function StartTaskFlow({
                 />
                 I understand this sends my message to an external agent service once.
               </label>
-              <Button className="mt-5" variant="brand" size="lg" disabled={!confirmed || busy}>
+              <Button
+                type="submit"
+                className="mt-5"
+                variant="brand"
+                size="lg"
+                disabled={!confirmed || busy}
+              >
                 {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
                 Send task
               </Button>
@@ -320,19 +334,17 @@ export function StartTaskFlow({
           ) : null}
 
           {service?.activationMethod === "mcp" ? (
-            <form onSubmit={submitMcp}>
-              <h2 className="text-2xl font-semibold text-foreground">Run a read-only tool</h2>
+            <form className="min-w-0" onSubmit={submitMcp}>
+              <h2 className="text-2xl font-semibold text-foreground">Run a safe tool</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                The tool list is checked again before execution. Tools without an explicit read-only declaration are blocked.
+                Choose a read-only action. Sift blocks tools that can make changes or move funds.
               </p>
-              <div className="mt-6">
+              <div className="mt-6 min-w-0 max-w-full">
                 <SelectField
                   aria-labelledby="mcp-tool-label"
-                  label="Tool"
+                  label="Choose a tool"
                   options={tools.map((tool) => ({
-                    label: tool.description
-                      ? `${tool.name} — ${tool.description}`
-                      : tool.name,
+                    label: formatToolName(tool.name),
                     value: tool.name,
                   }))}
                   triggerClassName="h-10 rounded-xl"
@@ -343,18 +355,42 @@ export function StartTaskFlow({
                   Read-only MCP tool
                 </span>
               </div>
-              <label className="mt-5 block text-sm font-semibold text-foreground" htmlFor="mcp-arguments">
-                Arguments (JSON object)
+              {selectedToolDetails ? (
+                <div className="mt-3 min-w-0 border-l-2 border-brand/40 pl-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <code className="break-all text-xs font-semibold text-foreground">
+                      {selectedToolDetails.name}
+                    </code>
+                    <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-300">
+                      Read only
+                    </span>
+                  </div>
+                  {selectedToolDetails.description ? (
+                    <p className="mt-1 line-clamp-3 break-words text-xs leading-5 text-muted-foreground">
+                      {selectedToolDetails.description}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              <label className="mt-5 flex items-center gap-2 text-sm font-semibold text-foreground" htmlFor="mcp-arguments">
+                Tool input
+                <span className="text-xs font-normal text-muted-foreground">JSON format</span>
               </label>
               <textarea
                 id="mcp-arguments"
                 value={toolArguments}
                 onChange={(event) => setToolArguments(event.target.value)}
-                rows={7}
+                rows={5}
                 spellCheck={false}
                 className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-4 py-3 font-mono text-xs leading-6 text-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/15"
               />
-              <Button className="mt-5" variant="brand" size="lg" disabled={!selectedTool || busy}>
+              <Button
+                type="submit"
+                className="mt-5"
+                variant="brand"
+                size="lg"
+                disabled={!selectedTool || busy}
+              >
                 {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Wrench className="size-4" />}
                 Run tool
               </Button>

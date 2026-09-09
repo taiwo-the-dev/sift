@@ -52,7 +52,7 @@ export function SelectField<Value extends string | number>({
           aria-describedby={ariaDescribedBy}
           aria-labelledby={ariaLabelledBy}
           className={cn(
-            "group flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-input bg-background px-3.5 text-left text-sm text-foreground outline-none transition-[border-color,box-shadow,background-color] hover:border-muted-foreground/70 hover:bg-card focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15 data-popup-open:border-ring data-popup-open:bg-card data-popup-open:ring-3 data-popup-open:ring-ring/15",
+            "group flex h-11 min-w-0 w-full max-w-full cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg border border-input bg-background px-3.5 text-left text-sm text-foreground outline-none transition-[border-color,box-shadow,background-color] hover:border-muted-foreground/70 hover:bg-card focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15 data-popup-open:border-ring data-popup-open:bg-card data-popup-open:ring-3 data-popup-open:ring-ring/15",
             triggerClassName,
           )}
         >
