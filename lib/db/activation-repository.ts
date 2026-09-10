@@ -16,7 +16,13 @@ import { DatabaseOperationError } from "@/lib/db/errors";
 export type ActivationRepository = Readonly<{
   findAgentIdentity(
     agentDbId: string,
-  ): Promise<Readonly<{ chainId: number }> | null>;
+  ): Promise<
+    Readonly<{
+      agentId: string;
+      chainId: number;
+      registryAddress: string;
+    }> | null
+  >;
   findService(serviceId: string): Promise<TableRow<"agent_services"> | null>;
   isServiceAgentEligible(agentDbId: string): Promise<boolean>;
   listCandidates(
@@ -50,13 +56,19 @@ export function createActivationRepository(
     async findAgentIdentity(agentDbId) {
       const { data, error } = await client
         .from("agents")
-        .select("chain_id")
+        .select("agent_id,chain_id,registry_address")
         .eq("id", agentDbId)
         .maybeSingle();
       if (error) {
         throw new DatabaseOperationError("find activation agent", error);
       }
-      return data ? { chainId: data.chain_id } : null;
+      return data
+        ? {
+            agentId: data.agent_id,
+            chainId: data.chain_id,
+            registryAddress: data.registry_address,
+          }
+        : null;
     },
     findService,
     async isServiceAgentEligible(agentDbId) {

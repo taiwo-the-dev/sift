@@ -21,8 +21,12 @@ export async function POST(request: NextRequest) {
     const input = a2aTaskSchema.parse(await request.json());
     const repository = createActivationRepository();
     const service = await repository.findService(input.serviceId);
+    const identity = service
+      ? await repository.findAgentIdentity(service.agent_db_id)
+      : null;
     if (
       !service ||
+      !identity ||
       service.activation_method !== "a2a" ||
       !service.endpoint ||
       !(await repository.isServiceAgentEligible(service.agent_db_id)) ||
@@ -38,9 +42,11 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sendA2aTask({
+      agent: identity,
       endpoint: service.endpoint,
       maxBytes: 65_536,
       message: input.message,
+      skillId: input.skillId,
       timeoutMs: 12_000,
     });
     return NextResponse.json(

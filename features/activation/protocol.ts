@@ -40,6 +40,20 @@ const a2aCardSchema = z
   .object({
     description: z.string().max(2_000).optional(),
     name: z.string().trim().min(1).max(256),
+    registrations: z
+      .array(
+        z
+          .object({
+            agentId: z.union([
+              z.number().int().nonnegative().safe(),
+              z.string().regex(/^(0|[1-9][0-9]{0,77})$/),
+            ]),
+            agentRegistry: z.string().trim().min(1).max(256),
+          })
+          .loose(),
+      )
+      .max(100)
+      .optional(),
     skills: z
       .array(
         z
@@ -119,6 +133,12 @@ export type McpInspection = Readonly<{
   responseTimeMs: number;
   sessionId: string | null;
   tools: readonly McpToolSummary[];
+}>;
+
+export type A2aAgentIdentity = Readonly<{
+  agentId: string;
+  chainId: number;
+  registryAddress: string;
 }>;
 
 function argumentsMatchSchema(
@@ -475,8 +495,54 @@ export async function callReadOnlyMcpTool(input: Readonly<{
 
 export function a2aCardUrl(endpoint: string): string {
   const url = new URL(endpoint);
-  if (url.pathname.includes("/.well-known/agent-card.json")) return url.toString();
+  if (url.pathname.toLowerCase().endsWith("/agent-card.json")) {
+    return url.toString();
+  }
   return new URL("/.well-known/agent-card.json", url.origin).toString();
+}
+
+function a2aRoutingMetadata(
+  cardUrl: string,
+  registrations: readonly Readonly<{
+    agentId: number | string;
+    agentRegistry: string;
+  }>[],
+  identity: A2aAgentIdentity,
+  skillId?: string,
+): Readonly<Record<string, number | string>> {
+  const metadata: Record<string, number | string> = {
+    agentId: identity.agentId,
+    chainId: identity.chainId,
+    registryAddress: identity.registryAddress,
+  };
+  const selectedRegistry =
+    `eip155:${identity.chainId}:${identity.registryAddress}`.toLowerCase();
+  const selectedIdentityIsDeclared = registrations.some(
+    (registration) =>
+      String(registration.agentId) === identity.agentId &&
+      registration.agentRegistry.toLowerCase() === selectedRegistry,
+  );
+  const routeToken = new URL(cardUrl).pathname.match(
+    /\/agents\/(0|[1-9][0-9]*)\/agent-card\.json$/i,
+  )?.[1];
+  const routeTokenIsDeclared =
+    routeToken !== undefined &&
+    registrations.some(
+      (registration) => String(registration.agentId) === routeToken,
+    );
+
+  // Some multi-agent A2A hosts publish one task endpoint for many agent cards.
+  // Bind only a token explicitly present in the card and its URL; never infer
+  // one from the selected ERC-8004 identity.
+  if (selectedIdentityIsDeclared && routeToken && routeTokenIsDeclared) {
+    const numericToken = Number(routeToken);
+    metadata.nfaTokenId = Number.isSafeInteger(numericToken)
+      ? numericToken
+      : routeToken;
+  }
+  if (skillId) metadata.skillId = skillId;
+
+  return metadata;
 }
 
 export async function inspectA2aService(
@@ -511,6 +577,10 @@ export async function inspectA2aService(
     card: {
       description: card.description ?? null,
       name: card.name,
+      registrations: (card.registrations ?? []).map((registration) => ({
+        agentId: String(registration.agentId),
+        agentRegistry: registration.agentRegistry,
+      })),
       skills: (card.skills ?? []).map((skill) => ({
         description: skill.description ?? null,
         id: skill.id,
@@ -523,14 +593,21 @@ export async function inspectA2aService(
 }
 
 export async function sendA2aTask(input: Readonly<{
+  agent: A2aAgentIdentity;
   endpoint: string;
   fetchImpl?: typeof fetch;
   maxBytes?: number;
   message: string;
   resolveHost?: HostResolver;
+  skillId?: string;
   timeoutMs?: number;
 }>): Promise<Json> {
   const inspection = await inspectA2aService(input.endpoint, input);
+  const currentSkillId = inspection.card.skills.some(
+    (skill) => skill.id === input.skillId,
+  )
+    ? input.skillId
+    : undefined;
   const response = await requestActivationService(inspection.card.taskEndpoint, {
     body: JSON.stringify({
       id: crypto.randomUUID(),
@@ -540,6 +617,12 @@ export async function sendA2aTask(input: Readonly<{
         message: {
           kind: "message",
           messageId: crypto.randomUUID(),
+          metadata: a2aRoutingMetadata(
+            a2aCardUrl(input.endpoint),
+            inspection.card.registrations,
+            input.agent,
+            currentSkillId,
+          ),
           parts: [{ kind: "text", text: input.message }],
           role: "user",
         },

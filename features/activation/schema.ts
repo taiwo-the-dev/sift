@@ -19,6 +19,16 @@ export const a2aTaskSchema = z
   .object({
     message: normalizedText(5, 2_000),
     serviceId: z.uuid(),
+    skillId: z
+      .string()
+      .trim()
+      .min(1)
+      .max(128)
+      .refine(
+        (value) => !/[\u0000-\u001F\u007F]/.test(value),
+        "Unsupported control characters.",
+      )
+      .optional(),
   })
   .strict();
 

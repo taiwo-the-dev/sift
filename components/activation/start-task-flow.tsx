@@ -5,6 +5,7 @@ import {
   Bot,
   BriefcaseBusiness,
   CheckCircle2,
+  ChevronRight,
   CircleDollarSign,
   ExternalLink,
   Globe2,
@@ -18,6 +19,12 @@ import { useMemo, useState, type FormEvent } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { McpTransactionReview } from "@/components/activation/mcp-transaction-review";
+import { ServiceResponse } from "@/components/activation/service-response";
+import {
+  TaskFlowProgress,
+  type TaskFlowStep,
+} from "@/components/activation/task-flow-progress";
+import { TaskInputFields } from "@/components/activation/task-input-fields";
 import { SelectField } from "@/components/ui/select-field";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfileService } from "@/features/agents/model";
@@ -26,12 +33,23 @@ import {
   type ActivationMethod,
 } from "@/features/activation/model";
 import type { PreparedEvmTransaction } from "@/features/activation/protocol";
+import {
+  buildTaskArguments,
+  initialTaskInputValues,
+  taskInputFields,
+  type TaskInputValues,
+} from "@/features/activation/task-input";
 import { cn } from "@/lib/utils";
 
 type Agent = Readonly<{ agentId: string; chainId: number; name: string }>;
 type ExternalService = Readonly<{
   href: string;
   label: string;
+}>;
+type A2aSkill = Readonly<{
+  description: string | null;
+  id: string;
+  name: string;
 }>;
 
 const methodDetails = {
@@ -78,48 +96,30 @@ function mcpTools(service: AgentProfileService) {
   });
 }
 
-function toolArgumentTemplate(
-  inputSchema: Readonly<Record<string, unknown>>,
-  chainId: number,
-): string {
-  const properties = record(inputSchema.properties);
-  const required = Array.isArray(inputSchema.required)
-    ? inputSchema.required.filter((key): key is string => typeof key === "string")
-    : [];
-  if (!properties) return "{}";
-
-  const result: Record<string, unknown> = {};
-  for (const key of required) {
-    const rule = record(properties[key]);
-    const values = Array.isArray(rule?.enum)
-      ? rule.enum.filter((value): value is string => typeof value === "string")
-      : [];
-    const normalizedKey = key.toLowerCase();
-    if (normalizedKey.includes("chain") && values.includes("bsc")) {
-      result[key] = "bsc";
-    } else if (normalizedKey.includes("chainid")) {
-      result[key] = chainId;
-    } else if (values.length > 0) {
-      result[key] = values[0];
-    } else if (rule?.type === "boolean") {
-      result[key] = false;
-    } else if (rule?.type === "number" || rule?.type === "integer") {
-      result[key] = 0;
-    } else if (rule?.type === "array") {
-      result[key] = [];
-    } else if (rule?.type === "object") {
-      result[key] = {};
-    } else {
-      result[key] = "";
-    }
-  }
-  return JSON.stringify(result, null, 2);
-}
-
 function formatToolName(name: string): string {
   return name
     .replaceAll(/[-_]+/g, " ")
     .replaceAll(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function a2aSkills(service: AgentProfileService | null): readonly A2aSkill[] {
+  const summary = record(service?.capabilitySummary);
+  if (!summary || !Array.isArray(summary.skills)) return [];
+  return summary.skills.slice(0, 100).flatMap((item) => {
+    const skill = record(item);
+    return skill &&
+      typeof skill.id === "string" &&
+      typeof skill.name === "string"
+      ? [
+          {
+            description:
+              typeof skill.description === "string" ? skill.description : null,
+            id: skill.id,
+            name: skill.name,
+          },
+        ]
+      : [];
+  });
 }
 
 function x402Options(service: AgentProfileService) {
@@ -180,6 +180,13 @@ export function StartTaskFlow({
   const [method, setMethod] = useState<ActivationMethod | null>(
     methods[0]?.activationMethod ?? null,
   );
+  const [flowStep, setFlowStep] = useState<TaskFlowStep>("details");
+  const initialA2aService = methods.find(
+    (item) => item.activationMethod === "a2a",
+  );
+  const [skillId, setSkillId] = useState(
+    a2aSkills(initialA2aService ?? null)[0]?.id ?? "",
+  );
   const [message, setMessage] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const initialMcpService = methods.find(
@@ -189,12 +196,15 @@ export function StartTaskFlow({
     ? mcpTools(initialMcpService)[0] ?? null
     : null;
   const [toolName, setToolName] = useState(initialMcpTool?.name ?? "");
-  const [toolArguments, setToolArguments] = useState(() =>
-    initialMcpTool
-      ? toolArgumentTemplate(initialMcpTool.inputSchema, agent.chainId)
-      : "{}",
+  const [toolValues, setToolValues] = useState<TaskInputValues>(() =>
+    initialTaskInputValues(
+      initialMcpTool
+        ? taskInputFields(initialMcpTool.inputSchema, agent.chainId)
+        : [],
+    ),
   );
   const [mcpConfirmed, setMcpConfirmed] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<unknown>(null);
@@ -207,6 +217,84 @@ export function StartTaskFlow({
   const selectedTool = toolName || tools[0]?.name || "";
   const selectedToolDetails =
     tools.find((tool) => tool.name === selectedTool) ?? null;
+  const selectedToolFields = selectedToolDetails
+    ? taskInputFields(selectedToolDetails.inputSchema, agent.chainId)
+    : [];
+  const skills = service?.activationMethod === "a2a" ? a2aSkills(service) : [];
+  const selectedSkillId = skillId || skills[0]?.id || "";
+  const selectedSkill =
+    skills.find((skill) => skill.id === selectedSkillId) ?? null;
+  const selectedQuote = quotes[quoteIndex] ?? quotes[0] ?? null;
+
+  function resetRequest(nextStep: TaskFlowStep = "details") {
+    setConfirmed(false);
+    setMcpConfirmed(false);
+    setBusy(false);
+    setError(null);
+    setResult(null);
+    setTransactions([]);
+    setFlowStep(nextStep);
+  }
+
+  function selectMethod(nextService: AgentProfileService) {
+    const nextMethod = nextService.activationMethod;
+    if (!nextMethod) return;
+
+    setMethod(nextMethod);
+    resetRequest();
+    setQuoteIndex(0);
+
+    if (nextMethod === "a2a") {
+      setSkillId(a2aSkills(nextService)[0]?.id ?? "");
+    }
+
+    if (nextMethod === "mcp") {
+      const nextTool = mcpTools(nextService)[0] ?? null;
+      setToolName(nextTool?.name ?? "");
+      setToolValues(
+        initialTaskInputValues(
+          nextTool ? taskInputFields(nextTool.inputSchema, agent.chainId) : [],
+        ),
+      );
+    }
+  }
+
+  function startAnotherRequest() {
+    resetRequest();
+    setMessage("");
+    setQuoteIndex(0);
+
+    if (selectedToolDetails) {
+      setToolValues(
+        initialTaskInputValues(
+          taskInputFields(selectedToolDetails.inputSchema, agent.chainId),
+        ),
+      );
+    }
+  }
+
+  function reviewA2a() {
+    setError(null);
+    if (message.trim().length < 5) {
+      setError("Describe the task in at least five characters.");
+      return;
+    }
+    setFlowStep("review");
+  }
+
+  function reviewMcp() {
+    setError(null);
+    if (!selectedTool) {
+      setError("Choose a tool before continuing.");
+      return;
+    }
+    try {
+      buildTaskArguments(selectedToolFields, toolValues);
+      setFlowStep("review");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Check the tool details.");
+    }
+  }
 
   async function submitA2a(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -217,11 +305,16 @@ export function StartTaskFlow({
     setTransactions([]);
     try {
       const response = await fetch("/api/activation/a2a", {
-        body: JSON.stringify({ message, serviceId: service.id ?? "" }),
+        body: JSON.stringify({
+          message,
+          serviceId: service.id ?? "",
+          ...(selectedSkillId ? { skillId: selectedSkillId } : {}),
+        }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
       setResult(await readApiResult(response));
+      setFlowStep("result");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The task could not be sent.");
     } finally {
@@ -237,8 +330,7 @@ export function StartTaskFlow({
     setResult(null);
     setTransactions([]);
     try {
-      const parsed = JSON.parse(toolArguments) as unknown;
-      if (!record(parsed)) throw new Error("Tool arguments must be a JSON object.");
+      const parsed = buildTaskArguments(selectedToolFields, toolValues);
       const response = await fetch("/api/activation/mcp", {
         body: JSON.stringify({
           arguments: parsed,
@@ -258,6 +350,7 @@ export function StartTaskFlow({
           ? (responseRecord.transactions as unknown as readonly PreparedEvmTransaction[])
           : [],
       );
+      setFlowStep("result");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The tool could not run.");
     } finally {
@@ -310,15 +403,10 @@ export function StartTaskFlow({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => {
-                    setMethod(itemMethod);
-                    setError(null);
-                    setResult(null);
-                    setTransactions([]);
-                    setMcpConfirmed(false);
-                  }}
+                  disabled={busy}
+                  onClick={() => selectMethod(item)}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-xl border p-3 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/30",
+                    "flex w-full items-start gap-3 rounded-xl border p-3 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50",
                     selected
                       ? "border-brand/35 bg-brand/8"
                       : "border-transparent hover:border-border hover:bg-background/50",
@@ -424,171 +512,421 @@ export function StartTaskFlow({
             </div>
           ) : null}
 
-          {service?.activationMethod === "a2a" ? (
+          {service?.activationMethod === "a2a" && flowStep !== "result" ? (
             <form onSubmit={submitA2a}>
-              <h2 className="text-2xl font-semibold text-foreground">Send one task</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                This sends one message to the live A2A service. Sift does not retry it automatically.
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                Tell the agent what you need
               </p>
-              <label className="mt-6 block text-sm font-semibold text-foreground" htmlFor="a2a-message">
-                What should the agent do?
-              </label>
-              <textarea
-                id="a2a-message"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                minLength={5}
-                maxLength={2000}
-                required
-                rows={7}
-                className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-4 py-3 text-sm leading-6 text-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/15"
-              />
-              <label className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-background/45 p-4 text-xs leading-5 text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  onChange={(event) => setConfirmed(event.target.checked)}
-                  className="mt-1 accent-brand"
-                />
-                I understand this sends my message to an external agent service once.
-              </label>
-              <Button
-                type="submit"
-                className="mt-5"
-                variant="brand"
-                size="lg"
-                disabled={!confirmed || busy}
-              >
-                {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-                Send task
-              </Button>
-            </form>
-          ) : null}
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                Send a task
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Choose one of the agent&apos;s published capabilities, then describe
+                the result you want.
+              </p>
+              <TaskFlowProgress step={flowStep} />
 
-          {service?.activationMethod === "mcp" ? (
-            <form className="min-w-0" onSubmit={submitMcp}>
-              <h2 className="text-2xl font-semibold text-foreground">Run an agent tool</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Read-only tools run after your click. Other tools require an extra
-                confirmation, and any blockchain transaction must still be reviewed
-                in your wallet.
-              </p>
-              <div className="mt-6 min-w-0 max-w-full">
-                <SelectField
-                  aria-labelledby="mcp-tool-label"
-                  label="Choose a tool"
-                  options={tools.map((tool) => ({
-                    label: formatToolName(tool.name),
-                    value: tool.name,
-                  }))}
-                  triggerClassName="h-10 rounded-xl"
-                  value={selectedTool}
-                  onValueChange={(value) => {
-                    setToolName(value);
-                    const nextTool = tools.find((tool) => tool.name === value);
-                    setToolArguments(
-                      nextTool
-                        ? toolArgumentTemplate(nextTool.inputSchema, agent.chainId)
-                        : "{}",
-                    );
-                    setMcpConfirmed(false);
-                    setError(null);
-                    setResult(null);
-                    setTransactions([]);
-                  }}
-                />
-                <span id="mcp-tool-label" className="sr-only">
-                  MCP tool
-                </span>
-              </div>
-              {selectedToolDetails ? (
-                <div className="mt-3 min-w-0 border-l-2 border-brand/40 pl-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <code className="break-all text-xs font-semibold text-foreground">
-                      {selectedToolDetails.name}
-                    </code>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
-                        selectedToolDetails.readOnly
-                          ? "bg-emerald-400/10 text-emerald-300"
-                          : "bg-amber-400/10 text-amber-200",
-                      )}
-                    >
-                      {selectedToolDetails.readOnly
-                        ? "Read only"
-                        : "Confirmation required"}
-                    </span>
-                  </div>
-                  {selectedToolDetails.description ? (
-                    <p className="mt-1 line-clamp-3 break-words text-xs leading-5 text-muted-foreground">
-                      {selectedToolDetails.description}
+              {flowStep === "details" ? (
+                <div>
+                  {skills.length > 0 ? (
+                    <div>
+                      <SelectField
+                        label="Capability"
+                        onValueChange={(value) => {
+                          setSkillId(value);
+                          setError(null);
+                        }}
+                        options={skills.map((skill) => ({
+                          label: skill.name,
+                          value: skill.id,
+                        }))}
+                        value={selectedSkillId}
+                      />
+                      {selectedSkill?.description ? (
+                        <p className="mt-3 border-l-2 border-brand/45 py-1 pl-3 text-xs leading-5 text-muted-foreground">
+                          {selectedSkill.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="border-l-2 border-brand/45 py-1 pl-3 text-xs leading-5 text-muted-foreground">
+                      This agent accepts a message but has not published a more specific
+                      capability list.
                     </p>
-                  ) : null}
+                  )}
+
+                  <label className="mt-6 block text-sm font-semibold text-foreground" htmlFor="a2a-message">
+                    Task details
+                  </label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Include the goal, relevant assets or identifiers, limits, and the
+                    format you want back.
+                  </p>
+                  <textarea
+                    id="a2a-message"
+                    value={message}
+                    onChange={(event) => {
+                      setMessage(event.target.value);
+                      setError(null);
+                    }}
+                    minLength={5}
+                    maxLength={2000}
+                    placeholder={
+                      selectedSkill
+                        ? `Describe what you need from ${selectedSkill.name}.`
+                        : "Describe the task and the result you need."
+                    }
+                    required
+                    rows={6}
+                    className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-4 py-3 text-sm leading-6 text-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/15"
+                  />
+                  <Button
+                    type="button"
+                    className="mt-5"
+                    variant="brand"
+                    size="lg"
+                    onClick={reviewA2a}
+                  >
+                    Review task
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </Button>
                 </div>
               ) : null}
-              <label className="mt-5 flex items-center gap-2 text-sm font-semibold text-foreground" htmlFor="mcp-arguments">
-                Tool input
-                <span className="text-xs font-normal text-muted-foreground">JSON format</span>
-              </label>
-              <textarea
-                id="mcp-arguments"
-                value={toolArguments}
-                onChange={(event) => setToolArguments(event.target.value)}
-                rows={5}
-                spellCheck={false}
-                className="mt-2 w-full resize-y rounded-xl border border-input bg-background px-4 py-3 font-mono text-xs leading-6 text-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/15"
-              />
-              {selectedToolDetails && !selectedToolDetails.readOnly ? (
-                <label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/6 p-4 text-xs leading-5 text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={mcpConfirmed}
-                    onChange={(event) => setMcpConfirmed(event.target.checked)}
-                    className="mt-1 accent-brand"
-                  />
-                  <span>
-                    I understand this sends one request to an external agent. It
-                    may prepare a transaction or change external data. Sift will
-                    not sign or send a wallet transaction automatically.
-                  </span>
-                </label>
+
+              {flowStep === "review" ? (
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Review your task
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Check the request before it is sent to the external agent.
+                  </p>
+                  <dl className="mt-5 divide-y divide-border rounded-xl border border-border bg-background/45 px-4">
+                    {selectedSkill ? (
+                      <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
+                        <dt className="text-xs font-medium text-muted-foreground">Capability</dt>
+                        <dd className="text-sm font-medium text-foreground">{selectedSkill.name}</dd>
+                      </div>
+                    ) : null}
+                    <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
+                      <dt className="text-xs font-medium text-muted-foreground">Task</dt>
+                      <dd className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+                        {message}
+                      </dd>
+                    </div>
+                  </dl>
+                  <label className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-background/45 p-4 text-xs leading-5 text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={confirmed}
+                      onChange={(event) => setConfirmed(event.target.checked)}
+                      className="mt-1 accent-brand"
+                    />
+                    I understand this sends my message to an external agent service once.
+                  </label>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      onClick={() => {
+                        setConfirmed(false);
+                        setError(null);
+                        setFlowStep("details");
+                      }}
+                    >
+                      Back to details
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="brand"
+                      size="lg"
+                      disabled={!confirmed || busy}
+                    >
+                      {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
+                      Send task
+                    </Button>
+                  </div>
+                </div>
               ) : null}
-              <Button
-                type="submit"
-                className="mt-5"
-                variant="brand"
-                size="lg"
-                disabled={
-                  !selectedTool ||
-                  busy ||
-                  (selectedToolDetails?.readOnly === false && !mcpConfirmed)
-                }
-              >
-                {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Wrench className="size-4" />}
-                {selectedToolDetails?.readOnly === false
-                  ? "Prepare action"
-                  : "Run tool"}
-              </Button>
             </form>
           ) : null}
 
-          {service?.activationMethod === "x402" ? (
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">Payment quote</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Sift checked the x402 challenge. Review its raw token units and addresses below. Payment is deliberately disabled until a wallet can enforce this exact cap.
+          {service?.activationMethod === "mcp" && flowStep !== "result" ? (
+            <form className="min-w-0" onSubmit={submitMcp}>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                Use a published capability
               </p>
-              <div className="mt-6 space-y-3">
-                {quotes.map((quote) => (
-                  <dl key={`${quote.network}:${quote.asset}:${quote.payTo}`} className="grid gap-3 rounded-xl border border-border bg-background/45 p-4 text-xs sm:grid-cols-2">
-                    <div><dt className="text-muted-foreground">Network</dt><dd className="mt-1 font-mono text-foreground">{quote.network}</dd></div>
-                    <div><dt className="text-muted-foreground">Amount (raw units)</dt><dd className="mt-1 font-mono text-foreground">{quote.amount}</dd></div>
-                    <div><dt className="text-muted-foreground">Token</dt><dd className="mt-1 break-all font-mono text-foreground">{quote.asset}</dd></div>
-                    <div><dt className="text-muted-foreground">Recipient</dt><dd className="mt-1 break-all font-mono text-foreground">{quote.payTo}</dd></div>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                Run an agent tool
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Select what you want to do. Sift builds the form from the fields
+                this agent published.
+              </p>
+              <TaskFlowProgress step={flowStep} />
+
+              {flowStep === "details" ? (
+                <div>
+                  <div className="min-w-0 max-w-full">
+                    <SelectField
+                      aria-labelledby="mcp-tool-label"
+                      label="Choose a tool"
+                      options={tools.map((tool) => ({
+                        label: formatToolName(tool.name),
+                        value: tool.name,
+                      }))}
+                      triggerClassName="h-11"
+                      value={selectedTool}
+                      onValueChange={(value) => {
+                        setToolName(value);
+                        const nextTool = tools.find((tool) => tool.name === value);
+                        setToolValues(
+                          initialTaskInputValues(
+                            nextTool
+                              ? taskInputFields(nextTool.inputSchema, agent.chainId)
+                              : [],
+                          ),
+                        );
+                        setMcpConfirmed(false);
+                        setError(null);
+                        setResult(null);
+                        setTransactions([]);
+                      }}
+                    />
+                    <span id="mcp-tool-label" className="sr-only">
+                      MCP tool
+                    </span>
+                  </div>
+                  {selectedToolDetails ? (
+                    <div className="mt-4 min-w-0 border-l-2 border-brand/40 py-1 pl-3">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <code className="break-all text-xs font-semibold text-foreground">
+                          {selectedToolDetails.name}
+                        </code>
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                            selectedToolDetails.readOnly
+                              ? "bg-emerald-400/10 text-emerald-300"
+                              : "bg-amber-400/10 text-amber-200",
+                          )}
+                        >
+                          {selectedToolDetails.readOnly
+                            ? "Read only"
+                            : "Confirmation required"}
+                        </span>
+                      </div>
+                      {selectedToolDetails.description ? (
+                        <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                          {selectedToolDetails.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="mt-7 border-t border-border pt-6">
+                    <div className="mb-5">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Details for this tool
+                      </h3>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Only fields declared by the agent are shown.
+                      </p>
+                    </div>
+                    <TaskInputFields
+                      fields={selectedToolFields}
+                      onChange={(name, value) => {
+                        setToolValues((current) => ({ ...current, [name]: value }));
+                        setError(null);
+                      }}
+                      values={toolValues}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    className="mt-5"
+                    variant="brand"
+                    size="lg"
+                    onClick={reviewMcp}
+                  >
+                    Review request
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              ) : null}
+
+              {flowStep === "review" ? (
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Review your request
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Confirm the selected tool and the information that will be sent.
+                  </p>
+                  <dl className="mt-5 divide-y divide-border rounded-xl border border-border bg-background/45 px-4">
+                    <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
+                      <dt className="text-xs font-medium text-muted-foreground">Tool</dt>
+                      <dd className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
+                        {formatToolName(selectedTool)}
+                        <span className={cn(
+                          "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                          selectedToolDetails?.readOnly
+                            ? "bg-emerald-400/10 text-emerald-300"
+                            : "bg-amber-400/10 text-amber-200",
+                        )}>
+                          {selectedToolDetails?.readOnly ? "Read only" : "Action request"}
+                        </span>
+                      </dd>
+                    </div>
+                    {selectedToolFields
+                      .filter((field) => (toolValues[field.name] ?? "").trim())
+                      .map((field) => (
+                        <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5" key={field.name}>
+                          <dt className="text-xs font-medium text-muted-foreground">{field.label}</dt>
+                          <dd className="break-words font-mono text-xs leading-5 text-foreground">
+                            {toolValues[field.name]}
+                          </dd>
+                        </div>
+                      ))}
                   </dl>
-                ))}
-              </div>
+                  {selectedToolDetails && !selectedToolDetails.readOnly ? (
+                    <label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/6 p-4 text-xs leading-5 text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={mcpConfirmed}
+                        onChange={(event) => setMcpConfirmed(event.target.checked)}
+                        className="mt-1 accent-brand"
+                      />
+                      <span>
+                        I understand this sends one request to an external agent. It
+                        may prepare a transaction or change external data. Sift will
+                        not sign or send a wallet transaction automatically.
+                      </span>
+                    </label>
+                  ) : null}
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      onClick={() => {
+                        setMcpConfirmed(false);
+                        setError(null);
+                        setFlowStep("details");
+                      }}
+                    >
+                      Back to details
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="brand"
+                      size="lg"
+                      disabled={
+                        !selectedTool ||
+                        busy ||
+                        (selectedToolDetails?.readOnly === false && !mcpConfirmed)
+                      }
+                    >
+                      {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Wrench className="size-4" />}
+                      {selectedToolDetails?.readOnly === false
+                        ? "Prepare action"
+                        : "Run tool"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </form>
+          ) : null}
+
+          {service?.activationMethod === "x402" && flowStep !== "result" ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                Review before paying
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">Payment request</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Check the exact network, token, amount, and recipient published by
+                the agent. Sift will not send a payment from this screen.
+              </p>
+              <TaskFlowProgress step={flowStep} />
+
+              {flowStep === "details" ? (
+                <div>
+                  {quotes.length > 1 ? (
+                    <SelectField
+                      label="Payment option"
+                      onValueChange={(value) => {
+                        setQuoteIndex(Number(value));
+                        setError(null);
+                      }}
+                      options={quotes.map((quote, index) => ({
+                        label: `${quote.network} · ${quote.amount}`,
+                        value: String(index),
+                      }))}
+                      value={String(quoteIndex)}
+                    />
+                  ) : null}
+                  {selectedQuote ? (
+                    <dl className="mt-5 grid gap-4 rounded-xl border border-border bg-background/45 p-4 text-xs sm:grid-cols-2">
+                      <div><dt className="text-muted-foreground">Network</dt><dd className="mt-1 font-mono text-foreground">{selectedQuote.network}</dd></div>
+                      <div><dt className="text-muted-foreground">Amount (raw units)</dt><dd className="mt-1 font-mono text-foreground">{selectedQuote.amount}</dd></div>
+                      <div><dt className="text-muted-foreground">Token</dt><dd className="mt-1 break-all font-mono text-foreground">{selectedQuote.asset}</dd></div>
+                      <div><dt className="text-muted-foreground">Recipient</dt><dd className="mt-1 break-all font-mono text-foreground">{selectedQuote.payTo}</dd></div>
+                    </dl>
+                  ) : (
+                    <p className="rounded-xl border border-border bg-background/45 p-4 text-sm text-muted-foreground">
+                      The agent did not return a payment option Sift can review.
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    className="mt-5"
+                    variant="brand"
+                    size="lg"
+                    disabled={!selectedQuote}
+                    onClick={() => setFlowStep("review")}
+                  >
+                    Review payment request
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              ) : null}
+
+              {flowStep === "review" && selectedQuote ? (
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Confirm the payment details
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    These values came from the agent&apos;s checked x402 request.
+                  </p>
+                  <dl className="mt-5 divide-y divide-border rounded-xl border border-border bg-background/45 px-4">
+                    {[
+                      ["Network", selectedQuote.network],
+                      ["Amount (raw units)", selectedQuote.amount],
+                      ["Token", selectedQuote.asset],
+                      ["Recipient", selectedQuote.payTo],
+                    ].map(([label, value]) => (
+                      <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5" key={label}>
+                        <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+                        <dd className="break-all font-mono text-xs leading-5 text-foreground">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/6 p-4 text-xs leading-5 text-muted-foreground">
+                    Payment execution is not enabled yet. Finishing this review will
+                    not move tokens or request a wallet signature.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button type="button" variant="outline" size="lg" onClick={() => setFlowStep("details")}>
+                      Back to details
+                    </Button>
+                    <Button type="button" variant="brand" size="lg" onClick={() => setFlowStep("result")}>
+                      Finish review
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -597,18 +935,53 @@ export function StartTaskFlow({
               {error}
             </p>
           ) : null}
-          {result !== null ? (
-            <div className="mt-6 rounded-xl border border-emerald-400/25 bg-emerald-400/6 p-4">
-              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
-                <CheckCircle2 className="size-4" aria-hidden="true" />
-                Service response
+          {service &&
+          service.activationMethod !== "erc8183" &&
+          flowStep === "result" ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                {service.activationMethod === "x402" ? "Review complete" : "Request complete"}
               </p>
-              <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-5 text-foreground">
-                {JSON.stringify(result, null, 2)}
-              </pre>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                {service.activationMethod === "x402"
+                  ? "Payment details reviewed"
+                  : transactions.length > 0
+                    ? "Action ready for wallet review"
+                    : "The agent responded"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {service.activationMethod === "x402"
+                  ? "No payment was sent and no wallet signature was requested."
+                  : transactions.length > 0
+                    ? "Review every transaction below before deciding whether to continue in your wallet."
+                    : "Review the result below. Sift keeps the original response available for technical inspection."}
+              </p>
+              <TaskFlowProgress step="result" />
+              <div className="flex items-start gap-3 border-l-2 border-emerald-400/60 py-1 pl-4">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" aria-hidden="true" />
+                <p className="text-sm text-foreground">
+                  {service.activationMethod === "x402"
+                    ? "Quote review finished safely."
+                    : "The request finished without Sift automatically signing or sending a wallet transaction."}
+                </p>
+              </div>
+              {service.activationMethod !== "x402" && result !== null ? (
+                <ServiceResponse value={result} />
+              ) : null}
+              {service.activationMethod === "mcp" ? (
+                <McpTransactionReview transactions={transactions} />
+              ) : null}
+              <Button
+                type="button"
+                className="mt-7"
+                variant="outline"
+                size="lg"
+                onClick={startAnotherRequest}
+              >
+                Start another request
+              </Button>
             </div>
           ) : null}
-          <McpTransactionReview transactions={transactions} />
         </section>
       </div>
     </main>

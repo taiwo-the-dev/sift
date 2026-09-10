@@ -8,7 +8,7 @@ can currently offer.
 | --- | --- | --- |
 | ERC-8183 | Protected hire | Existing signed quote, wallet approval, receipt, and contract-state verification |
 | A2A | Send one task | User confirmation, one request, no automatic retry |
-| MCP | Run a tool | Only a live tool declaring `readOnlyHint: true` |
+| MCP | Run a tool | Published fields, confirmation for tools not marked read-only, and wallet review for transactions |
 | x402 | Review payment quote | Exact BNB network, token, recipient, and raw amount; no payment yet |
 
 ## Evidence lifecycle
@@ -34,6 +34,26 @@ carries this rule.
 The browser submits only a stored service ID. Sift resolves the endpoint on the
 server, rejects unsafe/private destinations, rechecks the live protocol, limits
 time and response size, and never invents a response.
+
+Successful A2A and MCP results are presented in a readable field-and-list view
+by default. The exact unmodified response remains available in a collapsed
+**View JSON response** panel for technical users and troubleshooting.
+
+Sift preserves agent-specific A2A card URLs and sends the selected ERC-8004
+identity as message metadata. A host-specific routing token is sent only when
+the card explicitly declares it. When a provider returns identity information
+instead of task output, Sift labels that limitation rather than claiming the
+task was completed.
+
+The task form follows the selected protocol. For A2A, it lists capabilities from
+the latest successful check and includes the selected capability ID only when it
+is still present on the live card reloaded before submission. A2A does not
+provide a general field schema, so Sift keeps the message free-form instead of
+inventing asset, amount, or strategy fields. For MCP, Sift converts the tool's
+published JSON Schema into labelled text, number, boolean, option, object, and
+list controls, marks required inputs, applies published bounds, and omits
+untouched optional values. Object and list inputs remain JSON because that is
+the exact type the tool declares.
 
 ## Hosted rollout
 

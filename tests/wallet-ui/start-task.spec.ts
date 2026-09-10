@@ -22,10 +22,19 @@ function render(service: AgentProfileService): string {
 }
 
 describe("start task forms", () => {
-  it("submits an A2A task from the Send task button", () => {
+  it("starts A2A tasks with a details and review flow", () => {
     const html = render({
       activationMethod: "a2a",
       availabilityStatus: "available",
+      capabilitySummary: {
+        skills: [
+          {
+            description: "Buy assets on a published schedule.",
+            id: "dca",
+            name: "Dollar-Cost Averaging",
+          },
+        ],
+      },
       endpoint: "https://agent.example/a2a",
       id: "00000000-0000-4000-8000-000000000001",
       metadata: null,
@@ -33,15 +42,35 @@ describe("start task forms", () => {
       version: "1.0",
     });
 
-    assert.match(html, /<button[^>]*type="submit"[^>]*>[\s\S]*Send task/);
+    assert.match(html, /aria-label="Task progress"/);
+    assert.match(html, /Review task/);
+    assert.match(html, /Capability/);
+    assert.match(html, /Dollar-Cost Averaging/);
+    assert.match(html, /Task details/);
   });
 
-  it("submits an MCP tool call from the Run tool button", () => {
+  it("starts MCP tools with schema fields followed by review", () => {
     const html = render({
       activationMethod: "mcp",
       availabilityStatus: "available",
       capabilitySummary: {
-        tools: [{ inputSchema: { type: "object" }, name: "inspect", readOnly: true }],
+        tools: [
+          {
+            inputSchema: {
+              properties: {
+                chainId: { type: "integer" },
+                tokenId: {
+                  description: "Position token ID",
+                  type: "string",
+                },
+              },
+              required: ["tokenId"],
+              type: "object",
+            },
+            name: "inspect",
+            readOnly: true,
+          },
+        ],
       },
       endpoint: "https://agent.example/mcp",
       id: "00000000-0000-4000-8000-000000000002",
@@ -50,13 +79,17 @@ describe("start task forms", () => {
       version: "2025-06-18",
     });
 
-    assert.match(html, /<button[^>]*type="submit"[^>]*>[\s\S]*Run tool/);
+    assert.match(html, /aria-label="Task progress"/);
+    assert.match(html, /Review request/);
     assert.match(html, />Inspect</);
     assert.doesNotMatch(html, /Inspect —/);
-    assert.match(html, /Read-only tools run after your click/);
+    assert.match(html, /Only fields declared by the agent are shown/);
+    assert.match(html, /Chain ID/);
+    assert.match(html, /Token ID/);
+    assert.doesNotMatch(html, /JSON format/);
   });
 
-  it("requires confirmation for an MCP tool without a read-only marker", () => {
+  it("flags an MCP tool that will require confirmation during review", () => {
     const html = render({
       activationMethod: "mcp",
       availabilityStatus: "available",
@@ -71,7 +104,32 @@ describe("start task forms", () => {
     });
 
     assert.match(html, /Confirmation required/);
-    assert.match(html, /Prepare action/);
-    assert.match(html, /will not sign or send a wallet transaction automatically/);
+    assert.match(html, /Review request/);
+  });
+
+  it("guides x402 quotes through review without implying payment", () => {
+    const html = render({
+      activationMethod: "x402",
+      availabilityStatus: "available",
+      capabilitySummary: {
+        options: [
+          {
+            amount: "1000000",
+            asset: "0x0000000000000000000000000000000000000001",
+            network: "eip155:56",
+            payTo: "0x0000000000000000000000000000000000000002",
+          },
+        ],
+      },
+      endpoint: "https://agent.example/paid-task",
+      id: "00000000-0000-4000-8000-000000000004",
+      metadata: null,
+      serviceType: "x402",
+      version: "1",
+    });
+
+    assert.match(html, /aria-label="Task progress"/);
+    assert.match(html, /Review payment request/);
+    assert.match(html, /Sift will not send a payment from this screen/);
   });
 });
