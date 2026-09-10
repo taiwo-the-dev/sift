@@ -57,4 +57,26 @@ describe("ordered RPC fallback", () => {
 
     await assert.rejects(() => pool.validate(97, registry));
   });
+
+  it("uses the highest observed head when a healthy provider is behind", async () => {
+    const lines: string[] = [];
+    const pool = new RegistryRpcPool(
+      [
+        provider("lagging-primary", { getBlockNumber: async () => 100n }),
+        provider("current-fallback", { getBlockNumber: async () => 125n }),
+      ],
+      createLogger((line) => lines.push(line)),
+    );
+
+    await pool.validate(97, registry);
+    assert.equal(await pool.getBlockNumber(), 125n);
+    assert.equal(
+      lines.some(
+        (line) =>
+          line.includes("rpc_fallback_used") &&
+          line.includes("current-fallback"),
+      ),
+      true,
+    );
+  });
 });

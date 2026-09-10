@@ -119,6 +119,10 @@ The official BNB Agent SDK registration format identifies the registry as `eip15
 ## Recovery
 
 - RPC range failure: rerun the command; the failed range was not checkpointed.
+- Pruned-history failure: configure an archive-capable network-specific RPC. The
+  checked-in BSC Testnet fallbacks include NodeReal's documented public endpoint,
+  but a private free-tier `BNB_TESTNET_RPC_PRIMARY` remains preferable for a
+  prolonged catch-up.
 - Metadata failure: correct the upstream registration file or wait for it to recover. A later URI event or controlled historical replay can refresh it without erasing known-good metadata.
 - Database failure: restore Supabase connectivity and rerun; the last fully processed checkpoint is authoritative.
 - Suspected deployment/config error: stop, verify the address and start block against the canonical sources and chain bytecode, then use explicit overrides. Never guess a registry address or skip a failed range.

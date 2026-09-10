@@ -177,10 +177,45 @@ export class RegistryRpcPool {
     });
   }
 
-  getBlockNumber(): Promise<bigint> {
-    return this.execute("read latest block", (provider) =>
-      provider.getBlockNumber(),
+  async getBlockNumber(): Promise<bigint> {
+    const errors: unknown[] = [];
+    const observations = await Promise.all(
+      this.providers.map(async (provider, index) => {
+        try {
+          return {
+            blockNumber: await provider.getBlockNumber(),
+            index,
+            provider,
+          };
+        } catch (error) {
+          errors.push(error);
+          this.logger.warn("rpc_request_failed", {
+            operation: "read latest block",
+            provider: provider.name,
+            ...sanitizeError(error),
+          });
+          return null;
+        }
+      }),
     );
+    const successful = observations.filter(
+      (observation): observation is NonNullable<typeof observation> =>
+        observation !== null,
+    );
+    if (successful.length === 0) {
+      throw new RpcPoolError("read latest block", errors);
+    }
+
+    const latest = successful.reduce((current, observation) =>
+      observation.blockNumber > current.blockNumber ? observation : current,
+    );
+    if (latest.index > 0) {
+      this.logger.info("rpc_fallback_used", {
+        operation: "read latest block",
+        provider: latest.provider.name,
+      });
+    }
+    return latest.blockNumber;
   }
 
   getBlockTimestamp(blockNumber: bigint): Promise<bigint> {

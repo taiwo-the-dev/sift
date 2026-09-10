@@ -17,7 +17,10 @@ export const publicBnbChainDefinitions: Readonly<
     chainId: bscTestnet.id,
     publicRpcUrls: [
       "https://bsc-prebsc-dataseed.bnbchain.org",
-      "https://bsc-testnet-rpc.publicnode.com",
+      // NodeReal documents this credential as its public, shareable BSC
+      // Testnet key. Unlike the prior full-node fallback, it currently serves
+      // the historical log range required by the incremental indexer.
+      "https://bsc-testnet.nodereal.io/v1/e9a36765eb8a40b9bd12e680a1fd2bc5",
       "https://bsc-testnet.drpc.org",
     ],
   },

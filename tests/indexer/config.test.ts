@@ -17,7 +17,11 @@ describe("parseIndexerConfig", () => {
       config.registryAddress,
       bnbNetworkDefinitions["bsc-testnet"].registryAddress,
     );
-    assert.equal(config.rpcEndpoints.length, 3);
+    assert.deepEqual(config.rpcEndpoints, [
+      "https://bsc-prebsc-dataseed.bnbchain.org",
+      "https://bsc-testnet.nodereal.io/v1/e9a36765eb8a40b9bd12e680a1fd2bc5",
+      "https://bsc-testnet.drpc.org",
+    ]);
   });
 
   it("supports validated mainnet and ordered RPC overrides", () => {
