@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import type { PersistedSiftScore } from "../../features/scoring/model";
 import {
   describeScoreConfidence,
+  describeScoreTier,
   formatScoreConfidence,
   isScoreStale,
   scoreComponentRows,
@@ -60,6 +61,16 @@ describe("Sift Score presentation", () => {
       ),
       true,
     );
+  });
+
+  it("tiers a score without implying safety or performance", () => {
+    assert.equal(describeScoreTier(null).tier, "unavailable");
+    assert.equal(describeScoreTier(39.99).tier, "weak");
+    assert.equal(describeScoreTier(40).tier, "fair");
+    assert.equal(describeScoreTier(59.99).tier, "fair");
+    assert.equal(describeScoreTier(60).tier, "good");
+    assert.equal(describeScoreTier(79.99).tier, "good");
+    assert.equal(describeScoreTier(80).tier, "excellent");
   });
 
   it("exposes every weighted component including unavailable evidence", () => {

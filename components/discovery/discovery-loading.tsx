@@ -20,38 +20,38 @@ export function NetworkStatusLoading() {
 
 function GridCardSkeleton() {
   return (
-    <div className="flex min-h-[24rem] flex-col rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-4">
-        <Skeleton className="h-3 w-36" />
-        <Skeleton className="size-9 rounded-lg" />
-      </div>
-      <div className="mt-5 flex items-center gap-4">
-        <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
-        <div className="min-w-0 flex-1">
-          <Skeleton className="h-6 w-48 max-w-full" />
-          <Skeleton className="mt-2 h-3 w-32 max-w-full" />
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="border-b border-white/6 bg-card/70 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-7 w-16 shrink-0 rounded-full" />
+        </div>
+        <div className="mt-3.5 flex items-center gap-3">
+          <Skeleton className="size-16 shrink-0 rounded-full sm:size-[4.5rem]" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-3 w-24 max-w-full" />
+            <Skeleton className="mt-2 h-5 w-40 max-w-full" />
+          </div>
         </div>
       </div>
-      <div className="mt-5">
+      <div className="flex flex-1 flex-col p-4">
         <Skeleton className="h-4 w-full" />
-        <Skeleton className="mt-2 h-4 w-full" />
         <Skeleton className="mt-2 h-4 w-4/5" />
-      </div>
-      <div className="mt-4 flex gap-2">
-        <Skeleton className="h-7 w-28 rounded-md" />
-        <Skeleton className="h-7 w-24 rounded-md" />
-      </div>
-      <div className="mt-5 grid grid-cols-3 divide-x divide-border border-y border-border py-3">
-        {Array.from({ length: 3 }, (_, signalIndex) => (
-          <div key={signalIndex} className="px-3 first:pl-0 last:pr-0">
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="mt-2 h-4 w-16 max-w-full" />
-          </div>
-        ))}
-      </div>
-      <div className="mt-auto flex gap-2 pt-5">
-        <Skeleton className="h-9 w-24 rounded-lg" />
-        <Skeleton className="h-9 flex-1 rounded-lg" />
+        <div className="mt-3 flex gap-2">
+          <Skeleton className="h-6 w-24 rounded-md" />
+          <Skeleton className="h-6 w-20 rounded-md" />
+          <Skeleton className="h-6 w-28 rounded-md" />
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-1.5">
+          {Array.from({ length: 2 }, (_, signalIndex) => (
+            <Skeleton key={signalIndex} className="h-8 rounded-lg" />
+          ))}
+        </div>
+        <div className="mt-auto flex gap-2 pt-4">
+          <Skeleton className="size-9 shrink-0 rounded-lg" />
+          <Skeleton className="h-9 w-24 rounded-lg" />
+          <Skeleton className="h-9 flex-1 rounded-lg" />
+        </div>
       </div>
     </div>
   );

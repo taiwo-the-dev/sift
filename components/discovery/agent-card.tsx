@@ -3,14 +3,13 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CircleAlert,
-  Database,
   Gauge,
   RadioTower,
-  Tag,
 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentType, SVGProps } from "react";
 
+import { AgentArtworkHeader } from "@/components/agents/agent-artwork-header";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
@@ -20,25 +19,32 @@ import {
   isActivationEvidenceCurrent,
   type ActivationMethod,
 } from "@/features/activation/model";
-import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentDescription,
   formatAgentName,
   formatCategory,
   formatChainName,
   formatMetadataStatus,
+  formatRegistrationDate,
+  formatServiceType,
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
-import { getHealthPresentation } from "@/features/health/presentation";
+import {
+  getHealthPresentation,
+  type HealthPresentation,
+} from "@/features/health/presentation";
 import {
   describeScoreConfidence,
+  describeScoreTier,
   isScoreStale,
+  type ScoreTier,
 } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
 
 interface AgentCardProps {
   agent: DiscoveryAgent;
   comparisonGoal?: string;
+  position?: number;
 }
 
 const metadataStatusStyles = {
@@ -48,12 +54,34 @@ const metadataStatusStyles = {
   valid: "border-emerald-400/20 bg-emerald-400/8 text-emerald-200",
 } as const;
 
-const healthValueStyles = {
-  degraded: "text-amber-200",
-  offline: "text-red-300",
-  online: "text-emerald-200",
-  unknown: "text-muted-foreground",
-} as const;
+type SignalTone = "brand" | "caution" | "negative" | "neutral" | "positive";
+
+const signalToneStyles = {
+  brand: { value: "text-brand" },
+  caution: { value: "text-amber-200" },
+  negative: { value: "text-red-300" },
+  neutral: { value: "text-foreground" },
+  positive: { value: "text-emerald-200" },
+} as const satisfies Readonly<
+  Record<SignalTone, { value: string }>
+>;
+
+const scoreTierTone = {
+  excellent: "positive",
+  fair: "caution",
+  good: "brand",
+  unavailable: "neutral",
+  weak: "negative",
+} as const satisfies Readonly<Record<ScoreTier, SignalTone>>;
+
+const healthStateTone = {
+  "could-not-verify": "neutral",
+  degraded: "caution",
+  "no-checkable-service": "neutral",
+  "not-checked": "neutral",
+  offline: "negative",
+  online: "positive",
+} as const satisfies Readonly<Record<HealthPresentation["state"], SignalTone>>;
 
 const activationMethodPriority = {
   erc8183: 0,
@@ -62,44 +90,56 @@ const activationMethodPriority = {
   x402: 3,
 } as const satisfies Readonly<Record<ActivationMethod, number>>;
 
-function Signal({
+type SignalIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
+function StatusSignal({
   detail,
   icon,
   label,
+  tone,
   value,
-  valueClassName,
 }: Readonly<{
   detail: string;
-  icon: ReactNode;
+  icon: SignalIcon;
   label: string;
+  tone: SignalTone;
   value: string;
-  valueClassName?: string;
 }>) {
+  const Icon = icon;
+
   return (
-    <div className="min-w-0 px-3 py-3 first:pl-0 last:pr-0 sm:px-4">
-      <dt className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-[0.11em] text-muted-foreground">
-        {icon}
-        {label}
-      </dt>
-      <dd
-        className={cn(
-          "mt-1 truncate text-sm font-semibold text-foreground",
-          valueClassName,
-        )}
-      >
-        {value}
-      </dd>
-      <dd
-        className="mt-0.5 truncate text-[0.65rem] text-muted-foreground"
-        title={detail}
-      >
-        {detail}
-      </dd>
+    <div
+      title={`${label}: ${value} · ${detail}`}
+      className="relative flex min-w-0 items-center gap-3 px-3.5 py-3"
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-background/60 text-muted-foreground">
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <dt className="text-[0.58rem] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+          {label}
+        </dt>
+        <dd
+          className={cn(
+            "mt-0.5 truncate text-xs font-semibold",
+            signalToneStyles[tone].value,
+          )}
+        >
+          {value}
+        </dd>
+        <p className="mt-0.5 truncate text-[0.65rem] text-muted-foreground">
+          {detail}
+        </p>
+      </div>
     </div>
   );
 }
 
-export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
+export function AgentCard({
+  agent,
+  comparisonGoal = "",
+  position = 0,
+}: AgentCardProps) {
   const agentName = formatAgentName(agent.name, agent.agentId);
   const baseProfileHref = buildAgentProfileHref(agent.chainId, agent.agentId);
   const profileHref =
@@ -109,11 +149,18 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
         }).toString()}`
       : baseProfileHref;
   const primaryCategory = agent.categories[0];
-  const showOtherCategory = shouldShowOtherCategory(
-    agent.metadataStatus,
-    agent.categories,
-  );
-  const hiddenCategoryCount = Math.max(0, agent.categories.length - 1);
+  const categoryTitle = primaryCategory
+    ? agent.categories.length > 1
+      ? `Also matches: ${agent.categories.slice(1).map(formatCategory).join(", ")}`
+      : agent.categorySource === "deterministic-rule"
+        ? "Suggested from verified profile evidence"
+        : "Published in verified profile metadata"
+    : "No category matched Sift's supported taxonomy";
+  const serviceTypes = [
+    ...new Set(
+      agent.services.map((service) => formatServiceType(service.serviceType)),
+    ),
+  ].slice(0, 4);
   const taskMethods = agent.services
     .reduce<ActivationMethod[]>((methods, service) => {
       if (
@@ -153,172 +200,198 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
           : primaryTaskMethod === "x402"
             ? "View paid access"
             : "View agent";
-  const healthStatus = agent.health?.status ?? "unknown";
   const healthPresentation = getHealthPresentation(agent.health, agent.services);
-  const healthStyle = healthValueStyles[healthStatus];
+  const healthTierTone = healthStateTone[healthPresentation.state];
   const scoreIsStale = agent.score
     ? isScoreStale(agent.score.calculatedAt)
     : false;
-  const scoreValue =
-    agent.score?.score !== null && agent.score?.score !== undefined
-      ? `${agent.score.score}/100`
-      : "Not available";
+  const scoreNumber = agent.score?.score ?? null;
+  const scoreTier = describeScoreTier(scoreNumber);
+  const scoreSignalTone = scoreTierTone[scoreTier.tier];
   const scoreDetail = agent.score
     ? scoreIsStale
       ? "Refresh needed"
-      : `${describeScoreConfidence(agent.score.confidence)} confidence`
+      : describeScoreConfidence(agent.score.confidence)
     : "Awaiting evidence";
-  const identityTags = (
-    <div className="flex min-h-7 flex-wrap items-center gap-2">
-      {primaryCategory ? (
-        <span
-          title={
-            agent.categorySource === "deterministic-rule"
-              ? "Suggested from verified profile evidence"
-              : "Published in verified profile metadata"
-          }
-          className="inline-flex h-7 min-w-0 max-w-full items-center gap-1.5 rounded-md border border-brand/20 bg-brand/7 px-2.5 text-[0.65rem] font-semibold text-brand"
-        >
-          <Tag className="size-3 shrink-0" aria-hidden="true" />
-          <span className="truncate">{formatCategory(primaryCategory)}</span>
-        </span>
-      ) : showOtherCategory ? (
-        <span className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 text-[0.65rem] font-semibold text-muted-foreground">
-          <Tag className="size-3" aria-hidden="true" />
-          Other
-        </span>
-      ) : (
-        <span className="inline-flex h-7 items-center rounded-md border border-border bg-background/50 px-2.5 text-[0.65rem] font-medium text-muted-foreground">
-          Category not available
-        </span>
-      )}
-      {hiddenCategoryCount > 0 ? (
-        <span className="inline-flex h-7 items-center text-[0.65rem] font-medium text-muted-foreground">
-          +{hiddenCategoryCount} more
-        </span>
-      ) : null}
-      <span
-        className={cn(
-          "inline-flex h-7 items-center gap-1 rounded-md border px-2.5 text-[0.65rem] font-semibold",
-          metadataStatusStyles[agent.metadataStatus],
-        )}
-      >
-        {agent.metadataStatus === "valid" ? (
-          <BadgeCheck className="size-3" aria-hidden="true" />
-        ) : (
-          <CircleAlert className="size-3" aria-hidden="true" />
-        )}
-        {formatMetadataStatus(agent.metadataStatus)}
-      </span>
-    </div>
-  );
-  const decisionSignals = (
-    <>
-      <Signal
-        icon={<BriefcaseBusiness className="size-3" aria-hidden="true" />}
-        label="Access"
-        value={taskReady ? "Available" : "Not confirmed"}
-        detail={taskReady ? taskMethodSummary : "No recent check"}
-        valueClassName={taskReady ? "text-emerald-200" : undefined}
-      />
-      <Signal
-        icon={<RadioTower className="size-3" aria-hidden="true" />}
-        label="Health"
-        value={healthPresentation.label}
-        detail={healthPresentation.detail}
-        valueClassName={healthStyle}
-      />
-      <Signal
-        icon={<Gauge className="size-3" aria-hidden="true" />}
-        label="Sift Score"
-        value={scoreValue}
-        detail={scoreDetail}
-      />
-    </>
-  );
 
   return (
-    <article className="sift-card-reveal group relative flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_12%_-60%,rgba(240,185,11,0.18),transparent_15rem)]"
-      />
-
-      <div className="relative flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.09em] text-muted-foreground">
-          <span className="inline-flex shrink-0 items-center gap-1.5 text-brand">
-            <Database className="size-3" aria-hidden="true" />
-            {formatChainName(agent.chainId)}
+    <article className="sift-card-reveal group flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
+      <AgentArtworkHeader position={position}>
+        <div className="flex items-center justify-between gap-3">
+          <span
+            title={categoryTitle}
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-[0.62rem] font-semibold backdrop-blur-sm",
+              primaryCategory
+                ? "border-brand/25 bg-brand/15 text-brand"
+                : "border-white/10 bg-black/25 text-white/70",
+            )}
+          >
+            {primaryCategory ? formatCategory(primaryCategory) : "Other"}
           </span>
-          <span className="size-1 shrink-0 rounded-full bg-border" aria-hidden="true" />
-          <span className="truncate font-mono normal-case tracking-normal">
-            Agent #{agent.agentId}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.62rem] font-semibold backdrop-blur-sm",
+              metadataStatusStyles[agent.metadataStatus],
+            )}
+          >
+            {agent.metadataStatus === "valid" ? (
+              <BadgeCheck className="size-2.5" aria-hidden="true" />
+            ) : (
+              <CircleAlert className="size-2.5" aria-hidden="true" />
+            )}
+            {formatMetadataStatus(agent.metadataStatus)}
           </span>
         </div>
-        <BookmarkToggle agent={agent} variant="icon" />
-      </div>
 
-      <div className="relative mt-5 flex min-w-0 items-center gap-4">
-        <div className="relative shrink-0 rounded-full bg-background p-1 ring-1 ring-border">
-          <AgentAvatar
-            agentId={agent.agentId}
-            imageUrl={agent.imageUrl}
-            name={agentName}
+        <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
+          <div className="relative rounded-full bg-black/20 p-1 shadow-[0_14px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/10">
+            <AgentAvatar
+              agentId={agent.agentId}
+              imageUrl={agent.imageUrl}
+              name={agentName}
+            />
+            {taskReady ? (
+              <span className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full border-2 border-background bg-emerald-400">
+                <span className="sr-only">Available for tasks</span>
+              </span>
+            ) : null}
+          </div>
+          <div className="min-w-0">
+            <p
+              title={`Registered ${formatRegistrationDate(agent.registeredAt)}`}
+              className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-white/50"
+            >
+              {formatChainName(agent.chainId)} · #{agent.agentId}
+            </p>
+            <h2 className="mt-1.5 line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-white">
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  prefetch={false}
+                  className="rounded-sm outline-none transition-colors hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  {agentName}
+                </Link>
+              ) : (
+                agentName
+              )}
+            </h2>
+          </div>
+        </div>
+      </AgentArtworkHeader>
+
+      <div className="flex flex-1 flex-col p-5">
+        <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+          {formatAgentDescription(agent.description)}
+        </p>
+
+        <dl className="mt-4 grid min-h-32 grid-cols-1 overflow-hidden rounded-xl border border-border bg-card/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)]">
+          <div className="relative flex min-h-28 min-w-0 flex-col justify-between overflow-hidden border-b border-border p-3.5 sm:min-h-0 sm:border-r sm:border-b-0">
+            <dt className="relative flex items-center gap-1.5 text-[0.58rem] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+              <Gauge
+                className={cn(
+                  "size-3.5",
+                  signalToneStyles[scoreSignalTone].value,
+                )}
+                aria-hidden="true"
+              />
+              Sift Score
+            </dt>
+            <dd className="relative mt-3">
+              {scoreNumber !== null ? (
+                <>
+                  <div className="flex items-end gap-1.5">
+                    <span
+                      className={cn(
+                        "text-3xl leading-none font-semibold tracking-[-0.05em] tabular-nums",
+                        signalToneStyles[scoreSignalTone].value,
+                      )}
+                    >
+                      {scoreNumber}
+                    </span>
+                    <span className="pb-0.5 text-[0.62rem] text-muted-foreground">
+                      / 100
+                    </span>
+                  </div>
+                  <p
+                    className="mt-2 truncate text-[0.65rem] text-muted-foreground"
+                    title={`${scoreTier.label} · ${scoreDetail}`}
+                  >
+                    {scoreTier.label} · {scoreDetail}
+                  </p>
+                </>
+              ) : (
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Not scored yet
+                  </p>
+                  <p className="mt-1 text-[0.65rem] leading-4 text-muted-foreground">
+                    Waiting for enough verified evidence
+                  </p>
+                </div>
+              )}
+            </dd>
+          </div>
+          <div className="min-w-0 divide-y divide-border">
+            <StatusSignal
+              detail={taskReady ? taskMethodSummary : "No checked task service"}
+              icon={BriefcaseBusiness}
+              label="Access"
+              value={taskReady ? "Available" : "Profile only"}
+              tone={taskReady ? "positive" : "neutral"}
+            />
+            <StatusSignal
+              detail={healthPresentation.detail}
+              icon={RadioTower}
+              label="Health"
+              value={healthPresentation.label}
+              tone={healthTierTone}
+            />
+          </div>
+        </dl>
+
+        <div className="mt-4">
+          <p className="text-[0.6rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            Services
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {serviceTypes.length > 0 ? (
+              serviceTypes.map((service) => (
+                <span
+                  key={service}
+                  className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground"
+                >
+                  {service}
+                </span>
+              ))
+            ) : (
+              <span className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground">
+                No services listed
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-auto flex items-center gap-2 pt-4">
+          <BookmarkToggle agent={agent} variant="icon" className="shrink-0" />
+          <ComparisonToggle
+            className="shrink-0 border-border bg-background text-foreground hover:border-input hover:bg-muted hover:text-foreground"
+            reference={{ agentId: agent.agentId, chainId: agent.chainId }}
+            goal={comparisonGoal}
+            variant="icon"
           />
-          {taskReady ? (
-            <span className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full border-2 border-card bg-emerald-400">
-              <span className="sr-only">Available for tasks</span>
-            </span>
+          {actionHref ? (
+            <Link
+              href={actionHref}
+              prefetch={false}
+              className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-3 text-xs font-semibold text-brand-foreground outline-none transition-colors hover:bg-brand-hover focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              {actionLabel}
+              <ArrowUpRight className="size-3.5 shrink-0" aria-hidden="true" />
+            </Link>
           ) : null}
         </div>
-
-        <div className="min-w-0">
-          <h2 className="line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-foreground">
-            {profileHref ? (
-              <Link
-                href={profileHref}
-                prefetch={false}
-                className="rounded-sm outline-none transition-colors hover:text-brand focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                {agentName}
-              </Link>
-            ) : (
-              agentName
-            )}
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {taskReady ? taskMethodSummary : "Profile available for review"}
-          </p>
-        </div>
-      </div>
-
-      <p className="mt-5 line-clamp-3 text-sm leading-6 text-muted-foreground">
-        {formatAgentDescription(agent.description)}
-      </p>
-
-      <div className="mt-4">{identityTags}</div>
-
-      <dl className="mt-5 grid grid-cols-3 divide-x divide-border border-y border-border">
-        {decisionSignals}
-      </dl>
-
-      <div className="mt-auto flex items-center gap-2 pt-5">
-        <ComparisonToggle
-          className="border-border bg-background text-foreground hover:border-input hover:bg-muted hover:text-foreground"
-          reference={{ agentId: agent.agentId, chainId: agent.chainId }}
-          goal={comparisonGoal}
-          variant="compact"
-        />
-        {actionHref ? (
-          <Link
-            href={actionHref}
-            prefetch={false}
-            className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-3 text-xs font-semibold text-brand-foreground outline-none transition-[background-color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none"
-          >
-            {actionLabel}
-            <ArrowUpRight className="size-3.5 shrink-0" aria-hidden="true" />
-          </Link>
-        ) : null}
       </div>
     </article>
   );

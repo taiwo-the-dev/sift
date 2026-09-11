@@ -1,15 +1,12 @@
 import type { CategorySlug } from "@/features/categories/taxonomy";
-import type { MetadataStatus } from "@/lib/db/validation";
 
 /**
- * "Other" is a display fallback, not persisted category evidence. It means
- * Sift validated the agent's profile but found no match in its four supported
- * marketplace categories. Invalid, unavailable, and pending profiles remain
- * without a category label because their category cannot be established.
+ * "Other" is a display fallback, not persisted category evidence. Any agent
+ * with no match in Sift's four supported marketplace categories is labeled
+ * Other, so every listed agent always carries a category.
  */
 export function shouldShowOtherCategory(
-  metadataStatus: MetadataStatus,
   categories: readonly CategorySlug[],
 ): boolean {
-  return metadataStatus === "valid" && categories.length === 0;
+  return categories.length === 0;
 }

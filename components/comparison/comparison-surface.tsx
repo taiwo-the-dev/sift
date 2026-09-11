@@ -183,14 +183,14 @@ function HealthValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 }
 
 function CategoriesValue({ agent }: Readonly<{ agent: AgentProfile }>) {
-  if (shouldShowOtherCategory(agent.metadataStatus, agent.categories)) {
+  if (shouldShowOtherCategory(agent.categories)) {
     return (
       <div>
         <span className="rounded-full border border-border bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
           Other
         </span>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          This valid profile does not match a supported Sift category.
+          This agent does not match a supported Sift category.
         </p>
       </div>
     );

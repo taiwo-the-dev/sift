@@ -24,6 +24,30 @@ export function formatScoreConfidence(confidence: number): string {
   return `${Math.round(Math.max(0, Math.min(1, confidence)) * 100)}% data coverage`;
 }
 
+export type ScoreTier = "excellent" | "good" | "fair" | "weak" | "unavailable";
+
+export function describeScoreTier(
+  score: number | null,
+): Readonly<{ label: string; tier: ScoreTier }> {
+  if (score === null || !Number.isFinite(score)) {
+    return { label: "Not available", tier: "unavailable" };
+  }
+
+  if (score >= 80) {
+    return { label: "Excellent", tier: "excellent" };
+  }
+
+  if (score >= 60) {
+    return { label: "Good", tier: "good" };
+  }
+
+  if (score >= 40) {
+    return { label: "Fair", tier: "fair" };
+  }
+
+  return { label: "Weak", tier: "weak" };
+}
+
 export function isScoreStale(
   calculatedAt: string,
   asOf: Date = new Date(),

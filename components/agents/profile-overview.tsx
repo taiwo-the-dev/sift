@@ -2,7 +2,6 @@ import { Blocks, CircleDot, RadioTower, Tags } from "lucide-react";
 
 import { ProfileSection } from "@/components/agents/profile-section";
 import type { AgentProfile } from "@/features/agents/model";
-import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentDescription,
   formatCategory,
@@ -21,10 +20,6 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
       ),
     ),
   ];
-  const showOtherCategory = shouldShowOtherCategory(
-    profile.metadataStatus,
-    profile.categories,
-  );
 
   return (
     <ProfileSection
@@ -51,9 +46,7 @@ export function ProfileOverview({ profile }: ProfileOverviewProps) {
           <dd className="mt-3 text-sm font-medium text-foreground">
             {profile.categories.length > 0
               ? profile.categories.map(formatCategory).join(", ")
-              : showOtherCategory
-                ? "Other"
-                : "Not available"}
+              : "Other"}
           </dd>
         </div>
         <div className="bg-card p-5">

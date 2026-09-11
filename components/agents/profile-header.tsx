@@ -111,10 +111,7 @@ export function ProfileHeader({
   const taskReady = agentCanBeUsed && taskServices.length > 0;
   const externalReady = agentCanBeUsed && externalServices.length > 0;
   const canUseAgent = taskReady || externalReady;
-  const showOtherCategory = shouldShowOtherCategory(
-    profile.metadataStatus,
-    profile.categories,
-  );
+  const showOtherCategory = shouldShowOtherCategory(profile.categories);
 
   return (
     <header className="relative overflow-hidden border-b border-border bg-card">
@@ -199,7 +196,7 @@ export function ProfileHeader({
                   {showOtherCategory ? (
                     <span
                       className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                      title="This valid profile does not match one of Sift's four supported marketplace categories."
+                      title="This agent does not match one of Sift's four supported marketplace categories."
                     >
                       Other
                     </span>

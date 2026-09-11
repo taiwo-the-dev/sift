@@ -4,17 +4,11 @@ import { describe, it } from "node:test";
 import { shouldShowOtherCategory } from "../../features/categories/presentation";
 
 describe("category presentation", () => {
-  it("uses Other for a valid profile outside the supported taxonomy", () => {
-    assert.equal(shouldShowOtherCategory("valid", []), true);
+  it("labels any agent with no matched category as Other", () => {
+    assert.equal(shouldShowOtherCategory([]), true);
   });
 
-  it("does not replace real category evidence or unknown metadata with Other", () => {
-    assert.equal(
-      shouldShowOtherCategory("valid", ["grid-trading"]),
-      false,
-    );
-    assert.equal(shouldShowOtherCategory("invalid", []), false);
-    assert.equal(shouldShowOtherCategory("unavailable", []), false);
-    assert.equal(shouldShowOtherCategory("pending", []), false);
+  it("does not replace real category evidence with Other", () => {
+    assert.equal(shouldShowOtherCategory(["grid-trading"]), false);
   });
 });

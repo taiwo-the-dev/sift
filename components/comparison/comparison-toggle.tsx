@@ -13,7 +13,7 @@ interface ComparisonToggleProps {
   className?: string;
   goal?: string;
   reference: AgentReference;
-  variant?: "compact" | "default";
+  variant?: "compact" | "default" | "icon";
 }
 
 export function ComparisonToggle({
@@ -27,27 +27,32 @@ export function ComparisonToggle({
   const selected = comparison.isSelected(reference);
   const unavailable = comparison.isFull && !selected;
   const count = comparison.references.length;
+  const iconOnly = variant === "icon";
+  const label = selected
+    ? `Remove agent ${reference.agentId} from comparison`
+    : unavailable
+      ? `Comparison is full at ${maximumComparisonAgents} agents`
+      : `Add agent ${reference.agentId} to comparison`;
 
   return (
     <Button
       type="button"
-      variant={selected ? "outline" : "brand"}
-      size={variant === "compact" ? "sm" : "default"}
+      variant={selected ? "outline" : iconOnly ? "outline" : "brand"}
+      size={iconOnly ? "icon" : variant === "compact" ? "sm" : "default"}
       disabled={unavailable}
       aria-pressed={selected}
-      aria-label={
-        selected
-          ? `Remove agent ${reference.agentId} from comparison`
-          : unavailable
-            ? `Comparison is full at ${maximumComparisonAgents} agents`
-            : `Add agent ${reference.agentId} to comparison`
-      }
+      aria-label={label}
       title={
-        unavailable
-          ? `Remove an agent before adding another (maximum ${maximumComparisonAgents})`
-          : undefined
+        iconOnly
+          ? label
+          : unavailable
+            ? `Remove an agent before adding another (maximum ${maximumComparisonAgents})`
+            : undefined
       }
-      className={cn(className)}
+      className={cn(
+        iconOnly && selected && "border-brand/35 bg-brand/8 text-brand hover:bg-brand/12",
+        className,
+      )}
       onClick={() => {
         if (selected) {
           comparison.remove(reference);
@@ -70,8 +75,12 @@ export function ComparisonToggle({
       ) : (
         <Plus className="size-3.5" aria-hidden="true" />
       )}
-      {selected ? "Remove" : unavailable ? "Limit reached" : "Compare"} · {count}/
-      {maximumComparisonAgents}
+      {iconOnly ? null : (
+        <>
+          {selected ? "Remove" : unavailable ? "Limit reached" : "Compare"} ·{" "}
+          {count}/{maximumComparisonAgents}
+        </>
+      )}
       <span className="sr-only" aria-live="polite">
         {announcement}
       </span>
