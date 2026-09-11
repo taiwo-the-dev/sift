@@ -70,6 +70,11 @@ export const discoverySortOptions = [
   { label: "Best match", value: "relevance" },
   { label: "Newest first", value: "recent" },
   { label: "Oldest first", value: "oldest" },
+  { label: "Highest Sift rating", value: "score-desc" },
+  { label: "Lowest Sift rating", value: "score-asc" },
+  { label: "Available agents first", value: "available-first" },
+  { label: "Recently checked first", value: "health-recent" },
+  { label: "Most services", value: "services-desc" },
   { label: "Verified profiles first", value: "profile-first" },
   { label: "Name A–Z", value: "name-asc" },
   { label: "Name Z–A", value: "name-desc" },
@@ -77,6 +82,26 @@ export const discoverySortOptions = [
 
 export type DiscoverySort =
   (typeof discoverySortOptions)[number]["value"];
+
+export const discoveryScoreBands = [
+  { label: "Excellent", rangeLabel: "80–100", value: "excellent" },
+  { label: "Good", rangeLabel: "60–79", value: "good" },
+  { label: "Fair", rangeLabel: "40–59", value: "fair" },
+  { label: "Weak", rangeLabel: "Below 40", value: "weak" },
+] as const;
+
+export type DiscoveryScoreBand =
+  (typeof discoveryScoreBands)[number]["value"];
+
+export const discoveryRegistrationPeriods = [
+  { label: "Last 24 hours", value: "day" },
+  { label: "Last 7 days", value: "week" },
+  { label: "Last 30 days", value: "month" },
+  { label: "Older than 30 days", value: "older" },
+] as const;
+
+export type DiscoveryRegistrationPeriod =
+  (typeof discoveryRegistrationPeriods)[number]["value"];
 
 export const discoveryNetworkOptions = [
   {
@@ -153,6 +178,8 @@ export type DiscoveryQuery = Readonly<{
   page: number;
   pageSize: DiscoveryPageSize;
   query: string;
+  registrationPeriod: DiscoveryRegistrationPeriod | null;
+  scoreBands: readonly DiscoveryScoreBand[];
   searchTerms: readonly string[];
   sort: DiscoverySort;
   taskAvailability: "ready" | null;

@@ -32,6 +32,16 @@ export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
         {query.taskAvailability === "ready" ? (
           <input type="hidden" name="availability" value="ready" />
         ) : null}
+        {query.scoreBands.map((band) => (
+          <input key={band} type="hidden" name="rating" value={band} />
+        ))}
+        {query.registrationPeriod ? (
+          <input
+            type="hidden"
+            name="registered"
+            value={query.registrationPeriod}
+          />
+        ) : null}
         {query.pageSize !== 12 ? (
           <input type="hidden" name="size" value={query.pageSize} />
         ) : null}

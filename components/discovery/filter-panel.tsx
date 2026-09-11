@@ -1,10 +1,12 @@
 import {
   Activity,
   BriefcaseBusiness,
+  CalendarRange,
   Check,
   CircleEllipsis,
   Clock3,
   FileWarning,
+  Gauge,
   Grid3X3,
   RadioTower,
   RefreshCw,
@@ -19,6 +21,8 @@ import Link from "next/link";
 
 import {
   discoveryCategories,
+  discoveryRegistrationPeriods,
+  discoveryScoreBands,
   type DiscoveryCategory,
   type DiscoveryQuery,
 } from "@/features/discovery/model";
@@ -261,6 +265,105 @@ function FilterOptions({ query }: FilterPanelProps) {
         </div>
       </fieldset>
 
+      <fieldset className="border-t border-border pt-5">
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Sift rating
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            {query.scoreBands.length > 0
+              ? `${query.scoreBands.length} selected`
+              : "Any"}
+          </span>
+        </legend>
+        <p className="mt-2 text-[0.65rem] leading-5 text-muted-foreground/75">
+          Uses published Sift Scores. Unscored agents are excluded.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {discoveryScoreBands.map((band) => {
+            const selected = query.scoreBands.includes(band.value);
+            const nextBands = selected
+              ? query.scoreBands.filter((value) => value !== band.value)
+              : [...query.scoreBands, band.value];
+
+            return (
+              <Link
+                key={band.value}
+                href={buildDiscoveryHref(query, {
+                  page: 1,
+                  scoreBands: nextBands,
+                })}
+                prefetch={false}
+                role="checkbox"
+                aria-checked={selected}
+                className={cn(
+                  "group/rating inline-flex min-h-10 w-fit items-center gap-2 rounded-lg border py-1.5 pr-2.5 pl-1.5 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,box-shadow,color,transform] hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none",
+                  selected
+                    ? "border-brand/45 bg-[linear-gradient(135deg,rgba(240,185,11,0.16),rgba(240,185,11,0.05))] text-foreground shadow-[inset_3px_0_0_#f0b90b]"
+                    : "border-border bg-background/35 text-muted-foreground hover:border-input hover:bg-background hover:text-foreground",
+                )}
+              >
+                <span className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-card group-hover/rating:border-input">
+                  <Gauge
+                    className={cn(
+                      "size-3.5",
+                      selected ? "text-brand" : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span>{band.label}</span>
+                <span className="font-mono text-[0.6rem] text-muted-foreground">
+                  {band.rangeLabel}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="border-t border-border pt-5">
+        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Registered
+          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
+            {query.registrationPeriod ? "1 selected" : "Any time"}
+          </span>
+        </legend>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {discoveryRegistrationPeriods.map((period) => {
+            const selected = query.registrationPeriod === period.value;
+
+            return (
+              <Link
+                key={period.value}
+                href={buildDiscoveryHref(query, {
+                  page: 1,
+                  registrationPeriod: selected ? null : period.value,
+                })}
+                prefetch={false}
+                role="radio"
+                aria-checked={selected}
+                className={cn(
+                  "group/registered inline-flex min-h-10 w-fit items-center gap-2 rounded-lg border py-1.5 pr-2.5 pl-1.5 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,box-shadow,color,transform] hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/30 motion-reduce:transform-none",
+                  selected
+                    ? "border-brand/45 bg-[linear-gradient(135deg,rgba(240,185,11,0.16),rgba(240,185,11,0.05))] text-foreground shadow-[inset_3px_0_0_#f0b90b]"
+                    : "border-border bg-background/35 text-muted-foreground hover:border-input hover:bg-background hover:text-foreground",
+                )}
+              >
+                <span className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-card group-hover/registered:border-input">
+                  <CalendarRange
+                    className={cn(
+                      "size-3.5",
+                      selected ? "text-brand" : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span>{period.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </fieldset>
+
       <Link
         href="/discover"
         prefetch={false}
@@ -277,6 +380,8 @@ export function FilterPanel({ query }: FilterPanelProps) {
   const activeCount =
     query.categories.length +
     countSelectedAgentStatuses(query) +
+    query.scoreBands.length +
+    (query.registrationPeriod ? 1 : 0) +
     (query.network === "bsc-mainnet" ? 0 : 1);
 
   return (

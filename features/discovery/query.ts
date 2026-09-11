@@ -4,12 +4,16 @@ import {
   discoveryMetadataStatuses,
   discoveryNetworkOptions,
   discoveryPageSizes,
+  discoveryRegistrationPeriods,
+  discoveryScoreBands,
   discoverySortOptions,
   getDiscoveryChainIds,
   type DiscoveryCategory,
   type DiscoveryNetworkScope,
   type DiscoveryPageSize,
   type DiscoveryQuery,
+  type DiscoveryRegistrationPeriod,
+  type DiscoveryScoreBand,
   type DiscoverySort,
 } from "@/features/discovery/model";
 import type { HealthStatus } from "@/features/health/model";
@@ -243,8 +247,16 @@ export function parseDiscoverySearchParams(
     values(params.health),
     discoveryHealthStatuses.map((status) => status.value),
   ) as readonly HealthStatus[];
+  const scoreBands = uniqueSupported(
+    values(params.rating),
+    discoveryScoreBands.map((band) => band.value),
+  ) as readonly DiscoveryScoreBand[];
   const inferredCategory = inferDiscoveryCategory(query);
   const network = parseNetwork(firstValue(params.network), fallbackNetwork);
+  const registrationPeriod =
+    discoveryRegistrationPeriods.find(
+      (period) => period.value === firstValue(params.registered),
+    )?.value ?? null;
   const taskAvailability = firstValue(params.availability) === "ready"
     ? "ready"
     : null;
@@ -265,6 +277,8 @@ export function parseDiscoverySearchParams(
     page: parsePositiveInteger(firstValue(params.page)),
     pageSize: parsePageSize(firstValue(params.size)),
     query,
+    registrationPeriod,
+    scoreBands,
     searchTerms: extractDiscoverySearchTerms(query),
     sort: parseSort(firstValue(params.sort), query.length > 0),
     taskAvailability,
@@ -279,6 +293,8 @@ export type DiscoveryQueryOverrides = Readonly<{
   page?: number;
   pageSize?: DiscoveryPageSize;
   query?: string;
+  registrationPeriod?: DiscoveryRegistrationPeriod | null;
+  scoreBands?: readonly DiscoveryScoreBand[];
   sort?: DiscoverySort;
   taskAvailability?: "ready" | null;
 }>;
@@ -292,6 +308,11 @@ export function buildDiscoveryHref(
   const nextHealthStatuses = overrides.healthStatuses ?? query.healthStatuses;
   const nextStatuses = overrides.metadataStatuses ?? query.metadataStatuses;
   const nextNetwork = overrides.network ?? query.network;
+  const nextRegistrationPeriod =
+    overrides.registrationPeriod === undefined
+      ? query.registrationPeriod
+      : overrides.registrationPeriod;
+  const nextScoreBands = overrides.scoreBands ?? query.scoreBands;
   const nextPage = overrides.page ?? query.page;
   const nextSize = overrides.pageSize ?? query.pageSize;
   const nextSort = overrides.sort ?? query.sort;
@@ -315,6 +336,14 @@ export function buildDiscoveryHref(
 
   for (const status of nextHealthStatuses) {
     params.append("health", status);
+  }
+
+  for (const band of nextScoreBands) {
+    params.append("rating", band);
+  }
+
+  if (nextRegistrationPeriod) {
+    params.set("registered", nextRegistrationPeriod);
   }
 
   if (nextTaskAvailability === "ready") {
