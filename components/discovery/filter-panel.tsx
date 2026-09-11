@@ -4,10 +4,7 @@ import {
   Check,
   CircleEllipsis,
   Clock3,
-  Database,
   FileWarning,
-  FlaskConical,
-  Globe2,
   Grid3X3,
   RadioTower,
   RefreshCw,
@@ -22,9 +19,7 @@ import Link from "next/link";
 
 import {
   discoveryCategories,
-  discoveryNetworkOptions,
   type DiscoveryCategory,
-  type DiscoveryNetworkScope,
   type DiscoveryQuery,
 } from "@/features/discovery/model";
 import {
@@ -36,12 +31,6 @@ import { cn } from "@/lib/utils";
 interface FilterPanelProps {
   query: DiscoveryQuery;
 }
-
-const networkIcons = {
-  all: Globe2,
-  "bsc-mainnet": Database,
-  "bsc-testnet": FlaskConical,
-} as const satisfies Readonly<Record<DiscoveryNetworkScope, LucideIcon>>;
 
 const categoryIcons = {
   "grid-trading": Grid3X3,
@@ -111,72 +100,6 @@ function FilterOptions({ query }: FilterPanelProps) {
   return (
     <div className="space-y-6">
       <fieldset>
-        <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Network
-          <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">
-            1 selected
-          </span>
-        </legend>
-        <div className="mt-3 grid gap-2">
-          {discoveryNetworkOptions.map((network) => {
-            const selected = query.network === network.value;
-            const Icon = networkIcons[network.value];
-
-            return (
-              <Link
-                key={network.value}
-                href={buildDiscoveryHref(query, {
-                  network: network.value,
-                  page: 1,
-                })}
-                prefetch={false}
-                aria-current={selected ? "true" : undefined}
-                className={cn(
-                  "group grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
-                  selected
-                    ? "border-brand/35 bg-brand/8"
-                    : "border-border bg-background/45 hover:border-brand/25 hover:bg-background",
-                )}
-              >
-                <span
-                  className={cn(
-                    "grid size-9 place-items-center rounded-lg border transition-colors",
-                    selected
-                      ? "border-brand/25 bg-brand/10 text-brand"
-                      : "border-border bg-card text-muted-foreground group-hover:text-foreground",
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">
-                    {network.label}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[0.66rem] text-muted-foreground">
-                    {network.value === "bsc-mainnet"
-                      ? "Chain 56 · Production"
-                      : network.value === "bsc-testnet"
-                        ? "Chain 97 · Testing"
-                        : "Chain 56 + 97"}
-                  </span>
-                </span>
-                <span
-                  className={cn(
-                    "grid size-5 place-items-center rounded-full border",
-                    selected
-                      ? "border-brand bg-brand text-brand-foreground"
-                      : "border-input text-transparent",
-                  )}
-                >
-                  <Check className="size-3" aria-hidden="true" />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </fieldset>
-
-      <fieldset className="border-t border-border pt-5">
         <legend className="flex w-full items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Category
           <span className="font-mono text-[0.6rem] tracking-normal text-muted-foreground/65">

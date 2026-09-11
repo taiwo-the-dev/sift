@@ -26,12 +26,12 @@ const relay = "0x3333333333333333333333333333333333333333" as Address;
 const hash = `0x${"1".repeat(64)}` as Hash;
 const blockHash = `0x${"2".repeat(64)}` as Hash;
 const publicKey = `0x04${"3".repeat(128)}` as Hex;
-const deployment = getErc8183Deployment(97);
+const deployment = getErc8183Deployment(56);
 const jobId = 78n;
 
 const job = {
   budget_base_units: "5",
-  chain_id: 97,
+  chain_id: 56,
   commerce_address: deployment.commerce,
   expires_at: "2026-10-01T01:00:00.000Z",
   onchain_description: "{\"task\":\"test-only\"}",
@@ -108,12 +108,12 @@ function client(active = true): PublicClient {
   return {
     getBlock: async () => ({ timestamp: 1_780_272_000n }),
     getBlockNumber: async () => 101n,
-    getChainId: async () => 97,
+    getChainId: async () => 56,
     getTransaction: async () => ({ from: relay, to: wallet, value: 0n }),
     getTransactionReceipt: async () => receipt(),
     readContract: async ({ address, functionName }: { address: Address; functionName: string }) => {
-      if (address === getAltanaNetwork(97).keyStore && functionName === "getPublicKey") return publicKey;
-      if (address === getAltanaNetwork(97).keyStore && functionName === "isValidKey") return active;
+      if (address === getAltanaNetwork(56).keyStore && functionName === "getPublicKey") return publicKey;
+      if (address === getAltanaNetwork(56).keyStore && functionName === "isValidKey") return active;
       if (address === deployment.commerce && functionName === "getJob") {
         return {
           budget: 5n,

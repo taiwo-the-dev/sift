@@ -1,8 +1,9 @@
 # Testing Altana protected hiring
 
-This is the beginner test path for M20. Use **BSC Testnet first**. Testnet assets
-have no monetary value, but you should still use a disposable test wallet and
-read every prompt.
+This is the beginner protected-hiring test path for M20. Start on BSC Testnet,
+where tokens have no monetary value. Mainnet uses real assets; use a dedicated
+wallet containing only the amount you are willing to risk and stop before
+approval for a no-spend check.
 
 ## 1. Check the code
 
@@ -31,7 +32,7 @@ Open `http://localhost:3000/permissions`.
 
 ## 3. Create the passkey wallet
 
-1. Keep **BSC Testnet** selected.
+1. Select **BSC Testnet** for the safe first run, or Mainnet only when you intend to use real assets.
 2. Select **Create passkey wallet**.
 3. Approve the normal fingerprint, face-unlock, or device-PIN prompt.
 4. Confirm that Sift displays a real `0x…` wallet address.
@@ -42,20 +43,18 @@ phrase.
 
 ## 4. Fund only what the test needs
 
-Copy the passkey wallet address. Obtain testnet BNB from the official BNB Chain
-testnet faucet. If the genuine agent returns a non-zero quote, obtain test-only
-`U` using the faucet linked by the BNB Agent SDK. Check that the token address
-shown by Sift matches the reviewed testnet deployment.
-
-Never send real assets to the testnet wallet.
+For a no-spend interface check, do not fund the wallet. For Testnet execution,
+use the linked faucets for test BNB and test `U`. For Mainnet, copy the passkey
+wallet address and send only the minimum BNB and `U` required after independently
+checking every displayed address. Sift cannot recover or reverse Mainnet funds.
 
 ## 5. Start a real compatible hire
 
-1. Open Discover and choose a genuine BSC Testnet agent whose profile says it
+1. Open Discover on the same network and choose a genuine agent whose profile says it
    supports ERC-8183 hiring.
 2. Select **Hire agent**.
 3. Keep **Protected session** selected.
-4. Enter a non-sensitive test task and a small maximum test-token spend.
+4. Enter a non-sensitive task and the smallest acceptable maximum spend.
 5. Request the signed provider quote.
 6. On the permission step, read the four allowed actions, exact token cap,
    native gas cap, one-hour expiry, and network.
@@ -79,7 +78,7 @@ Never send real assets to the testnet wallet.
 ## 7. Revoke the permission
 
 1. Return to `/permissions`.
-2. Keep BSC Testnet selected and choose **Check on-chain status**.
+2. Confirm the original permission network is shown and choose **Check on-chain status**.
 3. Choose **Revoke permission** and approve the passkey prompt.
 4. Check again and confirm the status is **Revoked**.
 5. Record the real revoke transaction URL below.
@@ -93,8 +92,8 @@ Leave a field blank until you have observed it. Never add a made-up hash.
 | Test date/time | |
 | Sift deployment or localhost URL | |
 | Passkey wallet address | |
-| BSC network / chain ID | BSC Testnet / `97` |
-| Altana KeyStore address | `0x6b8361C29d05D498b1a12B54A37310f94171E94A` |
+| BSC network / chain ID | |
+| Altana KeyStore address | |
 | Session grant transaction | |
 | Session key ID | |
 | Session expiry | |

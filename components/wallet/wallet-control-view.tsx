@@ -7,7 +7,6 @@ import {
   Coins,
   LoaderCircle,
   LogOut,
-  Network,
   ShieldCheck,
   WalletCards,
   X,
@@ -43,7 +42,6 @@ interface WalletControlViewProps {
   onDismissNotice?: () => void;
   onNavigatePermissions?: () => void;
   onOpenChain?: () => void;
-  onSwitchToTestnet?: () => void;
   view: WalletConnectionView;
 }
 
@@ -54,7 +52,6 @@ export function WalletControlView({
   onDismissNotice,
   onNavigatePermissions,
   onOpenChain,
-  onSwitchToTestnet,
   view,
 }: WalletControlViewProps) {
   const controlClassName = mobile ? "w-full" : undefined;
@@ -119,39 +116,16 @@ export function WalletControlView({
             controlClassName,
             "border-amber-400/40 bg-amber-400/8 text-amber-100 hover:bg-amber-400/12",
           )}
-          disabled={view.switching}
-          onClick={onSwitchToTestnet}
+          onClick={onOpenChain}
           aria-describedby={view.notice ? "wallet-control-notice" : undefined}
         >
-          {view.switching ? (
-            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <CircleAlert className="size-4" aria-hidden="true" />
-          )}
-          {view.switching ? "Switching…" : "Switch to BSC Testnet"}
+          <CircleAlert className="size-4" aria-hidden="true" />
+          Choose a BNB network
         </Button>
       ) : null}
 
       {view.connection === "connected" && view.supportedChain !== false ? (
-        <div
-          className={cn(
-            "flex items-stretch gap-1.5",
-            mobile && "grid w-full grid-cols-[minmax(0,1fr)_auto]",
-          )}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            size={mobile ? "lg" : "default"}
-            className={cn(mobile && "min-w-0 justify-start")}
-            onClick={onOpenChain}
-            aria-label={`Current network: ${view.chainName ?? "Unknown network"}. Change network`}
-          >
-            <Network className="size-4 shrink-0 text-brand" aria-hidden="true" />
-            <span className="truncate">{view.chainName ?? "Unknown network"}</span>
-            <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
-          </Button>
-
+        <div className={cn(mobile && "w-full")}>
           <Popover.Root>
             <Popover.Trigger
               aria-describedby={view.notice ? "wallet-control-notice" : undefined}
@@ -159,6 +133,7 @@ export function WalletControlView({
               className={buttonVariants({
                 variant: "brand",
                 size: mobile ? "lg" : "default",
+                className: mobile ? "w-full justify-center" : undefined,
               })}
             >
               <span

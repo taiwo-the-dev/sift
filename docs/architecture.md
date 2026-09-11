@@ -21,10 +21,10 @@ flowchart LR
   wallet["User-controlled wallet"]
   altana["Altana passkey wallet\n+ bounded session"]
   keystore["Altana KeyStore\npublic authority"]
-  apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
+  apex["BNB Chain\nERC-8183 / APEX"]
 
   mainnet --> rpc --> indexer
-  testnet --> rpc --> indexer
+  testnet --> rpc
   metadata --> indexer
   indexer --> db
   indexer --> taxonomy --> db
@@ -47,10 +47,10 @@ flowchart LR
 
 ## Runtime boundaries
 
-- The Sift Indexer reads confirmed ERC-8004 registry events, validates bounded
-  external metadata, and writes normalized identities and services. Mainnet and
-  testnet use identity keys and checkpoints scoped by chain and registry. The
-  indexer has no wallet or signing key.
+- The Sift Indexer reads confirmed BSC Mainnet and BSC Testnet ERC-8004 registry events,
+  validates bounded external metadata, and writes normalized identities and
+  services. Identity keys and checkpoints remain scoped by chain and registry.
+  The indexer has no wallet or signing key.
 - The health and score workflow checks eligible public declarations in bounded
   batches, records the observation source/time, and calculates a versioned Sift
   Score only when enough current evidence exists.
@@ -67,7 +67,7 @@ flowchart LR
   remain server-side. Sift discovery never depends on that service.
 - Next.js Server Components and server route handlers read through typed,
   server-only repositories. `SUPABASE_SECRET_KEY` never enters the browser.
-- The browser owns wallet interaction. Sift requests each mainnet or testnet action
+- The browser owns wallet interaction. Sift requests each chain-bound action
   explicitly and never receives a private key or seed phrase.
 - The optional Altana browser boundary creates an OS-protected passkey wallet.
   It retains the live generated session signer only in React memory and stores
@@ -98,11 +98,11 @@ The detailed database, indexer, scoring, hiring, dashboard, and security
 contracts are documented in their focused files under `docs/`. This diagram
 must be updated if a deployment boundary changes.
 
-Discovery is BSC-mainnet-first for the judge journey, with an explicit testnet
-or combined catalogue selection. ERC-8183 hiring supports only the separately
-reviewed chain-56 and chain-97 deployments. Quotes, RPC reads, wallet clients,
-stored jobs, receipt verification, and explorer links remain bound to the
-agent's chain. Mainnet requires a real-funds acknowledgement and every write
+Discovery, indexing, wallet connection, task execution, hiring, and dashboard
+access support BSC Mainnet chain `56` and BSC Testnet chain `97`. The selected
+catalogue network is persistent, but quotes, RPC reads, wallet clients, stored
+jobs, receipt verification, and explorer links remain bound to the agent's
+actual chain. Mainnet requires a real-funds acknowledgement and every write
 still requires explicit wallet confirmation.
 The protected option keeps token approval under the passkey admin and gives the
 one-hour session only the four reviewed hiring functions plus exact token and

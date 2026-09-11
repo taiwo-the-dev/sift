@@ -18,7 +18,7 @@ const agent: TableRow<"agents"> = {
   agent_id: "42",
   agent_uri: "https://agent.test-only.dev/registration.json",
   category: null,
-  chain_id: 97,
+  chain_id: 56,
   created_at: timestamp,
   description: "Test-only scoring fixture.",
   id: agentId,

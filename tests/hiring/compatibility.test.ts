@@ -15,7 +15,7 @@ import {
 } from "../../features/hiring/quote";
 import { getErc8183Deployment } from "../../features/hiring/protocol";
 
-const erc8183Deployment = getErc8183Deployment(97);
+const erc8183Deployment = getErc8183Deployment(56);
 
 const service = {
   endpoint: "https://agent.test-only.dev/erc8183",
@@ -27,7 +27,7 @@ const ownerAddress = "0x1111111111111111111111111111111111111111" as Address;
 
 const profile = {
   active: true,
-  chainId: 97,
+  chainId: 56,
   metadataStatus: "valid" as const,
   ownerAddress,
   services: [service],
@@ -59,9 +59,9 @@ describe("ERC-8183 hiring compatibility", () => {
     }
   });
 
-  it("accepts an otherwise compatible BSC Mainnet agent", () => {
+  it("supports a compatible testnet identity on its own deployment", () => {
     assert.notEqual(
-      resolveHiringCompatibility({ ...profile, chainId: 56 }),
+      resolveHiringCompatibility({ ...profile, chainId: 97 }),
       null,
     );
   });
@@ -82,7 +82,7 @@ describe("ERC-8183 hiring compatibility", () => {
   it("accepts a legacy status without decimals but rejects a conflicting declaration", () => {
     const status = {
       agent_address: profile.ownerAddress,
-      chain_id: 97,
+      chain_id: 56,
       commerce_address: erc8183Deployment.commerce,
       currency: erc8183Deployment.paymentToken,
       policy_address: erc8183Deployment.policy,
@@ -92,14 +92,14 @@ describe("ERC-8183 hiring compatibility", () => {
     };
 
     assert.equal(
-      parseAgentCommerceStatus(status, profile.ownerAddress, 97).servicePrice,
+      parseAgentCommerceStatus(status, profile.ownerAddress, 56).servicePrice,
       0n,
     );
     assert.throws(() =>
       parseAgentCommerceStatus(
         { ...status, decimals: 6 },
         profile.ownerAddress,
-        97,
+        56,
       ),
     );
   });
@@ -116,7 +116,7 @@ describe("ERC-8183 hiring compatibility", () => {
     };
 
     assert.throws(
-      () => parseAgentCommerceStatus(status, profile.ownerAddress, 97),
+      () => parseAgentCommerceStatus(status, profile.ownerAddress, 56),
       (error: unknown) =>
         error instanceof HiringQuoteError &&
         error.code === "unsupported-agent-service" &&
@@ -129,7 +129,7 @@ describe("ERC-8183 hiring compatibility", () => {
       () =>
         parseNegotiationEnvelope({
           accepted: true,
-          chain_id: 97,
+          chain_id: 56,
           currency: erc8183Deployment.paymentToken,
           price: "1000000000000000000",
           provider_address: profile.ownerAddress,
@@ -142,7 +142,7 @@ describe("ERC-8183 hiring compatibility", () => {
     );
   });
 
-  it("binds a mainnet status document to the separate chain-56 deployment", () => {
+  it("binds a status document to the reviewed chain-56 deployment", () => {
     const mainnet = getErc8183Deployment(56);
     const status = {
       agent_address: profile.ownerAddress,
@@ -162,7 +162,10 @@ describe("ERC-8183 hiring compatibility", () => {
     );
     assert.throws(() =>
       parseAgentCommerceStatus(
-        { ...status, commerce_address: erc8183Deployment.commerce },
+        {
+          ...status,
+          commerce_address: "0x1111111111111111111111111111111111111111",
+        },
         profile.ownerAddress,
         56,
       ),

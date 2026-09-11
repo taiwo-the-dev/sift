@@ -1,7 +1,7 @@
 # M15 mainnet activation proof
 
-This record separates code readiness from real-world proof. The owner selected
-a BSC Mainnet-only release path on 2026-09-10. M15 remains **BLOCKED** until a
+This record separates mainnet code readiness from real-world proof. The wider
+product also supports BSC Testnet, but M15 remains **BLOCKED** until a
 genuine Agent Studio project, compatible mainnet category representatives, and
 the required human wallet evidence are recorded. Nothing is replaced with a
 fixture, screenshot, or invented transaction.

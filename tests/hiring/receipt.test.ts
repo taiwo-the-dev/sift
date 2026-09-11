@@ -25,11 +25,11 @@ const provider = "0x2222222222222222222222222222222222222222" as Address;
 const hash = `0x${"1".repeat(64)}` as Hash;
 const blockHash = `0x${"2".repeat(64)}` as Hash;
 const expiresAt = "2026-08-24T10:00:00.000Z";
-const erc8183Deployment = getErc8183Deployment(97);
+const erc8183Deployment = getErc8183Deployment(56);
 
 const job = {
   budget_base_units: "0",
-  chain_id: 97,
+  chain_id: 56,
   commerce_address: erc8183Deployment.commerce,
   expires_at: expiresAt,
   onchain_description: "{\"test\":true}",

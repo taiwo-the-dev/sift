@@ -68,8 +68,8 @@ archive-capable free-tier BSC endpoint; optional `_FALLBACK_1` and `_FALLBACK_2`
 variants preserve ordered fallback. Never place a token in a repository variable
 or `NEXT_PUBLIC_` value.
 
-- `sync-agents.yml` incrementally indexes BSC Mainnet every two hours. The
-  release schedule intentionally does not recreate testnet catalogue rows.
+- `sync-agents.yml` incrementally indexes BSC Mainnet and BSC Testnet in
+  independent jobs every two hours.
 - `assess-agents.yml` checks health and recalculates scores every six hours.
 - The assessment workflow also refreshes the bounded cached 8004scan
   cross-check after the M14 shortlist exists.

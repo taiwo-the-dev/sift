@@ -7,11 +7,11 @@ transaction.
 
 ## Current release direction
 
-The owner selected a **BSC Mainnet-only release path on 2026-09-10**. Testnet
-catch-up and testnet transaction proof are no longer release tasks. The current
-codebase still contains legacy chain-97 compatibility; removing that support or
-deleting hosted rows is a separate, destructive cleanup and is not performed by
-this checklist. Automated scheduling must not recreate testnet records.
+The owner selected a **dual BSC network release path on 2026-09-11**. Mainnet
+remains the default, while a persistent header selector lets users browse the
+separate chain `56` and chain `97` catalogues. Agent identities, checkpoints,
+wallet actions, jobs, dashboard sessions, RPC verification, and explorer links
+must remain bound to their original network.
 
 A complete mainnet ERC-8183 hire can spend real BNB or tokens. Codex may validate
 the read-only path and transaction preparation, but only the wallet owner may
@@ -46,9 +46,10 @@ verified reputation source. Health and scores are not filled with guessed data.
 - [x] `npm ci` succeeds from the current candidate lockfile.
 - [x] `npm run lint` passes on the current candidate.
 - [x] `npm run typecheck` passes on the current candidate.
-- [x] `npm test` passes (297/297) on the current candidate.
+- [x] `npm test` passes (314/314) on the current candidate.
 - [x] `npm run test:wallet-ui` passes (19/19) on the current candidate.
-- [x] `npm run test:browser` passes locally against a production build (12/12).
+- [x] `npm run test:browser` passes locally against a production build (14/14),
+      including desktop and mobile network switching.
 - [x] `PLAYWRIGHT_BASE_URL=https://sift-ten-swart.vercel.app npm run test:browser`
       passes against the current public baseline (12/12).
 - [x] `npm run build` passes on Next.js `16.3.4` for the current candidate.
@@ -67,7 +68,7 @@ verified reputation source. Health and scores are not filled with guessed data.
 - [ ] RLS and browser-role revocations are verified for private tables.
 - [ ] Vercel has the required production variables and no secret is browser-public.
 - [ ] The deployed commit exactly matches the recorded release commit.
-- [ ] The mainnet-only scheduled indexer succeeds and advances or confirms its checkpoint.
+- [ ] Both scheduled indexer jobs succeed and independently advance or confirm their checkpoints.
 - [ ] The scheduled health/service/score workflow succeeds on the release commit.
 - [ ] RPC primary/fallback behavior succeeds without exposing provider credentials.
 - [ ] Data freshness visible in Sift agrees with persisted observation times.

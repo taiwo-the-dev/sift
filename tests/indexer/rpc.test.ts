@@ -8,7 +8,7 @@ import {
   type RegistryRpcProvider,
 } from "../../lib/indexer/rpc";
 
-const registry = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const registry = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 
 function provider(
   name: string,
@@ -18,7 +18,7 @@ function provider(
     getBlockNumber: async () => 100n,
     getBlockTimestamp: async () => 1_700_000_000n,
     getBytecode: async () => "0x01" as Hex,
-    getChainId: async () => 97,
+    getChainId: async () => 56,
     getLogs: async () => [],
     name,
     ownerOf: async () =>
@@ -43,7 +43,7 @@ describe("ordered RPC fallback", () => {
       createLogger((line) => lines.push(line)),
     );
 
-    await pool.validate(97, registry);
+    await pool.validate(56, registry);
     assert.deepEqual(await pool.getLogs(registry, 1n, 2n), []);
     assert.equal(lines.some((line) => line.includes("rpc_fallback_used")), true);
     assert.equal(lines.some((line) => line.includes("super-secret")), false);
@@ -51,11 +51,11 @@ describe("ordered RPC fallback", () => {
 
   it("rejects providers connected to a different chain", async () => {
     const pool = new RegistryRpcPool(
-      [provider("wrong-chain", { getChainId: async () => 56 })],
+      [provider("wrong-chain", { getChainId: async () => 97 })],
       createLogger(() => undefined),
     );
 
-    await assert.rejects(() => pool.validate(97, registry));
+    await assert.rejects(() => pool.validate(56, registry));
   });
 
   it("uses the highest observed head when a healthy provider is behind", async () => {
@@ -68,7 +68,7 @@ describe("ordered RPC fallback", () => {
       createLogger((line) => lines.push(line)),
     );
 
-    await pool.validate(97, registry);
+    await pool.validate(56, registry);
     assert.equal(await pool.getBlockNumber(), 125n);
     assert.equal(
       lines.some(

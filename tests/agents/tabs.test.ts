@@ -16,17 +16,17 @@ describe("agent profile tabs", () => {
 
   it("builds shareable tab URLs and preserves comparison intent", () => {
     assert.equal(
-      buildAgentProfileTabHref(97, "1887", "overview"),
-      "/agents/97/1887",
+      buildAgentProfileTabHref(56, "1887", "overview"),
+      "/agents/56/1887",
     );
     assert.equal(
       buildAgentProfileTabHref(
-        97,
+        56,
         "1887",
         "services",
         "Protect my loan",
       ),
-      "/agents/97/1887?tab=services&goal=Protect+my+loan",
+      "/agents/56/1887?tab=services&goal=Protect+my+loan",
     );
   });
 });

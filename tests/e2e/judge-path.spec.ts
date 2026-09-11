@@ -24,6 +24,16 @@ async function expectNoViewportOverflow(page: Page): Promise<void> {
   expect(hasOverflow).toBe(false);
 }
 
+async function openNetworkSelector(page: Page, isMobile: boolean) {
+  if (isMobile) {
+    await page.getByRole("button", { name: "Open navigation" }).click();
+  }
+
+  await page
+    .getByRole("combobox", { name: /Browsing BSC Mainnet\. Change network/i })
+    .click();
+}
+
 test("a visitor understands Sift and can search the mainnet catalogue", async ({
   page,
 }) => {
@@ -69,6 +79,36 @@ test("all four required category routes return real mainnet results", async ({
     await expect(page.getByText("We couldn’t load the indexed catalogue")).toHaveCount(0);
   }
 
+  await expectNoViewportOverflow(page);
+  await expectNoPageErrors(errors);
+});
+
+test("a visitor can switch between isolated Testnet and Mainnet catalogues", async ({
+  page,
+  isMobile,
+}) => {
+  const errors = recordPageErrors(page);
+  await page.goto("/discover");
+
+  await openNetworkSelector(page, isMobile);
+  await page.getByRole("option", { name: /BSC Testnet/i }).click();
+
+  await expect(page).toHaveURL(/\/discover\?network=bsc-testnet/);
+  await expect(page.getByLabel("Agent directory status", { exact: true })).toContainText(
+    "BSC Testnet",
+  );
+  await expect(page.locator('a[href^="/agents/97/"]').first()).toBeVisible();
+
+  await page
+    .getByRole("combobox", { name: /Browsing BSC Testnet\. Change network/i })
+    .click();
+  await page.getByRole("option", { name: /BSC Mainnet/i }).click();
+
+  await expect(page).toHaveURL(/\/discover$/);
+  await expect(page.getByLabel("Agent directory status", { exact: true })).toContainText(
+    "BSC Mainnet",
+  );
+  await expect(page.locator('a[href^="/agents/56/"]').first()).toBeVisible();
   await expectNoViewportOverflow(page);
   await expectNoPageErrors(errors);
 });

@@ -60,7 +60,10 @@ function completedStageCount(job: DashboardJob): number {
 
 export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
   const StatusIcon = categoryIcons[job.category];
-  const finalTransactionHref = dashboardTransactionHref(job.transactionHash);
+  const finalTransactionHref = dashboardTransactionHref(
+    job.transactionHash,
+    job.agent.chainId,
+  );
   const stageCount = completedStageCount(job);
 
   return (
@@ -266,7 +269,10 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
             {job.activities.length > 0 ? (
               <ol className="mt-5 space-y-0">
                 {job.activities.map((activity, index) => {
-                  const transactionHref = dashboardTransactionHref(activity.transactionHash);
+                  const transactionHref = dashboardTransactionHref(
+                    activity.transactionHash,
+                    job.agent.chainId,
+                  );
                   return (
                     <li key={activity.id} className="relative grid grid-cols-[1rem_minmax(0,1fr)] gap-3 pb-5 last:pb-0">
                       {index < job.activities.length - 1 ? (

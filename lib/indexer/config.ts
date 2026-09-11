@@ -28,15 +28,6 @@ type NetworkDefinition = Readonly<{
 export const bnbNetworkDefinitions: Readonly<
   Record<SupportedBnbNetwork, NetworkDefinition>
 > = {
-  "bsc-testnet": {
-    chain: publicBnbChainDefinitions["bsc-testnet"].chain,
-    chainId: 97,
-    defaultRpcUrls: publicBnbChainDefinitions["bsc-testnet"].publicRpcUrls,
-    deploymentBlock: 84_555_147n,
-    explorerUrl:
-      "https://testnet.bscscan.com/address/0x8004A818BFB912233c491871b3d84c89A494BD9e",
-    registryAddress: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
-  },
   "bsc-mainnet": {
     chain: publicBnbChainDefinitions["bsc-mainnet"].chain,
     chainId: 56,
@@ -45,6 +36,15 @@ export const bnbNetworkDefinitions: Readonly<
     explorerUrl:
       "https://bscscan.com/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     registryAddress: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+  },
+  "bsc-testnet": {
+    chain: publicBnbChainDefinitions["bsc-testnet"].chain,
+    chainId: 97,
+    defaultRpcUrls: publicBnbChainDefinitions["bsc-testnet"].publicRpcUrls,
+    deploymentBlock: 84_555_147n,
+    explorerUrl:
+      "https://testnet.bscscan.com/address/0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    registryAddress: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
   },
 };
 

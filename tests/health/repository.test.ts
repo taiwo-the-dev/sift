@@ -15,7 +15,7 @@ const agent: Pick<
   "agent_id" | "chain_id" | "id"
 > = {
   agent_id: "42",
-  chain_id: 97,
+  chain_id: 56,
   id: agentDbId,
 };
 

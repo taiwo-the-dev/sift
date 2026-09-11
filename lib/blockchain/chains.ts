@@ -1,6 +1,6 @@
 import { bsc, bscTestnet, type Chain } from "viem/chains";
 
-export const supportedBnbNetworks = ["bsc-testnet", "bsc-mainnet"] as const;
+export const supportedBnbNetworks = ["bsc-mainnet", "bsc-testnet"] as const;
 export type SupportedBnbNetwork = (typeof supportedBnbNetworks)[number];
 
 type PublicBnbChainDefinition = Readonly<{
@@ -12,18 +12,6 @@ type PublicBnbChainDefinition = Readonly<{
 export const publicBnbChainDefinitions: Readonly<
   Record<SupportedBnbNetwork, PublicBnbChainDefinition>
 > = {
-  "bsc-testnet": {
-    chain: bscTestnet,
-    chainId: bscTestnet.id,
-    publicRpcUrls: [
-      "https://bsc-prebsc-dataseed.bnbchain.org",
-      // NodeReal documents this credential as its public, shareable BSC
-      // Testnet key. Unlike the prior full-node fallback, it currently serves
-      // the historical log range required by the incremental indexer.
-      "https://bsc-testnet.nodereal.io/v1/e9a36765eb8a40b9bd12e680a1fd2bc5",
-      "https://bsc-testnet.drpc.org",
-    ],
-  },
   "bsc-mainnet": {
     chain: bsc,
     chainId: bsc.id,
@@ -31,6 +19,15 @@ export const publicBnbChainDefinitions: Readonly<
       "https://bsc-rpc.publicnode.com",
       "https://bsc-mainnet.gateway.tatum.io",
       "https://1rpc.io/bnb",
+    ],
+  },
+  "bsc-testnet": {
+    chain: bscTestnet,
+    chainId: bscTestnet.id,
+    publicRpcUrls: [
+      "https://bsc-prebsc-dataseed.bnbchain.org",
+      "https://bsc-testnet.nodereal.io/v1/e9a36765eb8a40b9bd12e680a1fd2bc5",
+      "https://bsc-testnet.drpc.org",
     ],
   },
 };

@@ -37,8 +37,14 @@ export function dashboardActivitySourceLabel(
   return "Sift record";
 }
 
-export function dashboardTransactionHref(hash: string | null): string | null {
+export function dashboardTransactionHref(
+  hash: string | null,
+  chainId: number = 56,
+): string | null {
+  const explorerBaseUrl =
+    chainId === 97 ? "https://testnet.bscscan.com" : "https://bscscan.com";
+
   return hash && /^0x[0-9a-fA-F]{64}$/.test(hash)
-    ? `https://testnet.bscscan.com/tx/${hash}`
+    ? `${explorerBaseUrl}/tx/${hash}`
     : null;
 }

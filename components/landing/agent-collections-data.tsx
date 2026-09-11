@@ -4,9 +4,11 @@ import { AgentCollectionsSection } from "@/components/landing/agent-collections-
 import type { DiscoveryAgent } from "@/features/discovery/model";
 import { parseDiscoverySearchParams } from "@/features/discovery/query";
 import { createDiscoveryRepository } from "@/lib/db/discovery-repository";
+import { getSelectedCatalogueNetwork } from "@/lib/network/selection";
 
 export async function AgentCollectionsData() {
   await connection();
+  const network = await getSelectedCatalogueNetwork();
 
   let catalogueAvailable = true;
   let featuredAgents: DiscoveryAgent[] = [];
@@ -20,7 +22,7 @@ export async function AgentCollectionsData() {
     const readyResult = await repository.search(
       parseDiscoverySearchParams({
         availability: "ready",
-        network: "all",
+        network,
         size: "24",
       }),
     );
@@ -30,7 +32,7 @@ export async function AgentCollectionsData() {
       const verifiedResult = await repository.search(
         parseDiscoverySearchParams({
           metadata: "valid",
-          network: "all",
+          network,
           size: "24",
         }),
       );

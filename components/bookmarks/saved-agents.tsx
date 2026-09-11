@@ -9,8 +9,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatRegistrationDate } from "@/features/discovery/format";
 import { cn } from "@/lib/utils";
 
-export function SavedAgents() {
+export function SavedAgents({ chainId }: Readonly<{ chainId: 56 | 97 }>) {
   const bookmarks = useBookmarks();
+  const visibleAgents = bookmarks.agents.filter(
+    (agent) => agent.chainId === chainId,
+  );
 
   if (!bookmarks.ready) {
     return (
@@ -29,17 +32,17 @@ export function SavedAgents() {
     );
   }
 
-  if (bookmarks.agents.length === 0) {
+  if (visibleAgents.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-14 text-center sm:px-8">
         <span className="mx-auto grid size-12 place-items-center rounded-xl border border-brand/25 bg-brand/8 text-brand">
           <Bookmark className="size-5" aria-hidden="true" />
         </span>
         <h2 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-          No bookmarks yet
+          No bookmarks on this network
         </h2>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-          Bookmark agents while browsing to keep a shortlist on this device.
+          Bookmark agents while browsing, or switch networks to review another shortlist.
         </p>
         <Link
           href="/discover"
@@ -63,7 +66,7 @@ export function SavedAgents() {
             Your shortlist
           </p>
           <p className="mt-1 text-lg font-semibold text-foreground">
-            {bookmarks.count} bookmarked {bookmarks.count === 1 ? "agent" : "agents"}
+            {visibleAgents.length} bookmarked {visibleAgents.length === 1 ? "agent" : "agents"}
           </p>
         </div>
         <Link
@@ -76,7 +79,7 @@ export function SavedAgents() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {bookmarks.agents.map((agent, index) => (
+        {visibleAgents.map((agent, index) => (
           <AgentShowcaseCard
             key={`${agent.chainId}:${agent.agentId}`}
             agent={agent}

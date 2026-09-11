@@ -8,13 +8,13 @@ import {
   normalizeExternalHref,
 } from "../../features/agents/links";
 
-const address = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 
 describe("agent profile links", () => {
   it("builds chain-specific BscScan links from validated values", () => {
     assert.equal(
-      buildExplorerAddressHref(97, address),
-      "https://testnet.bscscan.com/address/0x8004a818bfb912233c491871b3d84c89a494bd9e",
+      buildExplorerAddressHref(56, address),
+      "https://bscscan.com/address/0x8004a169fb4a3325136eb29fa0ceb6d2e539a432",
     );
     assert.equal(
       buildExplorerBlockHref(56, 123),
@@ -24,13 +24,17 @@ describe("agent profile links", () => {
       buildExplorerTransactionHref(56, `0x${"A".repeat(64)}`),
       `https://bscscan.com/tx/0x${"a".repeat(64)}`,
     );
+    assert.equal(
+      buildExplorerAddressHref(97, address),
+      "https://testnet.bscscan.com/address/0x8004a169fb4a3325136eb29fa0ceb6d2e539a432",
+    );
   });
 
   it("does not construct explorer links for unsupported or invalid values", () => {
     assert.equal(buildExplorerAddressHref(1, address), null);
-    assert.equal(buildExplorerAddressHref(97, "not-an-address"), null);
-    assert.equal(buildExplorerBlockHref(97, -1), null);
-    assert.equal(buildExplorerTransactionHref(97, "0x1234"), null);
+    assert.equal(buildExplorerAddressHref(56, "not-an-address"), null);
+    assert.equal(buildExplorerBlockHref(56, -1), null);
+    assert.equal(buildExplorerTransactionHref(56, "0x1234"), null);
   });
 
   it("allows public HTTPS metadata links and rejects unsafe targets", () => {

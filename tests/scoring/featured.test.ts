@@ -66,7 +66,7 @@ function sources(
     listAgents: async () =>
       ids.map((id, index) => ({
         agent_id: String(index + 1),
-        chain_id: 97,
+        chain_id: 56,
         description: `Test-only agent ${index + 1}`,
         id,
         image_url: null,

@@ -18,7 +18,7 @@ const candidates = [
   {
     agentDbId: "11111111-1111-4111-8111-111111111111",
     agentId: "1",
-    chainId: 97,
+    chainId: 56,
     previousHealth: null,
     services: [
       {
@@ -30,7 +30,7 @@ const candidates = [
   {
     agentDbId: "22222222-2222-4222-8222-222222222222",
     agentId: "2",
-    chainId: 97,
+    chainId: 56,
     previousHealth: null,
     services: [{ endpoint: "https://two.test-only.dev/mcp", serviceType: "MCP" }],
   },

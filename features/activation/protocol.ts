@@ -79,13 +79,6 @@ const a2aCardSchema = z
   })
   .loose();
 
-function object(value: unknown): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new ActivationRemoteError("invalid-response", "The service returned an invalid protocol response.");
-  }
-  return value as Record<string, unknown>;
-}
-
 function json(value: unknown): Json {
   return JSON.parse(JSON.stringify(value)) as Json;
 }

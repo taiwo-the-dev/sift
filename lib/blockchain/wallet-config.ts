@@ -30,10 +30,10 @@ export function getWalletConfig() {
   const environment = readPublicWalletEnvironment();
   const transports = {
     [supportedWalletChains[0].id]: browserTransport(
-      environment.testnetRpcUrls,
+      environment.mainnetRpcUrls,
     ),
     [supportedWalletChains[1].id]: browserTransport(
-      environment.mainnetRpcUrls,
+      environment.testnetRpcUrls,
     ),
   };
 

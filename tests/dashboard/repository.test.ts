@@ -17,7 +17,7 @@ const job: TableRow<"jobs"> = {
   agent_id: "42",
   block_number: null,
   budget_base_units: "1000000000000000000",
-  chain_id: 97,
+  chain_id: 56,
   commerce_address: "0xa206c0517b6371c6638cd9e4a42cc9f02a33b0de",
   confirmed_at: null,
   created_at: "2026-08-24T10:00:00.000Z",
@@ -54,7 +54,7 @@ const agent: TableRow<"agents"> = {
   agent_id: "42",
   agent_uri: "ipfs://test-only-agent",
   category: null,
-  chain_id: 97,
+  chain_id: 56,
   created_at: "2026-08-22T10:00:00.000Z",
   description: "Test-only agent",
   id: agentDbId,
@@ -112,7 +112,7 @@ describe("dashboard repository wallet boundary", () => {
       async listJobs(requestedWallet, chainId) {
         calls.push("jobs");
         assert.equal(requestedWallet, wallet);
-        assert.equal(chainId, 97);
+        assert.equal(chainId, 56);
         return [job];
       },
       async listTransactions(ids) {
@@ -122,7 +122,7 @@ describe("dashboard repository wallet boundary", () => {
       },
     };
 
-    const records = await createDashboardRepository(sources).listWalletJobs(wallet, 97);
+    const records = await createDashboardRepository(sources).listWalletJobs(wallet, 56);
     assert.equal(records.length, 1);
     assert.equal(records[0]?.job.wallet_address, wallet.toLowerCase());
     assert.equal(records[0]?.agent?.name, "Test Agent");
@@ -139,13 +139,13 @@ describe("dashboard repository wallet boundary", () => {
       listHealth: async () => { evidenceCalls += 1; return []; },
       listJobs: async (requestedWallet, chainId) => {
         assert.equal(requestedWallet, wallet);
-        assert.equal(chainId, 97);
+        assert.equal(chainId, 56);
         return [];
       },
       listTransactions: async () => { evidenceCalls += 1; return []; },
     };
     assert.deepEqual(
-      await createDashboardRepository(sources).listWalletJobs(wallet, 97),
+      await createDashboardRepository(sources).listWalletJobs(wallet, 56),
       [],
     );
     assert.equal(evidenceCalls, 0);

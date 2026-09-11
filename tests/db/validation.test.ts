@@ -19,7 +19,7 @@ function createAgentInput(
     agentId: "340282366920938463463374607431768211455",
     agentUri: null,
     category: null,
-    chainId: 97,
+    chainId: 56,
     description: null,
     imageUrl: null,
     lastSyncedAt: null,

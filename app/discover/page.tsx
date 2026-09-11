@@ -18,6 +18,7 @@ import {
   type DiscoverySearchParams,
 } from "@/features/discovery/query";
 import { createPageMetadata } from "@/lib/metadata";
+import { getSelectedCatalogueNetwork } from "@/lib/network/selection";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Discover AI agents",
@@ -31,7 +32,11 @@ interface DiscoverPageProps {
 }
 
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
-  const query = parseDiscoverySearchParams(await searchParams);
+  const [params, selectedNetwork] = await Promise.all([
+    searchParams,
+    getSelectedCatalogueNetwork(),
+  ]);
+  const query = parseDiscoverySearchParams(params, selectedNetwork);
 
   return (
     <div className="flex-1 bg-background">

@@ -17,7 +17,7 @@ function agent(
     agent_id: agentId,
     agent_uri: `ipfs://test-only-${agentId}`,
     category: null,
-    chain_id: 97,
+    chain_id: 56,
     created_at: "2026-08-22T08:00:00.000Z",
     description: `Test-only agent ${agentId}`,
     id,
@@ -139,10 +139,10 @@ describe("comparison repository integration boundary", () => {
       async listAgents(references) {
         calls.agents += 1;
         assert.deepEqual(references, [
-          { agentId: "101", chainId: 97 },
-          { agentId: "102", chainId: 97 },
-          { agentId: "103", chainId: 97 },
-          { agentId: "404", chainId: 97 },
+          { agentId: "101", chainId: 56 },
+          { agentId: "102", chainId: 56 },
+          { agentId: "103", chainId: 56 },
+          { agentId: "404", chainId: 56 },
         ]);
         return [thirdAgent, firstAgent, secondAgent];
       },
@@ -165,10 +165,10 @@ describe("comparison repository integration boundary", () => {
       },
     };
     const result = await createComparisonRepository(sources).findByReferences([
-      { agentId: "101", chainId: 97 },
-      { agentId: "102", chainId: 97 },
-      { agentId: "103", chainId: 97 },
-      { agentId: "404", chainId: 97 },
+      { agentId: "101", chainId: 56 },
+      { agentId: "102", chainId: 56 },
+      { agentId: "103", chainId: 56 },
+      { agentId: "404", chainId: 56 },
     ]);
 
     assert.deepEqual(
@@ -183,7 +183,7 @@ describe("comparison repository integration boundary", () => {
     assert.deepEqual(result.missingAgents, [
       {
         reason: "not-found",
-        reference: { agentId: "404", chainId: 97 },
+        reference: { agentId: "404", chainId: 56 },
       },
     ]);
     assert.deepEqual(calls, {
@@ -222,14 +222,14 @@ describe("comparison repository integration boundary", () => {
       },
     };
     const result = await createComparisonRepository(sources).findByReferences([
-      { agentId: "101", chainId: 97 },
+      { agentId: "101", chainId: 56 },
     ]);
 
     assert.deepEqual(result.agents, []);
     assert.deepEqual(result.missingAgents, [
       {
         reason: "ambiguous",
-        reference: { agentId: "101", chainId: 97 },
+        reference: { agentId: "101", chainId: 56 },
       },
     ]);
     assert.equal(evidenceCalls, 0);
@@ -249,12 +249,12 @@ describe("comparison repository integration boundary", () => {
     };
 
     await createComparisonRepository(sources).findByReferences([
-      { agentId: "1", chainId: 97 },
-      { agentId: "1", chainId: 97 },
-      { agentId: "2", chainId: 97 },
-      { agentId: "3", chainId: 97 },
-      { agentId: "4", chainId: 97 },
-      { agentId: "5", chainId: 97 },
+      { agentId: "1", chainId: 56 },
+      { agentId: "1", chainId: 56 },
+      { agentId: "2", chainId: 56 },
+      { agentId: "3", chainId: 56 },
+      { agentId: "4", chainId: 56 },
+      { agentId: "5", chainId: 56 },
     ]);
 
     assert.deepEqual(requestedAgentIds, ["1", "2", "3", "4"]);

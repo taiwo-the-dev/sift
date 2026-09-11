@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { ReactNode } from "react";
 
 import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { Brand } from "@/components/layout/brand";
@@ -30,7 +31,9 @@ function isCurrentRoute(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileNavigation() {
+export function MobileNavigation({
+  networkControl,
+}: Readonly<{ networkControl: ReactNode }>) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -124,6 +127,12 @@ export function MobileNavigation() {
             </div>
 
             <div className="shrink-0 border-t border-border bg-card/45 p-4">
+              <div className="mb-4">
+                <p className="mb-2 px-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Browse network
+                </p>
+                {networkControl}
+              </div>
               <div className="mb-3 flex items-center justify-between gap-3 px-1">
                 <div>
                   <p className="text-xs font-semibold text-foreground">Wallet</p>

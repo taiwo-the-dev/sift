@@ -14,7 +14,7 @@ import type {
 } from "../../features/hiring/model";
 import { getErc8183Deployment } from "../../features/hiring/protocol";
 
-const erc8183Deployment = getErc8183Deployment(97);
+const erc8183Deployment = getErc8183Deployment(56);
 
 const owner = "0x1111111111111111111111111111111111111111" as Address;
 const walletA = "0x2222222222222222222222222222222222222222" as Address;
@@ -23,25 +23,25 @@ const now = Date.UTC(2026, 8, 5, 12);
 
 const agent: HiringAgentSummary = {
   agentId: "1503",
-  chainId: 97,
+  chainId: 56,
   imageUrl: null,
   name: "Test fixture agent",
   ownerAddress: owner,
-  profileHref: "/agents/97/1503",
+  profileHref: "/agents/56/1503",
 };
 
 const mission: HiringMissionInput = {
   deliverables: "A bounded public test report.",
   durationSeconds: 86_400,
   maxSpend: "1",
-  mission: "Produce a bounded testnet-only analysis report.",
+  mission: "Produce a bounded mainnet analysis report.",
   qualityStandards: "Cite public inputs and label missing evidence.",
 };
 
 const quote: HiringQuote = {
   budgetBaseUnits: "500000000000000000",
   budgetDisplay: "0.5",
-  chainId: 97,
+  chainId: 56,
   disputeWindowSeconds: 3_600,
   estimatedCompletionSeconds: 300,
   expiresAt: new Date(now + 86_400_000).toISOString(),

@@ -133,7 +133,7 @@ export function mapWalletError(error: unknown): WalletErrorMessage {
       code: "switch-unavailable",
       title: "Automatic switching unavailable",
       description:
-        "Open your wallet and manually select BSC Testnet (chain ID 97), then return to Sift.",
+        "Open your wallet and manually select BSC Mainnet or BSC Testnet, then return to Sift.",
     };
   }
 
@@ -146,7 +146,7 @@ export function mapWalletError(error: unknown): WalletErrorMessage {
       code: "chain-unavailable",
       title: "Network unavailable",
       description:
-        "This network is not supported by Sift. Select BSC Testnet or BSC Mainnet in your wallet.",
+        "This network is not supported by Sift. Select BSC Mainnet or BSC Testnet in your wallet.",
     };
   }
 

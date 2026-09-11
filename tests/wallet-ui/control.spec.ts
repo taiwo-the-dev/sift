@@ -17,7 +17,6 @@ function render(view: WalletConnectionView, mobile = false): string {
       onDisconnect() {},
       onDismissNotice() {},
       onOpenChain() {},
-      onSwitchToTestnet() {},
       view,
     }),
   );
@@ -41,37 +40,28 @@ describe("wallet connection control states", () => {
     assert.match(render({ connection: "reconnecting" }), /Reconnecting/);
   });
 
-  it("shows the actual shortened account and supported network", () => {
+  it("shows the actual shortened account in the wallet menu", () => {
     const html = render({
       addressLabel: "0x1234…5678",
       balanceLabel: "1.25 BNB",
-      chainName: "BSC Testnet",
+      chainName: "BSC Mainnet",
       connection: "connected",
       supportedChain: true,
       walletName: "Browser wallet",
     });
 
     assert.match(html, /0x1234…5678/);
-    assert.match(html, /BSC Testnet/);
     assert.match(html, /Open wallet menu/);
   });
 
-  it("offers an explicit network switch and pending state", () => {
+  it("offers an explicit supported-network chooser", () => {
     assert.match(
       render({
         chainName: "Ethereum",
         connection: "connected",
         supportedChain: false,
       }),
-      /Switch to BSC Testnet/,
-    );
-    assert.match(
-      render({
-        connection: "connected",
-        supportedChain: false,
-        switching: true,
-      }),
-      /Switching/,
+      /Choose a BNB network/,
     );
   });
 

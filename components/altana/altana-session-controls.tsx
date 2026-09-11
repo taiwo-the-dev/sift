@@ -41,10 +41,12 @@ function sessionStatusLabel(status: string): string {
   return "Needs verification";
 }
 
-export function AltanaSessionControls() {
+export function AltanaSessionControls({
+  initialChainId = 97,
+}: Readonly<{ initialChainId?: HiringChainId }>) {
   const altana = useAltanaSession();
-  const [chainId, setChainId] = useState<HiringChainId>(97);
-  const [tokenCap, setTokenCap] = useState("1");
+  const [chainId, setChainId] = useState<HiringChainId>(initialChainId);
+  const [tokenCap, setTokenCap] = useState(initialChainId === 97 ? "1" : "0");
   const [mainnetAccepted, setMainnetAccepted] = useState(false);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [notice, setNotice] = useState<string | null>(null);

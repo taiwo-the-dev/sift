@@ -12,7 +12,7 @@ const agent: TableRow<"agents"> = {
   agent_id: "1887",
   agent_uri: "data:application/json;base64,e30=",
   category: null,
-  chain_id: 97,
+  chain_id: 56,
   created_at: "2026-08-21T18:58:31.000Z",
   description: "Protects a lending position from liquidation risk.",
   id: "11111111-1111-4111-8111-111111111111",
@@ -116,7 +116,7 @@ describe("agent profile repository composition", () => {
       }),
     );
 
-    const profile = await repository.findByIdentity(97, "1887");
+    const profile = await repository.findByIdentity(56, "1887");
 
     assert.equal(profile?.name, "Safety Sentinel");
     assert.deepEqual(profile?.categories, ["health-factor-monitoring"]);
@@ -147,7 +147,7 @@ describe("agent profile repository composition", () => {
       }),
     );
 
-    const profile = await repository.findByIdentity(97, "1887");
+    const profile = await repository.findByIdentity(56, "1887");
 
     assert.equal(profile?.name, null);
     assert.equal(profile?.health, null);
@@ -168,7 +168,7 @@ describe("agent profile repository composition", () => {
       }),
     );
 
-    const profile = await repository.findByIdentity(97, "1887");
+    const profile = await repository.findByIdentity(56, "1887");
 
     assert.deepEqual(profile?.categories, []);
   });
@@ -197,7 +197,7 @@ describe("agent profile repository composition", () => {
       }),
     );
 
-    assert.equal(await repository.findByIdentity(97, "9999"), null);
+    assert.equal(await repository.findByIdentity(56, "9999"), null);
     assert.equal(childQueries, 0);
   });
 });

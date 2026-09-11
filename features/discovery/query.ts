@@ -216,15 +216,19 @@ function parseSort(
   return supportedSort ?? (hasQuery ? "relevance" : "recent");
 }
 
-function parseNetwork(value: string | undefined): DiscoveryNetworkScope {
+function parseNetwork(
+  value: string | undefined,
+  fallback: DiscoveryNetworkScope,
+): DiscoveryNetworkScope {
   return (
     discoveryNetworkOptions.find((option) => option.value === value)?.value ??
-    defaultDiscoveryNetwork
+    fallback
   );
 }
 
 export function parseDiscoverySearchParams(
   params: DiscoverySearchParams,
+  fallbackNetwork: DiscoveryNetworkScope = defaultDiscoveryNetwork,
 ): DiscoveryQuery {
   const query = normalizeQuery(firstValue(params.q));
   const categories = uniqueSupported(
@@ -240,7 +244,7 @@ export function parseDiscoverySearchParams(
     discoveryHealthStatuses.map((status) => status.value),
   ) as readonly HealthStatus[];
   const inferredCategory = inferDiscoveryCategory(query);
-  const network = parseNetwork(firstValue(params.network));
+  const network = parseNetwork(firstValue(params.network), fallbackNetwork);
   const taskAvailability = firstValue(params.availability) === "ready"
     ? "ready"
     : null;

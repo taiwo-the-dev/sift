@@ -110,7 +110,7 @@ describe("discovery query parsing", () => {
       category: ["yield-optimisation", "grid-trading"],
       metadata: "valid",
       health: ["degraded", "unknown"],
-      network: "all",
+      network: "bsc-testnet",
       q: "yield",
       size: "24",
     });
@@ -128,7 +128,7 @@ describe("discovery query parsing", () => {
       "degraded",
       "unknown",
     ]);
-    assert.equal(url.searchParams.get("network"), "all");
+    assert.equal(url.searchParams.get("network"), "bsc-testnet");
     assert.equal(url.searchParams.get("sort"), "recent");
     assert.equal(url.searchParams.get("size"), "24");
     assert.equal(url.searchParams.get("page"), "3");
@@ -141,6 +141,13 @@ describe("discovery query parsing", () => {
     assert.deepEqual(query.networkChainIds, [56]);
     assert.deepEqual(query.healthStatuses, []);
     assert.equal(buildDiscoveryHref(query), "/discover");
+  });
+
+  it("uses a valid persisted network when the URL does not override it", () => {
+    const query = parseDiscoverySearchParams({}, "bsc-testnet");
+
+    assert.equal(query.network, "bsc-testnet");
+    assert.deepEqual(query.networkChainIds, [97]);
   });
 
   it("uses an explicit evidence-based task availability filter", () => {

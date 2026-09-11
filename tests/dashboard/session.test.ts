@@ -6,7 +6,7 @@ import { buildDashboardChallengeMessage } from "../../features/dashboard/session
 describe("dashboard wallet challenge", () => {
   it("binds the read-only authorization to origin, wallet, chain, nonce, and expiry", () => {
     const message = buildDashboardChallengeMessage({
-      chainId: 97,
+      chainId: 56,
       expiresAt: "2026-08-24T10:05:00.000Z",
       issuedAt: "2026-08-24T10:00:00.000Z",
       nonce: "test-only-nonce",
@@ -16,14 +16,14 @@ describe("dashboard wallet challenge", () => {
 
     assert.match(message, /Sift Dashboard/);
     assert.match(message, /URI: https:\/\/sift\.test/);
-    assert.match(message, /Chain ID: 97/);
+    assert.match(message, /Chain ID: 56/);
     assert.match(message, /Nonce: test-only-nonce/);
     assert.match(message, /does not submit a transaction or grant spending permission/);
   });
 
   it("keeps signed bytes stable after PostgreSQL normalizes UTC timestamps", () => {
     const input = {
-      chainId: 97,
+      chainId: 56,
       expiresAt: "2026-08-24T10:05:00.123Z",
       issuedAt: "2026-08-24T10:00:00.123Z",
       nonce: "test-only-nonce",

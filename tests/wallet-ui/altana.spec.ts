@@ -19,7 +19,9 @@ describe("Altana browser integration boundaries", () => {
     assert.match(fundingSource, /Fund your passkey wallet/);
     assert.match(fundingSource, /CopyButton/);
     assert.match(fundingSource, /Check balances/);
-    assert.match(fundingSource, /Get test BNB/);
+    assert.match(fundingSource, /Mainnet uses real assets/);
+    assert.match(fundingSource, /testnet-faucet/);
+    assert.match(fundingSource, /deployment\.isMainnet/);
     assert.match(source, /Token approval is intentionally excluded/);
   });
 

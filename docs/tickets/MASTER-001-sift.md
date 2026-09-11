@@ -32,12 +32,13 @@ Release Validation In Progress
 - M23 — Implemented Locally; Hosted Migration and Human Wallet Validation Pending
 - M24 — In Progress
 
-## Release Scope Decision — 2026-09-10
+## Release Scope Decision — 2026-09-11
 
-The owner selected a BSC Mainnet-only release path. Scheduled indexing, release
-evidence, browser validation, and submission materials target chain ID `56`.
-Historical chain-97 compatibility may remain in code until a separately reviewed
-cleanup, but testnet catch-up and testnet transaction proof are not release gates.
+The release supports separate BSC Mainnet and BSC Testnet experiences. The
+header network selector persists the browsing network, and discovery queries,
+profiles, indexing, wallet configuration, task execution, hiring, dashboard
+records, explorer links, and RPC verification remain bound to chain ID `56` or
+`97` without mixing identities across networks. Mainnet remains the default.
 Any mainnet transaction requires the wallet owner's explicit review and approval
 because mainnet assets have real value.
 
@@ -1630,14 +1631,13 @@ plan. Do not speculate or build guessed Phase 2 features.
 
 Deliver:
 
-- chain-aware ERC-8183 hiring on the reviewed BSC Mainnet and BSC Testnet
-  deployments;
-- separate network RPC, contract, quote, wallet, persistence, receipt, explorer,
+- ERC-8183 hiring on the reviewed BSC Mainnet deployment;
+- mainnet-bound RPC, contract, quote, wallet, persistence, receipt, explorer,
   and dashboard boundaries;
 - explicit real-funds acknowledgement and clear mainnet risk language;
 - exact token approvals and an individual wallet confirmation for every write;
-- an additive hosted migration allowing only chain IDs `56` and `97` in hiring
-  and dashboard records;
+- an additive hosted migration expanding hiring and dashboard records to the
+  exact `chain_id in (56, 97)` BSC allowlist;
 - automated mainnet configuration, isolation, validation, and migration tests.
 
 Mainnet hiring must remain non-custodial and fail closed. Never automate a

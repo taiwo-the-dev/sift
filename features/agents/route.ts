@@ -22,7 +22,7 @@ export function parseAgentProfileIdentity(
 
   if (
     !Number.isSafeInteger(parsedChainId) ||
-    parsedChainId <= 0 ||
+    (parsedChainId !== 56 && parsedChainId !== 97) ||
     BigInt(agentId) > maximumUint256
   ) {
     return null;

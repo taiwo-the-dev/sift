@@ -147,10 +147,10 @@ for bounded dashboard reads. It does not insert jobs, sessions, transactions,
 agents, or any other product data, and it does not weaken Row Level Security or
 browser-role revocations.
 
-Deploy this additive migration before releasing the mainnet hiring UI. Until it
-is present, hosted PostgreSQL correctly rejects chain-56 intents. After GitHub
-deploys it, verify the constraint definitions and migration history in Supabase;
-do not create a test mainnet transaction as part of database validation.
+The exact `chain_id in (56, 97)` constraint keeps hiring and dashboard records
+inside the two supported BNB networks. Catalogue identities and checkpoints
+remain uniquely scoped by chain and registry, so equal numeric agent IDs on the
+two networks are never merged.
 
 ## M13 mainnet catalogue provenance
 

@@ -27,22 +27,18 @@ describe("Altana bounded hiring permissions", () => {
       "0x6572427ED530BadcF7375Cf9A4709D8d2b0E7E0a",
     );
     assert.equal(
-      getAltanaNetwork(97).keyStore,
-      "0x6b8361C29d05D498b1a12B54A37310f94171E94A",
+      getAltanaNetwork(56).sdkBundledPolicy,
+      "0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5",
     );
     assert.equal(
-      getAltanaNetwork(97).sdkBundledPolicy,
-      "0x4F4678D4439feC812Ac7674Bb3Efb4C8f5Fb78A6",
+      getAltanaNetwork(56).sdkBundledPolicy,
+      getErc8183Deployment(56).policy,
     );
-    assert.notEqual(
-      getAltanaNetwork(97).sdkBundledPolicy,
-      getErc8183Deployment(97).policy,
-    );
-    const altana = getAltanaNetwork(97);
-    const erc8183 = getErc8183Deployment(97);
+    const altana = getAltanaNetwork(56);
+    const erc8183 = getErc8183Deployment(56);
     assert.doesNotThrow(() =>
       assertAltanaSdkNetwork({
-        chainId: 97,
+        chainId: 56,
         commerce: erc8183.commerce,
         keyStore: altana.keyStore,
         keyStoreController: altana.keyStoreController,
@@ -55,12 +51,12 @@ describe("Altana bounded hiring permissions", () => {
     assert.throws(
       () =>
         assertAltanaSdkNetwork({
-          chainId: 97,
+          chainId: 56,
           commerce: erc8183.commerce,
           keyStore: altana.keyStore,
           keyStoreController: altana.keyStoreController,
           paymentToken: erc8183.paymentToken,
-          policy: erc8183.policy,
+          policy: "0x1111111111111111111111111111111111111111",
           registry: altana.registry,
           router: erc8183.router,
         }),
@@ -69,8 +65,8 @@ describe("Altana bounded hiring permissions", () => {
   });
 
   it("allows only four reviewed ERC-8183 functions and bounded spending", () => {
-    const deployment = getErc8183Deployment(97);
-    const permissions = buildAltanaBuyerPermissions(97, 5n);
+    const deployment = getErc8183Deployment(56);
+    const permissions = buildAltanaBuyerPermissions(56, 5n);
 
     assert.deepEqual(
       permissions.calls?.map((permission) => "signature" in permission ? permission.signature : null),
@@ -94,7 +90,7 @@ describe("Altana bounded hiring permissions", () => {
   });
 
   it("removes the token approval from the official five-call bundle", () => {
-    const deployment = getErc8183Deployment(97);
+    const deployment = getErc8183Deployment(56);
     const calls: readonly Call[] = [
       {
         data: encodeFunctionData({
@@ -143,7 +139,7 @@ describe("Altana bounded hiring permissions", () => {
         to: deployment.commerce,
       },
     ];
-    const protectedCalls = removeUnsafeApprovalCall(calls, 97);
+    const protectedCalls = removeUnsafeApprovalCall(calls, 56);
 
     assert.equal(protectedCalls.length, 4);
     assert.equal(
@@ -155,13 +151,13 @@ describe("Altana bounded hiring permissions", () => {
   });
 
   it("fails closed if the official bundle shape changes", () => {
-    const deployment = getErc8183Deployment(97);
+    const deployment = getErc8183Deployment(56);
     assert.throws(
-      () => removeUnsafeApprovalCall([{ to: deployment.commerce }], 97),
+      () => removeUnsafeApprovalCall([{ to: deployment.commerce }], 56),
       /no longer matches/,
     );
     assert.throws(
-      () => buildAltanaBuyerPermissions(97, 1n, ALTANA_NATIVE_GAS_CAP_WEI + 1n),
+      () => buildAltanaBuyerPermissions(56, 1n, ALTANA_NATIVE_GAS_CAP_WEI + 1n),
       /outside Sift's supported range/,
     );
   });

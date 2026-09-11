@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 
 import { AltanaSessionControls } from "@/components/altana/altana-session-controls";
+import { catalogueChainId } from "@/features/network/selection";
+import { getSelectedCatalogueNetwork } from "@/lib/network/selection";
 
 export const metadata: Metadata = {
   title: "Wallet safety",
   description: "Create, inspect, and stop protected hiring permissions for Sift.",
 };
 
-export default function PermissionsPage() {
+export default async function PermissionsPage() {
+  const network = await getSelectedCatalogueNetwork();
+
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <header className="mb-8 max-w-3xl">
@@ -19,7 +23,10 @@ export default function PermissionsPage() {
           See the wallet address, check its balance, and stop a time-limited hiring permission. For an actual job, create the exact permission from that agent&apos;s hiring flow.
         </p>
       </header>
-      <AltanaSessionControls />
+      <AltanaSessionControls
+        key={network}
+        initialChainId={catalogueChainId(network)}
+      />
     </main>
   );
 }

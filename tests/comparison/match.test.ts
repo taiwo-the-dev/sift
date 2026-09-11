@@ -38,7 +38,7 @@ function profile(
     categories: [],
     categoryEvidence: [],
     categorySource: null,
-    chainId: 97,
+    chainId: 56,
     description: null,
     externalEvidence: null,
     health: null,

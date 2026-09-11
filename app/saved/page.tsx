@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 
 import { SavedAgents } from "@/components/bookmarks/saved-agents";
 import { createPageMetadata } from "@/lib/metadata";
+import { catalogueChainId } from "@/features/network/selection";
+import { getSelectedCatalogueNetwork } from "@/lib/network/selection";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Bookmarked agents",
@@ -11,7 +13,9 @@ export const metadata: Metadata = createPageMetadata({
   path: "/saved",
 });
 
-export default function SavedAgentsPage() {
+export default async function SavedAgentsPage() {
+  const network = await getSelectedCatalogueNetwork();
+
   return (
     <div className="min-w-0 flex-1 bg-background">
       <section className="relative overflow-hidden border-b border-border bg-card">
@@ -35,7 +39,7 @@ export default function SavedAgentsPage() {
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-        <SavedAgents />
+        <SavedAgents chainId={catalogueChainId(network)} />
       </section>
     </div>
   );

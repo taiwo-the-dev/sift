@@ -34,7 +34,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
       <span className="mr-1 text-xs font-medium text-muted-foreground">Active</span>
-      {query.network !== "bsc-mainnet" ? (
+      {query.network === "bsc-testnet" ? (
         <Link
           href={buildDiscoveryHref(query, {
             network: "bsc-mainnet",
@@ -43,7 +43,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/8 px-3 py-1.5 text-xs font-medium text-brand outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
           aria-label="Show BSC Mainnet agents"
         >
-          {query.network === "all" ? "All networks" : "BSC Testnet"}
+          BSC Testnet
           <X className="size-3" aria-hidden="true" />
         </Link>
       ) : null}

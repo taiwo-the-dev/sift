@@ -25,8 +25,8 @@ Sift supports these two reviewed deployments only:
 The official deployment source of truth is `apex-contracts/scripts/addresses.ts`. Sift additionally reads live contract bytecode, token, router/commerce relationships, policy whitelist, pause flags, platform fee, token metadata, dispute window, and latest block time before accepting a quote.
 
 Server-side hiring reads use the selected chain's `BNB_MAINNET_RPC_*` or
-`BNB_TESTNET_RPC_*` variables, followed by public endpoints for that same
-chain. They never reuse generic `BNB_RPC_*` indexer settings, so an indexer
+`BNB_TESTNET_RPC_*` variables, followed by public endpoints for that chain.
+They never reuse generic `BNB_RPC_*` indexer settings, so an indexer
 configuration cannot redirect a hiring check to another network.
 
 ## Compatibility and negotiation
@@ -68,12 +68,12 @@ budget, and fund atomically. The server accepts the result only when all four
 events, the funded job state, two confirmations, and the session's historical
 KeyStore registration match the saved quote.
 
-Altana SDK `0.7.1` still bundles testnet policy
-`0x4F4678D4439feC812Ac7674Bb3Efb4C8f5Fb78A6`; the official BNB Agent SDK
-`0.5.5` and Sift's live deployment checks use the current testnet policy
-`0xd6a4217588f6b1f5657a92a3e94e6422ad771cea`. Sift recognizes only that exact
-known SDK mismatch and passes the current reviewed address explicitly to
-`buildHireCalls`. Changes to any other bundled deployment field fail closed.
+Sift checks every bundled mainnet deployment field against the reviewed
+constants before enabling Altana. Any mismatch fails closed.
+
+For Testnet, Sift recognizes the documented Altana SDK policy-address mismatch
+and passes the current reviewed BNB Agent SDK policy explicitly. Any other
+deployment mismatch still fails closed.
 
 See [the beginner protected-hiring test runbook](altana-session-testing.md).
 
@@ -98,18 +98,14 @@ connected and requires a fresh review.
 
 ## Testnet demo prerequisites
 
-Use a disposable test wallet. Never paste or commit its private key.
+Use a disposable test wallet. Testnet tokens have no monetary value, but private
+keys and seed phrases must still never be pasted into Sift or committed.
 
-1. Configure the hosted Supabase variables described in [database.md](database.md), deploy all migrations through the GitHub integration, and confirm the M9 migration succeeded.
-2. Optionally configure `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` for QR/mobile wallets. An installed injected browser wallet works without it.
-3. Add BSC Testnet (chain ID `97`) to the wallet.
-4. Get testnet BNB for gas from the [official BNB Chain faucet](https://www.bnbchain.org/en/testnet-faucet).
-5. Get test-only `U` from the [U faucet listed by the BNB Agent SDK](https://united-coin-u.github.io/u-faucet/) when the selected quote is above zero. Confirm the token address before using it.
-6. Start Sift, open a compatible agent profile, select **Hire agent**, enter non-sensitive test terms, and review the signed price and contracts.
-7. Confirm each displayed transaction in the disposable wallet. Rejecting a prompt should leave an honest resumable cancelled state; reloading should recover a submitted transaction without another automatic signature request.
-8. Confirm the funding transaction and job ID through the testnet BscScan link shown by Sift.
-
-For a zero-priced provider quote, no test token balance or approval is required, but the wallet still needs testnet BNB for contract gas.
+1. Add BSC Testnet (chain ID `97`) to the wallet.
+2. Get test BNB from the official BNB Chain faucet.
+3. Get test-only `U` from the faucet listed by the BNB Agent SDK when a quote is above zero.
+4. Select **BSC Testnet** in Sift, open a compatible chain-97 agent, and review every displayed contract and amount.
+5. Approve or reject each wallet request deliberately, then verify any submitted transaction through Testnet BscScan.
 
 ## Mainnet prerequisites and warning
 
@@ -122,7 +118,7 @@ payment-token funding; Sift does not sponsor, custody, recover, or reverse those
 transactions.
 
 Migration `20260908110000_enable_mainnet_hiring.sql` must be deployed to hosted
-Supabase before a mainnet intent can be stored. Confirm the payment token and
+Supabase before launch. Confirm the payment token and
 all displayed contract addresses against the official deployment source before
 approving a real transaction.
 

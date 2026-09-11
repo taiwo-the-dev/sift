@@ -8,8 +8,8 @@ The registry addresses and ABI were rechecked on 2026-08-25 against the canonica
 
 | Network | Chain ID | Identity Registry | Deployment block | Deployment verification |
 | --- | ---: | --- | ---: | --- |
-| BSC Testnet | 97 | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | `84,555,147` | First bytecode block, hash `0x8090bd6bbf308ad5e5674792b03196427ae3357a2df9e211dcd2f1ec4db20333`, 2026-01-15 10:03:52 UTC |
 | BSC Mainnet | 56 | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` | `79,027,268` | First bytecode block, hash `0xdb9c6a8fff62cc59b2e2d9978af06db139a41e65f30d99ea6f12dc58909d5a36`, 2026-02-03 08:35:15 UTC |
+| BSC Testnet | 97 | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | `84,555,147` | Verified ERC-8004 Testnet deployment boundary |
 
 The mainnet deployment boundary was reverified on 2026-08-25 by reading historical bytecode: block `79,027,268` contains registry code and block `79,027,267` does not. The first block also returns canonical registry logs. The minimal checked-in ABI matches the official SDK ABI for `Registered`, `URIUpdated`, `Transfer`, `ownerOf`, and `tokenURI`. Runtime log requests filter to those three relevant events; an explorer is not part of the data path.
 
@@ -27,7 +27,11 @@ BNB_RPC_FALLBACK_1=
 BNB_RPC_FALLBACK_2=
 ```
 
-Mainnet is the current release default. If no RPC overrides are present, Sift uses three ordered public endpoints. Public providers change limits and availability without notice; for sustained mainnet historical indexing, create a free-tier RPC project that supports historical `eth_getLogs` and store its URL in `BNB_RPC_PRIMARY`. BNB's public mainnet endpoints may reject `eth_getLogs`, as documented in the [BNB Chain RPC endpoint guide](https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/).
+Mainnet is the default. Set `BNB_NETWORK=bsc-testnet` for a separate Testnet
+run. If no RPC overrides are present, Sift uses three ordered public endpoints
+for the selected network. Public providers change limits and availability
+without notice; sustained historical indexing may require a free-tier endpoint
+that supports historical `eth_getLogs`.
 
 All tuning values are optional:
 
@@ -93,19 +97,20 @@ M6 reads this verification timestamp when deciding whether metadata-derived scor
 
 ## Scheduled operation
 
-`.github/workflows/sync-agents.yml` runs one BSC Mainnet incremental job every
-two hours and can also be dispatched manually. Configure these GitHub repository
-secrets:
+`.github/workflows/sync-agents.yml` runs independent BSC Mainnet and BSC
+Testnet incremental jobs every two hours and can also be dispatched manually.
+Configure these GitHub repository secrets:
 
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
 - `BNB_MAINNET_RPC_PRIMARY` with an archive-capable free-tier endpoint
 - optional `BNB_MAINNET_RPC_FALLBACK_1` and `BNB_MAINNET_RPC_FALLBACK_2`
+- optional `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, and
+  `BNB_TESTNET_RPC_FALLBACK_2`; public Testnet fallbacks are used when omitted
 - legacy generic `BNB_RPC_PRIMARY` / fallback secrets only as a shared fallback
 
-The workflow fixes `BNB_NETWORK` to `bsc-mainnet`; no repository network
-variable is needed. It has read-only repository permissions, serializes runs,
-and has no blockchain signing material.
+The workflow matrix fixes each job to one network, serializes runs per network,
+uses read-only repository permissions, and has no blockchain signing material.
 
 Generate a read-only network eligibility snapshot from the hosted database:
 
@@ -113,11 +118,10 @@ Generate a read-only network eligibility snapshot from the hosted database:
 npm run report:catalogue
 ```
 
-The JSON report includes observed time, count, registry, latest agent sync,
-checkpoint, confirmed head, partial/stale state, and the configured hiring
-policy. Historical chain-97 rows may appear until the owner completes the
-separate cleanup; they are not part of the current release gate. The report does
-not expose agent metadata or credentials.
+The JSON report includes observed time and separate Mainnet/Testnet counts,
+registries, latest agent syncs, checkpoints, confirmed heads, partial/stale
+states, and the configured hiring policy. It does not expose agent metadata or
+credentials.
 
 ## BNB Agent Studio identity mapping
 
@@ -126,10 +130,10 @@ The official BNB Agent SDK registration format identifies the registry as `eip15
 ## Recovery
 
 - RPC range failure: rerun the command; the failed range was not checkpointed.
-- Pruned-history failure: configure an archive-capable network-specific RPC. The
-  checked-in BSC Testnet fallbacks include NodeReal's documented public endpoint,
-  but a private free-tier `BNB_TESTNET_RPC_PRIMARY` remains preferable for a
-  prolonged catch-up.
+- Pruned-history failure: configure an archive-capable mainnet RPC in
+  `BNB_MAINNET_RPC_PRIMARY` for a prolonged catch-up.
+- Testnet RPC failure: configure `BNB_TESTNET_RPC_PRIMARY` or let the next
+  scheduled run retry from the last saved chain-97 checkpoint.
 - Metadata failure: correct the upstream registration file or wait for it to recover. A later URI event or controlled historical replay can refresh it without erasing known-good metadata.
 - Database failure: restore Supabase connectivity and rerun; the last fully processed checkpoint is authoritative.
 - Suspected deployment/config error: stop, verify the address and start block against the canonical sources and chain bytecode, then use explicit overrides. Never guess a registry address or skip a failed range.

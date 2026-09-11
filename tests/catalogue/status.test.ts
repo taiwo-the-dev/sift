@@ -60,6 +60,8 @@ describe("catalogue network status", () => {
     }).list(now);
 
     assert.equal(statuses.length, 2);
+    assert.equal(statuses[0]?.chainId, 56);
+    assert.equal(statuses[1]?.chainId, 97);
     assert.ok(statuses.every((status) => status.agentCountIsEstimate));
   });
 });

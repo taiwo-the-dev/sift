@@ -8,9 +8,9 @@ checks are still required.
 
 ## Release boundary
 
-The release path is BSC Mainnet-only by owner direction. Tests must not depend
-on chain-97 data. Browser automation never connects a wallet, enters signing
-material, or approves a transaction.
+The clean judge path defaults to BSC Mainnet while the header selector also
+exposes the independent BSC Testnet catalogue. Browser automation never
+connects a wallet, enters signing material, or approves a transaction.
 
 ## Non-coaching test task
 
@@ -49,10 +49,11 @@ information.
 ## Automated evidence
 
 The Playwright suite uses one worker to avoid overloading the free Supabase
-project and runs the same six checks on desktop Chromium and a Pixel 7 viewport:
+project and runs the same seven checks on desktop Chromium and a Pixel 7 viewport:
 
 - landing purpose and natural-language search;
 - all four required category routes with real chain-56 results;
+- persistent switching between isolated chain-56 and chain-97 catalogues;
 - a real mainnet profile and two-agent comparison;
 - the Available filter leading to a recently checked task or hire route;
 - the disconnected dashboard privacy boundary;
@@ -63,7 +64,7 @@ Recorded on 2026-09-10:
 
 | Target | Result | Notes |
 | --- | --- | --- |
-| Local Next.js production build | 12/12 PASS | Candidate changes on top of `f2d8883` |
+| Local Next.js production build | 14/14 PASS | Includes desktop and mobile dual-network switching |
 | <https://sift-ten-swart.vercel.app> | 12/12 PASS | Public baseline at `f2d8883`; repeat after deployment |
 | Public release smoke | PASS | Routes, category evidence, metadata, headers, dashboard privacy, 404, and assets |
 

@@ -14,7 +14,7 @@ const existingAgent: AgentRecord = {
   agent_id: "7",
   agent_uri: "https://old.example/metadata.json",
   category: null,
-  chain_id: 97,
+  chain_id: 56,
   created_at: "2026-01-01T00:00:00.000Z",
   description: "Last verified description",
   id: "11111111-1111-4111-8111-111111111111",
@@ -37,7 +37,7 @@ function failedObservation(): ObservedAgent {
   return {
     agentId: 7n,
     agentUri: "https://new.example/metadata.json",
-    chainId: 97,
+    chainId: 56,
     metadata: { code: "timeout", status: "unavailable" },
     observedAt: "2026-08-20T00:00:00.000Z",
     ownerAddress: "0x2222222222222222222222222222222222222222",
@@ -111,7 +111,7 @@ describe("indexer persistence mapping", () => {
       syncState: {
         find: async () => null,
         upsert: async () => ({
-          chain_id: 97,
+          chain_id: 56,
           confirmed_head: 1,
           last_synced_block: 1,
           registry_address: existingAgent.registry_address,

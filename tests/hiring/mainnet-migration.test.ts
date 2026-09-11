@@ -7,7 +7,7 @@ const migrationUrl = new URL(
   import.meta.url,
 );
 
-describe("BSC Mainnet hiring migration", () => {
+describe("BSC network hiring migration", () => {
   it("allows only chain 56 and 97 hiring and dashboard records", async () => {
     const sql = await readFile(migrationUrl, "utf8");
 

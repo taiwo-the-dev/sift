@@ -1,10 +1,21 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { Brand } from "@/components/layout/brand";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { navigationItems } from "@/components/layout/navigation";
+import { CatalogueNetworkSelectorData } from "@/components/network/catalogue-network-selector-data";
 import { WalletControl } from "@/components/wallet/wallet-control";
+
+function NetworkSelectorFallback({ mobile = false }: Readonly<{ mobile?: boolean }>) {
+  return (
+    <div
+      className={mobile ? "h-10 w-full rounded-lg border border-input bg-background" : "h-10 w-40 rounded-lg border border-input bg-background"}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function SiteHeader() {
   return (
@@ -34,11 +45,20 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="hidden items-center justify-self-end lg:flex">
+        <div className="hidden items-center justify-self-end gap-2 lg:flex">
+          <Suspense fallback={<NetworkSelectorFallback />}>
+            <CatalogueNetworkSelectorData />
+          </Suspense>
           <WalletControl />
         </div>
 
-        <MobileNavigation />
+        <MobileNavigation
+          networkControl={
+            <Suspense fallback={<NetworkSelectorFallback mobile />}>
+              <CatalogueNetworkSelectorData mobile />
+            </Suspense>
+          }
+        />
       </div>
     </header>
   );

@@ -21,8 +21,9 @@ The automated mainnet judge path passes on desktop and mobile, and the public
 release smoke test passes. M16/M17 are still in progress because hosted migration
 history, the exact replacement deployment, three novice sessions, manual
 wallet/two-wallet checks, licensing, and the final submission media need owner
-confirmation. The current release direction is mainnet-only; scheduled indexing
-no longer runs a testnet job. No successful mainnet transaction is claimed.
+confirmation. Users can browse isolated BSC Mainnet and BSC Testnet catalogues
+from the header network selector; wallet actions remain bound to the selected
+agent's chain. No successful mainnet transaction is claimed.
 
 ## Product preview
 
@@ -52,8 +53,8 @@ public experience.
   Provisional ratings for agents that have less evidence.
 - URL-backed side-by-side comparison that keeps missing evidence distinct from
   poor evidence.
-- User-controlled BSC Mainnet wallet connection with fail-closed ERC-8183/APEX
-  hiring for compatible services.
+- User-controlled BSC Mainnet and BSC Testnet wallet connection with fail-closed
+  ERC-8183/APEX hiring for compatible services.
 - A signed-challenge dashboard that exposes only the connected wallet's
   persisted job and on-chain evidence.
 - Optional Altana passkey hiring with a one-hour registered session, exact
@@ -78,7 +79,7 @@ flowchart LR
   app <--> db
   browser <--> wallet["User-controlled\nwallet"]
   browser <--> altana["Altana passkey\n+ bounded session"]
-  wallet --> apex["BSC Mainnet\nERC-8183 / APEX"]
+  wallet --> apex["BNB Chain\nERC-8183 / APEX"]
   altana --> apex
   apex --> rpc
   rpc --> app
@@ -124,11 +125,13 @@ an honest recovery state and never substitutes demo agents.
 | `SUPABASE_URL` | Yes for real catalogue/jobs | Server-only hosted project URL |
 | `SUPABASE_SECRET_KEY` | Yes for real catalogue/jobs | Server-only secret; never `NEXT_PUBLIC_` |
 | `SIFT_SITE_URL` | Production recommendation | Canonical HTTPS origin |
-| `BNB_NETWORK` | Single indexer run | Set `bsc-mainnet` for the release catalogue |
+| `BNB_NETWORK` | Single indexer run | Set `bsc-mainnet` or `bsc-testnet` |
 | `BNB_RPC_PRIMARY`, `BNB_RPC_FALLBACK_1`, `BNB_RPC_FALLBACK_2` | Optional | Server/indexer RPC overrides; secrets when token-bearing |
 | `BNB_MAINNET_RPC_PRIMARY`, `BNB_MAINNET_RPC_FALLBACK_1`, `BNB_MAINNET_RPC_FALLBACK_2` | Recommended for mainnet hiring/indexing | Server-only chain-56 RPC overrides |
+| `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, `BNB_TESTNET_RPC_FALLBACK_2` | Optional | Server-only chain-97 RPC overrides |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
 | `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC override |
+| `NEXT_PUBLIC_BNB_TESTNET_RPC_URL` | Optional | Browser-public Testnet RPC override |
 | `SIFT_8004SCAN_API_KEY` | Optional for core discovery; required for the intended Pro-tier validation run | Server-only external cross-check credential |
 | `ACTIVATION_CHECK_LIMIT`, `ACTIVATION_CHECK_CONCURRENCY`, `ACTIVATION_CHECK_INTERVAL_HOURS` | Optional | Bounded scheduled task-service checks; safe defaults are provided |
 

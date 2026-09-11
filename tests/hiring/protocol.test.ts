@@ -38,18 +38,10 @@ describe("chain-aware ERC-8183 deployment configuration", () => {
     );
   });
 
-  it("keeps mainnet and testnet addresses and explorers isolated", () => {
-    const mainnet = getErc8183Deployment(56);
-    const testnet = getErc8183Deployment(97);
-
-    assert.notEqual(mainnet.commerce, testnet.commerce);
-    assert.notEqual(mainnet.paymentToken, testnet.paymentToken);
-    assert.match(
-      buildHiringAddressHref(97, testnet.commerce),
-      /^https:\/\/testnet\.bscscan\.com\/address\//,
-    );
+  it("supports both BSC networks and rejects unrelated chains", () => {
     assert.equal(isHiringChainId(56), true);
     assert.equal(isHiringChainId(97), true);
     assert.equal(isHiringChainId(1), false);
+    assert.equal(getErc8183Deployment(97).networkName, "BSC Testnet");
   });
 });

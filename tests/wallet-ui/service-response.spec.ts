@@ -12,7 +12,7 @@ describe("agent service response", () => {
         value: {
           supportedChains: [
             { chainId: 56, name: "BNB Smart Chain" },
-            { chainId: 97, name: "BSC Testnet" },
+            { chainId: 56, name: "BSC Mainnet" },
           ],
           success: true,
         },

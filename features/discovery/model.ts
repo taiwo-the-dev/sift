@@ -91,12 +91,6 @@ export const discoveryNetworkOptions = [
     label: "BSC Testnet",
     value: "bsc-testnet",
   },
-  {
-    chainIds: [56, 97],
-    description: "Browse agents across both supported networks",
-    label: "All supported networks",
-    value: "all",
-  },
 ] as const;
 
 export type DiscoveryNetworkScope =

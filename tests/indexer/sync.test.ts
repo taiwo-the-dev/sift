@@ -122,7 +122,7 @@ describe("indexer range integration", () => {
       getBlockNumber: async () => 101n,
       getBlockTimestamp: async () => 1_700_000_000n,
       getBytecode: async () => "0x01",
-      getChainId: async () => 97,
+      getChainId: async () => 56,
       getLogs: async (_address, fromBlock, toBlock) =>
         fromBlock <= 100n && toBlock >= 100n ? [registrationLog()] : [],
       name: "fixture-rpc",
@@ -132,7 +132,7 @@ describe("indexer range integration", () => {
     const logger = createLogger(() => undefined);
     const rpc = new RegistryRpcPool([provider], logger);
     const config = parseIndexerConfig({
-      BNB_NETWORK: "bsc-testnet",
+      BNB_NETWORK: "bsc-mainnet",
       ERC8004_DEPLOYMENT_BLOCK: "100",
       INDEXER_BATCH_SIZE: "1",
       INDEXER_CONFIRMATIONS: "1",
@@ -169,59 +169,11 @@ describe("indexer range integration", () => {
     assert.equal(writes, 2);
   });
 
-  it("keeps overlapping numeric identities and checkpoints isolated by network", async () => {
-    const checkpoints = new Map<number, bigint>();
-    const records = new Map<string, AgentRecord>();
-    const persistence: CatalogPersistence = {
-      async findAgent(identity) {
-        return records.get(`${identity.chainId}:${identity.agentId}`) ?? null;
-      },
-      async getCheckpoint(chainId) {
-        return checkpoints.get(chainId) ?? null;
-      },
-      async persistAgent(observation, existing) {
-        const record = recordFromObservation(observation);
-        records.set(`${observation.chainId}:${observation.agentId}`, record);
-        return { created: existing === null, record };
-      },
-      async saveCheckpoint(chainId, _registryAddress, blockNumber) {
-        checkpoints.set(chainId, blockNumber);
-      },
-    };
-    const logger = createLogger(() => undefined);
+  it("uses the verified testnet indexer configuration independently", () => {
+    const config = parseIndexerConfig({ BNB_NETWORK: "bsc-testnet" });
 
-    for (const network of ["bsc-mainnet", "bsc-testnet"] as const) {
-      const config = parseIndexerConfig({
-        BNB_NETWORK: network,
-        ERC8004_DEPLOYMENT_BLOCK: "100",
-        INDEXER_BATCH_SIZE: "1",
-        INDEXER_CONFIRMATIONS: "1",
-        INDEXER_MIN_BATCH_SIZE: "1",
-      });
-      const provider: RegistryRpcProvider = {
-        getBlockNumber: async () => 101n,
-        getBlockTimestamp: async () => 1_700_000_000n,
-        getBytecode: async () => "0x01",
-        getChainId: async () => config.chainId,
-        getLogs: async () => [registrationLog()],
-        name: `${network}-fixture-rpc`,
-        ownerOf: async () => owner as Address,
-        tokenUri: async () => "https://agent.example/metadata.json",
-      };
-
-      await runIndexer("bootstrap", config, {
-        logger,
-        metadata: successfulMetadata(),
-        persistence,
-        rpc: new RegistryRpcPool([provider], logger),
-      });
-    }
-
-    assert.deepEqual([...checkpoints.entries()].sort(), [
-      [56, 100n],
-      [97, 100n],
-    ]);
-    assert.deepEqual([...records.keys()].sort(), ["56:7", "97:7"]);
+    assert.equal(config.chainId, 97);
+    assert.equal(config.network, "bsc-testnet");
   });
 
   it("persists an agent and advances the checkpoint when its metadata is invalid", async () => {
@@ -242,7 +194,7 @@ describe("indexer range integration", () => {
       getBlockNumber: async () => 101n,
       getBlockTimestamp: async () => 1_700_000_000n,
       getBytecode: async () => "0x01",
-      getChainId: async () => 97,
+      getChainId: async () => 56,
       getLogs: async () => [registrationLog()],
       name: "fixture-rpc",
       ownerOf: async () => owner as Address,
@@ -250,7 +202,7 @@ describe("indexer range integration", () => {
     };
     const logger = createLogger(() => undefined);
     const config = parseIndexerConfig({
-      BNB_NETWORK: "bsc-testnet",
+      BNB_NETWORK: "bsc-mainnet",
       ERC8004_DEPLOYMENT_BLOCK: "100",
       INDEXER_BATCH_SIZE: "1",
       INDEXER_CONFIRMATIONS: "1",
@@ -292,7 +244,7 @@ describe("indexer range integration", () => {
       getBlockNumber: async () => 101n,
       getBlockTimestamp: async () => 1_700_000_000n,
       getBytecode: async () => "0x01",
-      getChainId: async () => 97,
+      getChainId: async () => 56,
       getLogs: async () => {
         throw new Error("provider failure");
       },

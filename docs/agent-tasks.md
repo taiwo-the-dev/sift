@@ -66,8 +66,9 @@ the exact type the tool declares.
 4. Open Discover and select **Available**. Agents with a supported declared
    task service appear immediately; once the checker runs, any whose service
    fails a live check drop out.
-5. Open a returned profile and test **Start task**. Approve only deliberate
-   testnet wallet transactions in the protected-hire path.
+5. Open a returned profile and test **Start task**. Mainnet actions can spend
+   real assets, so stop before wallet approval unless the owner has reviewed the
+   exact contract, token, amount, and network and intends to proceed.
 
 The checker is also included in the existing six-hour assessment workflow. Its
 limit, concurrency, timeout, and body size can be tuned through the documented

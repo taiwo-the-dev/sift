@@ -10,15 +10,9 @@ import {
 const BATCH_SIZE = 500;
 const MIN_BATCH_SIZE = 25;
 const MAX_ATTEMPTS = 6;
-const CHECKPOINT_PATH = join(
-  process.cwd(),
-  ".sift",
-  "category-classification-checkpoint.json",
-);
-
 type BackfillCheckpoint = Readonly<{
   after: string;
-  chainId: 56;
+  chainId: 56 | 97;
   classified: number;
   matched: number;
   ruleVersion: typeof CATEGORY_TAXONOMY_VERSION;
@@ -30,9 +24,28 @@ function wait(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function loadCheckpoint(): Promise<BackfillCheckpoint | null> {
+function resolveChainId(network: string | undefined): 56 | 97 {
+  if (!network || network === "bsc-mainnet") return 56;
+  if (network === "bsc-testnet") return 97;
+  throw new TypeError("BNB_NETWORK must be bsc-mainnet or bsc-testnet.");
+}
+
+function checkpointPath(chainId: 56 | 97): string {
+  return join(
+    process.cwd(),
+    ".sift",
+    chainId === 56
+      ? "category-classification-checkpoint.json"
+      : "category-classification-checkpoint-97.json",
+  );
+}
+
+async function loadCheckpoint(
+  path: string,
+  chainId: 56 | 97,
+): Promise<BackfillCheckpoint | null> {
   try {
-    const value: unknown = JSON.parse(await readFile(CHECKPOINT_PATH, "utf8"));
+    const value: unknown = JSON.parse(await readFile(path, "utf8"));
     if (
       typeof value !== "object" ||
       value === null ||
@@ -40,7 +53,7 @@ async function loadCheckpoint(): Promise<BackfillCheckpoint | null> {
       typeof value.after !== "string" ||
       !uuidPattern.test(value.after) ||
       !("chainId" in value) ||
-      value.chainId !== 56 ||
+      value.chainId !== chainId ||
       !("classified" in value) ||
       typeof value.classified !== "number" ||
       !Number.isSafeInteger(value.classified) ||
@@ -70,14 +83,17 @@ async function loadCheckpoint(): Promise<BackfillCheckpoint | null> {
   }
 }
 
-async function saveCheckpoint(checkpoint: BackfillCheckpoint): Promise<void> {
-  const temporaryPath = `${CHECKPOINT_PATH}.tmp`;
-  await mkdir(dirname(CHECKPOINT_PATH), { recursive: true });
+async function saveCheckpoint(
+  path: string,
+  checkpoint: BackfillCheckpoint,
+): Promise<void> {
+  const temporaryPath = `${path}.tmp`;
+  await mkdir(dirname(path), { recursive: true });
   await writeFile(temporaryPath, `${JSON.stringify(checkpoint)}\n`, {
     encoding: "utf8",
     mode: 0o600,
   });
-  await rename(temporaryPath, CHECKPOINT_PATH);
+  await rename(temporaryPath, path);
 }
 
 function safeErrorName(error: unknown): string {
@@ -86,11 +102,13 @@ function safeErrorName(error: unknown): string {
 
 async function main(): Promise<void> {
   loadEnvConfig(process.cwd());
+  const chainId = resolveChainId(process.env.BNB_NETWORK);
+  const path = checkpointPath(chainId);
   const { createCategoryRepository } = await import(
     "@/lib/db/category-repository"
   );
   const repository = createCategoryRepository();
-  const checkpoint = await loadCheckpoint();
+  const checkpoint = await loadCheckpoint(path, chainId);
   let after: string | null = checkpoint?.after ?? null;
   let classified = checkpoint?.classified ?? 0;
   let matched = checkpoint?.matched ?? 0;
@@ -113,7 +131,7 @@ async function main(): Promise<void> {
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
       try {
-        candidates = await repository.listCandidatePage(56, after, batchSize);
+        candidates = await repository.listCandidatePage(chainId, after, batchSize);
         break;
       } catch (error) {
         if (attempt === MAX_ATTEMPTS) throw error;
@@ -156,9 +174,9 @@ async function main(): Promise<void> {
     classified += candidates.length;
     after = candidates.at(-1)?.agentDbId ?? null;
     if (!after) throw new Error("Category candidate page had no final cursor.");
-    await saveCheckpoint({
+    await saveCheckpoint(path, {
       after,
-      chainId: 56,
+      chainId,
       classified,
       matched,
       ruleVersion: CATEGORY_TAXONOMY_VERSION,
@@ -182,11 +200,11 @@ async function main(): Promise<void> {
     );
   }
 
-  await rm(CHECKPOINT_PATH, { force: true });
+  await rm(path, { force: true });
 
   process.stdout.write(
     `${JSON.stringify({
-      chainId: 56,
+      chainId,
       classified,
       event: "category_classification_complete",
       matchedEvidence: matched,

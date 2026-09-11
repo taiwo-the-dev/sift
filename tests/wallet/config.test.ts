@@ -10,10 +10,10 @@ describe("public wallet environment", () => {
   it("uses bounded public BNB RPC fallbacks and no invented project ID", () => {
     const config = parsePublicWalletEnvironment({});
 
-    assert.equal(config.testnetRpcUrls.length, 3);
     assert.equal(config.mainnetRpcUrls.length, 3);
+    assert.equal(config.testnetRpcUrls.length, 3);
     assert.equal(config.walletConnectProjectId, null);
-    assert.match(config.testnetRpcUrls[0], /^https:\/\//);
+    assert.match(config.mainnetRpcUrls[0], /^https:\/\//);
   });
 
   it("places validated public overrides before the free fallbacks", () => {
@@ -39,7 +39,7 @@ describe("public wallet environment", () => {
     assert.throws(
       () =>
         parsePublicWalletEnvironment({
-          NEXT_PUBLIC_BNB_TESTNET_RPC_URL: "http://localhost:8545",
+          NEXT_PUBLIC_BNB_MAINNET_RPC_URL: "http://localhost:8545",
         }),
       PublicWalletConfigError,
     );

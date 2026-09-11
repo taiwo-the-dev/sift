@@ -1,9 +1,7 @@
-import { CircleAlert, Database, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { CircleAlert, Database } from "lucide-react";
 
 import type { CatalogueNetworkStatus } from "@/features/catalogue/status";
 import type { DiscoveryQuery } from "@/features/discovery/model";
-import { buildDiscoveryHref } from "@/features/discovery/query";
 import { cn } from "@/lib/utils";
 
 interface NetworkStatusProps {
@@ -62,11 +60,7 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
     );
   }
 
-  const visible = statuses.filter((status) =>
-    query.network === "all"
-      ? true
-      : status.network === query.network,
-  );
+  const visible = statuses.filter((status) => status.network === query.network);
 
   return (
     <div className="mb-6 grid gap-3" aria-label="Agent directory status">
@@ -118,20 +112,6 @@ export function NetworkStatus({ query, statuses }: NetworkStatusProps) {
               </div>
             </div>
 
-            {status.network === "bsc-mainnet" &&
-            !status.agentCountIsEstimate &&
-            status.agentCount === 0 ? (
-              <Link
-                href={buildDiscoveryHref(query, {
-                  network: "bsc-testnet",
-                  page: 1,
-                })}
-                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground outline-none hover:border-brand/40 focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                <RefreshCw className="size-3.5" aria-hidden="true" />
-                View testnet agents
-              </Link>
-            ) : null}
           </div>
         );
       })}

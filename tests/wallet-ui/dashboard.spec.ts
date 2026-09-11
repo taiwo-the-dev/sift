@@ -35,12 +35,12 @@ function failedJob(): DashboardJob {
     }],
     agent: {
       agentId: "42",
-      chainId: 97,
+      chainId: 56,
       healthCheckedAt: null,
       healthStatus: "unknown",
       imageUrl: null,
       name: "Test-only Agent",
-      profileHref: "/agents/97/42",
+      profileHref: "/agents/56/42",
     },
     budgetDisplay: "1",
     category: "failed",
@@ -53,7 +53,7 @@ function failedJob(): DashboardJob {
     id: "11111111-1111-4111-8111-111111111111",
     maximumSpendDisplay: "2",
     mission: "Test-only mission with enough detail for the dashboard.",
-    networkName: "BSC Testnet",
+    networkName: "BSC Mainnet",
     onchainJobId: "7",
     paymentTokenSymbol: "U",
     protocolObservedAt: "2026-08-24T12:00:00.000Z",
@@ -85,13 +85,13 @@ describe("dashboard browser-facing states", () => {
         {
           description: "The dashboard will not mix jobs from another network.",
           icon: Network,
-          title: "Switch to BSC Testnet",
+          title: "Switch to BSC Mainnet",
         },
         createElement("button", null, "Switch network"),
       ),
     );
     assert.match(disconnected, /Connect your hiring wallet/);
-    assert.match(wrongNetwork, /Switch to BSC Testnet/);
+    assert.match(wrongNetwork, /Switch to BSC Mainnet/);
   });
 
   it("renders an honest empty state without sample jobs", () => {

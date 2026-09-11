@@ -7,7 +7,6 @@ import {
   useBalance,
   useConnectors,
   useDisconnect,
-  useSwitchChain,
 } from "wagmi";
 
 import {
@@ -21,10 +20,7 @@ import {
   shortenWalletAddress,
   type WalletErrorMessage,
 } from "@/features/wallet/presentation";
-import {
-  defaultWalletChain,
-  getSupportedWalletChain,
-} from "@/lib/blockchain/chains";
+import { getSupportedWalletChain } from "@/lib/blockchain/chains";
 import { isWalletConnectConfigured } from "@/lib/blockchain/wallet-config";
 
 interface WalletControlProps {
@@ -50,7 +46,6 @@ function WalletControlInner({
   const account = useAccount();
   const connectors = useConnectors();
   const disconnect = useDisconnect();
-  const switchChain = useSwitchChain();
   const [noticeState, setNoticeState] = useState<Readonly<{
     contextKey: string;
     message: WalletErrorMessage;
@@ -103,7 +98,6 @@ function WalletControlInner({
     disconnecting: disconnect.isPending,
     notice,
     providerAvailable,
-    switching: switchChain.isPending,
     supportedChain: account.status === "connected" ? chain !== null : undefined,
     walletName: account.connector?.name,
   };
@@ -121,22 +115,6 @@ function WalletControlInner({
 
     onBeforeWalletAction?.();
     rainbow.openConnectModal();
-  }
-
-  function switchToTestnet(): void {
-    setNoticeState(null);
-    onBeforeWalletAction?.();
-    switchChain.switchChain(
-      { chainId: defaultWalletChain.id },
-      {
-        onError(error) {
-          setNoticeState({ contextKey, message: mapWalletError(error) });
-        },
-        onSuccess() {
-          setNoticeState(null);
-        },
-      },
-    );
   }
 
   return (
@@ -161,7 +139,6 @@ function WalletControlInner({
         onBeforeWalletAction?.();
         rainbow.openChainModal();
       }}
-      onSwitchToTestnet={switchToTestnet}
     />
   );
 }
