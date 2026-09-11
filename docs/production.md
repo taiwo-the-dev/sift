@@ -50,12 +50,15 @@ npm run lint
 npm run typecheck
 npm test
 npm run test:wallet-ui
+npm run test:browser:release
 npm run build
 ```
 
 After M9 and M10 hosted migrations are present, manually test the primary path
 at mobile, tablet, and desktop widths: landing, discovery, profile, comparison,
 wallet connection, compatible-agent hiring, and the wallet-scoped dashboard.
-Use a disposable BSC Testnet wallet. Keyboard-check the mobile menu, search,
+Use a disposable BSC Mainnet wallet with only the minimum funds the owner accepts
+risking. Keyboard-check the mobile menu, search,
 filters, profile tabs, comparison controls, wallet dialogs, hiring steps, and
-dashboard actions. This validation does not authorize mainnet transactions.
+dashboard actions. Automated validation does not authorize a mainnet
+transaction; the wallet owner must review and approve each real write.

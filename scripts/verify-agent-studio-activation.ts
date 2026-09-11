@@ -13,7 +13,9 @@ import { parseAgentCommerceStatus } from "@/features/hiring/quote";
 import { fetchSafeAgentJson } from "@/features/hiring/remote";
 
 type Candidate = Readonly<{ agentId: string; category: CategorySlug }>;
-const testnetDeployment = getErc8183Deployment(97);
+const verificationChainId = 56 as const;
+const verificationNetwork = "bsc-mainnet" as const;
+const verificationDeployment = getErc8183Deployment(verificationChainId);
 
 function packageVersion(packageName: string): string {
   const manifestPath = join(process.cwd(), "node_modules", ...packageName.split("/"), "package.json");
@@ -88,15 +90,15 @@ function verifySdkDeployment(): Readonly<{
   ok: boolean;
   paymentTokenAllowlisted: boolean;
 }> {
-  const addresses = getSdkDeployment(testnetDeployment.chainId);
+  const addresses = getSdkDeployment(verificationDeployment.chainId);
   const paymentTokenAllowlisted = knownPaymentTokens().has(
-    `${testnetDeployment.chainId}:${testnetDeployment.paymentToken}`,
+    `${verificationDeployment.chainId}:${verificationDeployment.paymentToken}`,
   );
   const ok =
-    getAddress(addresses.commerceProxy) === testnetDeployment.commerce &&
-    getAddress(addresses.routerProxy) === testnetDeployment.router &&
-    getAddress(addresses.policy) === testnetDeployment.policy &&
-    getAddress(addresses.paymentToken) === testnetDeployment.paymentToken &&
+    getAddress(addresses.commerceProxy) === verificationDeployment.commerce &&
+    getAddress(addresses.routerProxy) === verificationDeployment.router &&
+    getAddress(addresses.policy) === verificationDeployment.policy &&
+    getAddress(addresses.paymentToken) === verificationDeployment.paymentToken &&
     paymentTokenAllowlisted;
 
   return { addresses, ok, paymentTokenAllowlisted };
@@ -118,7 +120,7 @@ async function main(): Promise<void> {
   }
 
   if (!sdkCheck.ok) {
-    blockers.push("The official SDK deployment does not match Sift's reviewed testnet deployment.");
+    blockers.push("The official SDK deployment does not match Sift's reviewed mainnet deployment.");
   }
 
   if (!studioProject) {
@@ -134,7 +136,7 @@ async function main(): Promise<void> {
   const { getHiringPublicClient, verifyErc8183Runtime } = await import(
     "@/lib/blockchain/hiring-client"
   );
-  const publicClient = getHiringPublicClient(97);
+  const publicClient = getHiringPublicClient(verificationChainId);
   let runtimeVerified = false;
 
   if (candidates.length === 0) {
@@ -152,7 +154,7 @@ async function main(): Promise<void> {
             parseDiscoverySearchParams({
               category,
               metadata: "valid",
-              network: "bsc-testnet",
+              network: verificationNetwork,
               q: "ERC-8183",
               size: "12",
             }),
@@ -178,21 +180,21 @@ async function main(): Promise<void> {
 
   if (candidates.length > 0 && sdkCheck.ok) {
     try {
-      await verifyErc8183Runtime(97, publicClient);
+      await verifyErc8183Runtime(verificationChainId, publicClient);
       runtimeVerified = true;
     } catch (error) {
       blockers.push(
-        `The live testnet deployment check failed: ${error instanceof Error ? error.message : "unknown error"}`,
+        `The live mainnet deployment check failed: ${error instanceof Error ? error.message : "unknown error"}`,
       );
     }
   }
 
   const candidateResults = await Promise.all(
     candidates.map(async (candidate) => {
-      const profile = await getAgentProfile(97, candidate.agentId);
+      const profile = await getAgentProfile(verificationChainId, candidate.agentId);
 
       if (!profile) {
-        return { ...candidate, ok: false, reason: "The indexed BSC Testnet identity was not found." };
+        return { ...candidate, ok: false, reason: "The indexed BSC Mainnet identity was not found." };
       }
 
       if (!profile.categories.includes(candidate.category)) {
@@ -218,11 +220,11 @@ async function main(): Promise<void> {
         parseAgentCommerceStatus(
           statusDocument,
           getAddress(profile.ownerAddress),
-          97,
+          verificationChainId,
         );
         const cliResolution = studioProject
           ? runBag(
-              ["erc8004", "resolve", candidate.agentId, "--network", "bsc-testnet"],
+              ["erc8004", "resolve", candidate.agentId, "--network", verificationNetwork],
               studioProject,
             )
           : null;
@@ -232,7 +234,7 @@ async function main(): Promise<void> {
           cliIdentityResolved: cliResolution?.ok ?? false,
           liveStatusVerified: true,
           ok: runtimeVerified && (cliResolution?.ok ?? false),
-          profile: `/agents/97/${candidate.agentId}`,
+          profile: `/agents/${verificationChainId}/${candidate.agentId}`,
           reason:
             cliResolution && !cliResolution.ok
               ? cliResolution.detail || "Agent Studio CLI identity resolution failed."
@@ -263,13 +265,13 @@ async function main(): Promise<void> {
     event: "agent_studio_activation_readiness",
     observedAt: new Date().toISOString(),
     runtime: {
-      chainId: testnetDeployment.chainId,
+      chainId: verificationDeployment.chainId,
       verified: runtimeVerified,
     },
     status: blockers.length === 0 ? "ready-for-human-activation" : "blocked",
     tooling: {
       cli: {
-        command: "bag erc8004 resolve <agent-id> --network bsc-testnet",
+        command: `bag erc8004 resolve <agent-id> --network ${verificationNetwork}`,
         installedVersion: cliVersion,
         versionCheck: cliCheck,
       },

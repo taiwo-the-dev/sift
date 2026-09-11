@@ -74,7 +74,7 @@ async function verify(): Promise<void> {
 
   const home = await request(origin, "/");
   requireStatus(home, 200, "Landing page");
-  requireText(home, "built to execute.", "Landing page");
+  requireText(home, "Find the right", "Landing page");
   assert(
     home.body.includes('rel="canonical"'),
     "Landing page has no canonical link.",
@@ -120,7 +120,7 @@ async function verify(): Promise<void> {
 
   const agentPaths = [
     ...new Set(
-      [...discover.body.matchAll(/href="(\/agents\/(?:56|97)\/\d+)"/g)].map(
+      [...discover.body.matchAll(/href="(\/agents\/56\/\d+)"/g)].map(
         (match) => match[1],
       ),
     ),
@@ -135,7 +135,10 @@ async function verify(): Promise<void> {
     requireText(category, "ERC-8004 agents on BNB Chain", `Category route ${path}`);
   }
 
-  const categoryCoverage = await request(origin, "/api/reports/category-coverage");
+  const categoryCoverage = await request(
+    origin,
+    `/api/reports/category-coverage?release-check=${Date.now()}`,
+  );
   requireStatus(categoryCoverage, 200, "Category coverage report");
   requireText(categoryCoverage, '"status":"pass"', "Category coverage report");
 
@@ -160,7 +163,11 @@ async function verify(): Promise<void> {
 
   const dashboard = await request(origin, "/dashboard");
   requireStatus(dashboard, 200, "Dashboard");
-  requireText(dashboard, "Monitor verified agent tasks", "Dashboard");
+  requireText(
+    dashboard,
+    "Follow every job from payment to completion.",
+    "Dashboard",
+  );
   assert(dashboard.body.includes("noindex"), "Dashboard must remain noindex.");
   pass("Dashboard privacy metadata is present");
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Blocked on Genuine Studio Agent Supply and Human Testnet Evidence
+Blocked on Genuine Studio Agent Supply and Human Mainnet Evidence
 
 ## Depends On
 
@@ -11,8 +11,8 @@ M14 — Category Parity & Decision-Grade Data
 ## Objective
 
 Prove that a person with no Agent Studio knowledge can move from any required
-category to a compatible agent, understand the commitment, activate it through
-the reviewed BNB-supported testnet path, and recover or monitor the result
+category to a compatible agent, understand the commitment, use it through the
+reviewed BSC Mainnet path, and recover or monitor the result
 without a dead end.
 
 ## Product Context
@@ -37,7 +37,7 @@ rejected, pending, reloaded, and confirmed states.
   approval and must remain real, labelled, funded safely, and available during
   the claimed judging window.
 - Identify at least one real representative agent in each required category
-  that can complete the supported testnet activation path. If a category lacks
+  that can complete the supported mainnet task path. If a category lacks
   compatible supply, coordinate with real agent owners/organizers or report the
   milestone blocked; never create fake records.
 - Provide a clear Find → Understand → Configure → Review → Connect/Switch → Sign
@@ -46,11 +46,12 @@ rejected, pending, reloaded, and confirmed states.
   irreversible effects before any signature.
 - Keep explicit human approval for every transaction and preserve the current
   verified contract/address binding.
-- Execute and record at least one complete real BSC Testnet activation/job with
+- Execute and record at least one complete real BSC Mainnet activation/job, if
+  the owner explicitly accepts the quoted real-funds cost, with
   transaction receipt, job ID, indexed agent identity, timestamps, and dashboard
   recovery.
-- Use the official BSC Testnet network configuration, faucet procedure, and
-  explorer for the disposable validation wallet and receipt evidence.
+- Use official BSC Mainnet chain ID `56` and BscScan for the disposable
+  validation wallet and any intentionally approved receipt evidence.
 - Exercise the representative flow for every category; a category may reuse the
   same reviewed protocol only when its real agent declares that support.
 - Make unsupported agents useful rather than broken: explain why activation is
@@ -64,7 +65,7 @@ rejected, pending, reloaded, and confirmed states.
 
 ## Out of Scope
 
-- Mainnet payments or mainnet hiring.
+- Any mainnet transaction the wallet owner has not explicitly reviewed and approved.
 - Custody, private-key handling, autonomous signing, delegated session keys, or
   unlimited token approvals.
 - Pretending a funded escrow means an agent completed useful work.
@@ -74,7 +75,7 @@ rejected, pending, reloaded, and confirmed states.
 
 ## Technical Requirements
 
-- Continue using wagmi/viem and the existing verified BSC Testnet deployment.
+- Continue using wagmi/viem and the reviewed BSC Mainnet deployment.
 - Resolve Agent Studio package names, versions, authentication, and supported
   service conventions from current official docs when implementation begins;
   do not invent SDK APIs from this ticket.
@@ -97,18 +98,18 @@ rejected, pending, reloaded, and confirmed states.
 ## Data Integrity Requirements
 
 - Use only real indexed agent identities, real service declarations, real
-  quotes, and real testnet receipts.
+  quotes, and any real mainnet receipts.
 - Link claims to the correct chain explorer and transaction hash.
 - Distinguish submitted, pending, confirmed, failed, rejected, expired, and
   agent-work completion states.
 - Do not claim success from a mocked provider, local fixture, screenshot, or
-  transaction hash that was not independently read from BSC Testnet.
+  transaction hash that was not independently read from BSC Mainnet.
 - Do not claim agent quality or delivered output based only on job creation.
 
 ## Security Requirements
 
 - Never request, store, log, or transmit a seed phrase/private key.
-- Require chain ID 97 and the verified contracts before a write request.
+- Require chain ID 56 and the verified contracts before a write request.
 - Revalidate account/chain after every wallet event and before every signature.
 - Reject stale or mismatched quote, owner, job, token, contract, and session data.
 - Make transaction rejection safe and resumable without silently retrying.
@@ -118,7 +119,7 @@ rejected, pending, reloaded, and confirmed states.
 ## UX Requirements
 
 - A new user can understand each step without knowing ERC-8004 or ERC-8183.
-- Progress, required wallet actions, expected testnet cost, and current state are
+- Progress, required wallet actions, expected mainnet cost, and current state are
   always visible.
 - Account/network changes explain what was preserved and what must be refreshed.
 - Back, cancel, replace-agent, and resume paths are available where safe.
@@ -136,10 +137,10 @@ rejected, pending, reloaded, and confirmed states.
       category, or M15 is reported BLOCKED with source evidence.
 - [ ] A novice can complete the full category-to-monitor path without external
       Agent Studio instructions.
-- [ ] One complete human-approved BSC Testnet activation/job has a verified
+- [ ] One complete human-approved BSC Mainnet activation/job has a verified
       receipt, job ID, persisted state, and dashboard recovery record.
-- [x] The disposable wallet procedure uses official BSC Testnet network,
-      faucet, and explorer resources without exposing wallet secrets.
+- [x] The disposable wallet procedure uses official BSC Mainnet network and
+      explorer resources without exposing wallet secrets.
 - [ ] Every category representative reaches an honest activation outcome.
 - [x] Unsupported agents provide explanation and compatible alternatives rather
       than broken controls.
@@ -148,8 +149,8 @@ rejected, pending, reloaded, and confirmed states.
 - [ ] Rejection, wrong-network, stale, pending, reload, failure, and duplicate
       submission paths behave safely.
 - [ ] A second wallet cannot view or resume the first wallet's private job.
-- [x] No private key, autonomous transaction, mainnet write, fabricated receipt,
-      or unlimited approval is introduced.
+- [x] No private key, autonomous transaction, unreviewed mainnet write,
+      fabricated receipt, or unlimited approval is introduced.
 
 ## Implementation Note — 2026-09-05
 
@@ -160,15 +161,15 @@ TypeScript SDK `0.5.5`, both development-only.
 
 M15 is not complete. Sift has no supplied genuine persistent Studio project for
 the CLI identity check, no verified activatable representative for every
-required category, and no human-approved BSC Testnet receipt/job/dashboard
-record. M14 is also still blocked on its hosted evidence prerequisites. See
+required category, and no human-approved BSC Mainnet receipt/job/dashboard
+record. M14 category coverage passes, but hosted migration history still needs
+operator confirmation. See
 `docs/activation-proof.md`; do not convert any unchecked acceptance item to a
 pass without real source evidence.
 
-The bounded 2026-09-05 hosted readiness run verified the chain-97 deployment,
-but six real yield/grid candidates returned invalid status documents and the
-search returned no health-factor or liquidity-rebalancing candidate. This is
-recorded as blocked supply rather than replaced with fabricated agents.
+The previous bounded chain-97 observation is historical and is no longer part
+of the release gate. The mainnet readiness run must be recorded without
+reusing or relabelling that evidence.
 
 ## Testing Requirements
 
@@ -176,15 +177,15 @@ recorded as blocked supply rather than replaced with fabricated agents.
   and lifecycle transitions.
 - Integration-test server validation, receipt reconciliation, idempotency, and
   two-wallet isolation.
-- Browser-test the complete flow with wallet rejection, switching, reload, and
-  confirmation using a disposable funded testnet wallet.
-- Manually verify recorded transaction links against BscScan Testnet.
+- Browser-test the complete flow with wallet rejection, switching, and reload
+  using a disposable mainnet wallet with only the minimum accepted funds.
+- Manually verify any intentionally approved transaction on BscScan.
 - Run `npm run lint`, typecheck, relevant tests, and `npm run build`.
 
 ## Definition of Done
 
 M15 is complete when official Agent Studio tooling has proved compatibility with
-a genuine Studio agent, the real BSC Testnet activation journey is
+a genuine Studio agent, the real BSC Mainnet task journey is
 understandable, safe, recoverable, and receipt-proven, each required category
 has a genuine route to an activation outcome, and no core-path control leads to
 a concealed dead end.

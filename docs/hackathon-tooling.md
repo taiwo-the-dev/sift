@@ -49,13 +49,15 @@ feedback, and network evidence.
 ### Official BSC network resources
 
 Use official BNB Chain documentation for supported chain IDs, RPC configuration,
-explorer URLs, faucets, and network behavior.
+explorer URLs, and network behavior.
 
-- Use the official BSC Testnet faucet procedure for disposable test wallets used
-  in M15 validation.
-- Faucet use is manual and must never require a seed phrase or private key.
-- Testnet tokens have no monetary value and must not be represented as real funds.
-- Mainnet discovery and testnet activation must remain visibly distinct.
+- The owner selected BSC Mainnet chain ID `56` for the release path. Automated
+  evidence checks remain read-only.
+- Any mainnet wallet validation uses a disposable wallet and only the minimum
+  real funds the owner explicitly accepts risking.
+- Preparing or simulating an action is not a successful transaction. Only a
+  human-approved receipt verified on BscScan can be recorded as execution.
+- Sift never requests a seed phrase or private key.
 
 ## Partner tooling boundary
 
@@ -71,9 +73,10 @@ tracks. They are not included merely because they appear on the Resources tab:
 
 M20 is the separately approved Altana integration. It pins the official SDK,
 uses browser passkeys, registers bounded sessions in KeyStore, exposes
-revocation, and routes a real ERC-8183 hire through that session. Its human
-testnet evidence remains pending. TermiX is represented only by the empty
-real-evidence worksheet in `agent-advantage-report.md`; no result is claimed.
+revocation, and routes a compatible ERC-8183 hire through that session. Its
+human mainnet safety evidence remains pending. TermiX is represented only by
+the empty real-evidence worksheet in `agent-advantage-report.md`; no result is
+claimed.
 PancakeSwap remains unimplemented.
 
 Any additional partner feature still requires a separate approved ticket with
@@ -87,7 +90,8 @@ The tooling decision is satisfied only when the final release records:
   result;
 - the 8004scan API integration, provenance, fallback, and observed enrichment
   result;
-- the official BSC network/explorer configuration and real testnet receipt;
+- the official BSC Mainnet network/explorer configuration and any real receipt
+  that the owner intentionally approves;
 - secrets review and release validation for each integration.
 
 Installing a package, adding a logo, or mentioning a tool in the README is not

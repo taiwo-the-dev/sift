@@ -1,99 +1,131 @@
-# M12 release checklist
+# Sift release checklist
 
 This is the evidence record for the Sift hackathon release. Check an item only
-after observing it on the exact production commit. A screenshot, fixture, or
-local result is not evidence that a production wallet transaction succeeded.
+after observing it on the exact production commit. Local results prove the
+candidate, not the deployed site. A prepared wallet action is not a confirmed
+transaction.
+
+## Current release direction
+
+The owner selected a **BSC Mainnet-only release path on 2026-09-10**. Testnet
+catch-up and testnet transaction proof are no longer release tasks. The current
+codebase still contains legacy chain-97 compatibility; removing that support or
+deleting hosted rows is a separate, destructive cleanup and is not performed by
+this checklist. Automated scheduling must not recreate testnet records.
+
+A complete mainnet ERC-8183 hire can spend real BNB or tokens. Codex may validate
+the read-only path and transaction preparation, but only the wallet owner may
+approve a real transaction after reviewing the amount, contract, and network.
 
 ## Candidate record
 
 | Field | Recorded value |
 | --- | --- |
 | Package version | `0.1.0` |
-| Local baseline commit | `a2867a02d0b276f8e80ea5dd08b9b1e19213039f` |
-| M12 release commit | Not recorded; current M12 work is uncommitted |
-| Vercel production URL | Not deployed / not recorded |
-| Vercel deployment ID | Not recorded |
-| Production Supabase schema check | M14 evidence tables are live; forward shortlist-function safety migration is pending deployment |
-| Latest successful indexer run | BSC Mainnet bootstrap completed on 2026-09-03; scheduled incremental health still needs confirmation |
-| Latest successful assessment run | Not current; scheduled run `#8` failed during dependency installation on 2026-08-24 |
-| Stored index checkpoint | BSC Mainnet block/head `119684064`, reported 2026-09-03; BSC Testnet block/head `127211325` was stale at the same observation |
-| Mainnet catalogue | 331,747 real indexed chain-56 identities at the completed checkpoint |
-| M14 category evidence | Coverage PASS on 2026-09-07: 63 matches, 12 shortlisted agents, and 12 recorded 8004scan checks |
-| Latest stored health / score evidence | Bounded health refresh completed 2026-09-07; score refresh blocked by candidate-query timeout |
-| Live RPC smoke | Passed at confirmed BSC Testnet head `126972263` on 2026-08-24 |
-| BSC Testnet demo transaction | Not recorded |
-| M15 activation proof | Blocked; category representatives and human-approved job are not recorded |
-| Validation date | 2026-08-24 (local release candidate) |
+| Current public commit | `f2d8883` |
+| Current local release candidate | Uncommitted changes on top of `f2d8883` |
+| Vercel production URL | <https://sift-ten-swart.vercel.app> |
+| Vercel deployment | Public deployment of `f2d8883`; replacement deployment ID not yet recorded |
+| Production Supabase schema | Current category, service, health, score, and job operations succeed; migration history still needs operator confirmation |
+| Mainnet catalogue | Current at confirmed head `121126225`; approximately 341,163 chain-56 agents reported at 2026-09-10 19:31 UTC |
+| M14 category evidence | PASS: taxonomy `sift-category-taxonomy-v1.1.0`, 12 shortlisted agents, and 12 current 8004scan cross-checks |
+| Latest bounded service check | 100 checked: 3 available, 70 unavailable, 27 unsupported |
+| Latest bounded health check | 50 checked: 4 online and 46 honest unknown/client-error outcomes |
+| Latest score run | Completed without query timeout; 4 candidates were withheld for insufficient verified evidence |
+| Agent Studio / SDK readiness | CLI and SDK mainnet runtime pass; genuine Studio project and ERC-8183 category representatives are still missing |
+| Public smoke | PASS on 2026-09-10 against the URL above |
+| Public browser path | 12/12 PASS on desktop Chromium and a Pixel 7 viewport on 2026-09-10 |
+| Human mainnet task / hire | Not recorded |
+| Two-wallet dashboard isolation | Not recorded for the release candidate |
 
-The lockfile in this M12 candidate has been regenerated for npm 10/11 clean
-install compatibility, and both workflows use the current Node-runtime GitHub
-Action majors. The workflow fix cannot be considered deployed until this
-candidate is committed, pushed, and both scheduled jobs pass.
+The category report correctly keeps reputation unavailable where Sift has no
+verified reputation source. Health and scores are not filled with guessed data.
 
 ## Automated gate
 
-- [x] `npm ci` succeeds with npm 10, matching the failed release runner boundary.
-- [x] `npm run lint` passes.
-- [x] `npm run typecheck` passes.
-- [x] `npm test` passes (203 tests).
-- [x] `npm run test:wallet-ui` passes (8 rendered-state tests).
-- [x] `npm run build` passes with the configured hosted environment.
-- [ ] `npm audit` currently reports 18 transitive vulnerabilities (17 moderate,
-      1 high) through the existing shadcn tooling and wallet dependency trees;
-      M14 adds no package dependency. Review upgrades separately without forcing
-      a breaking wagmi migration into this milestone.
-- [ ] `npm run release:data` verifies every hosted table and source freshness (category coverage passes; other freshness gates still require validation).
-- [ ] `npm run release:smoke -- http://127.0.0.1:3102` passes against the local production build.
-- [ ] `npm run release:smoke -- https://<production-origin>` passes.
+- [x] `npm ci` succeeds from the current candidate lockfile.
+- [x] `npm run lint` passes on the current candidate.
+- [x] `npm run typecheck` passes on the current candidate.
+- [x] `npm test` passes (297/297) on the current candidate.
+- [x] `npm run test:wallet-ui` passes (19/19) on the current candidate.
+- [x] `npm run test:browser` passes locally against a production build (12/12).
+- [x] `PLAYWRIGHT_BASE_URL=https://sift-ten-swart.vercel.app npm run test:browser`
+      passes against the current public baseline (12/12).
+- [x] `npm run build` passes on Next.js `16.3.4` for the current candidate.
+- [x] `npm audit --audit-level=high` has no high or critical finding. The audit has 16
+      moderate transitive WalletConnect/wagmi findings whose offered fix is a
+      breaking wagmi 3 migration; this risk remains documented.
+- [x] `npm run release:data` verifies current hosted tables and source freshness.
+- [x] `npm run report:categories` passes for all four categories.
+- [x] `npm run release:smoke -- https://sift-ten-swart.vercel.app` passes for the
+      current public baseline.
+- [ ] Repeat production smoke after the new release commit is deployed.
 
 ## Production services
 
-- [ ] Every migration is present in the hosted Supabase migration history.
-- [ ] RLS and browser-role revocations are verified for all private tables.
+- [ ] Every migration is present in hosted Supabase migration history.
+- [ ] RLS and browser-role revocations are verified for private tables.
 - [ ] Vercel has the required production variables and no secret is browser-public.
 - [ ] The deployed commit exactly matches the recorded release commit.
-- [ ] The latest scheduled indexer run succeeds and advances or confirms its checkpoint.
-- [ ] The latest scheduled health/score run succeeds with honest bounded output.
+- [ ] The mainnet-only scheduled indexer succeeds and advances or confirms its checkpoint.
+- [ ] The scheduled health/service/score workflow succeeds on the release commit.
 - [ ] RPC primary/fallback behavior succeeds without exposing provider credentials.
-- [ ] Data freshness visible in Sift agrees with the latest persisted observations.
-- [ ] The forward M14 shortlist-function safety migration is present in hosted migration history.
-- [x] M14 category backfill, 12-agent shortlist, and 8004scan cross-check are persisted.
-- [x] `npm run report:categories` passes for all four categories locally against hosted data; the public deployed report remains part of production smoke.
+- [ ] Data freshness visible in Sift agrees with persisted observation times.
+- [x] Mainnet indexing is current at the recorded confirmed head.
+- [x] M14 category evidence is current and persisted for all four categories.
+- [x] The score candidate query completes without the former statement timeout.
 
 ## Clean-browser product path
 
-- [ ] Landing purpose is clear within five seconds.
-- [ ] Plain-language search and each of the four category routes work with honest real/empty states.
-- [ ] A real indexed profile shows identity, source, freshness, and Unknown fallbacks correctly.
-- [ ] Comparison works for two or three real agents and preserves Unknown evidence.
-- [ ] Mobile navigation, forms, profile tabs, comparison controls, and wallet dialogs pass keyboard review.
-- [ ] Metadata, canonical URL, OpenGraph image, favicon, manifest, robots, external links, and error states work on production.
-- [ ] A common mobile viewport and current desktop browser have no blocking layout issue.
+- [x] Landing purpose and primary search are visible.
+- [x] Plain-language search and all four category routes return real mainnet data.
+- [x] A real mainnet profile exposes identity, evidence, freshness, and Unknown states.
+- [x] Two real mainnet agents can be compared.
+- [x] The Available filter leads to a currently supported action route.
+- [x] The disconnected dashboard explains the wallet boundary.
+- [x] Desktop/mobile layout, keyboard search, mobile navigation, and reduced
+      motion pass the automated browser suite.
+- [ ] Complete a manual screen-reader and visible-focus spot check.
+- [ ] Document three novice user sessions and retest reproducible P0/P1 findings.
 
-## Wallet and job path
+## Mainnet wallet and task path
 
-- [ ] `npm run verify:activation` passes for source-backed representatives in all four categories using a genuine Studio project.
-- [ ] Official Agent Studio CLI `0.0.13` and SDK `0.5.5` evidence is recorded without adding either tool to the production bundle.
-- [ ] A fresh disposable wallet connects on BSC Testnet chain ID `97`.
-- [ ] Wrong-network switch approval and rejection behave safely.
-- [ ] A compatible agent returns a valid owner-bound status and signed quote.
-- [ ] Transaction rejection remains honest and resumable.
-- [ ] A human explicitly approves the real BSC Testnet transaction sequence.
-- [ ] Every confirmed step links to the correct BSC Testnet receipt and job ID.
-- [ ] Reload recovers pending/confirmed state without duplicate signing.
-- [ ] The dashboard challenge succeeds for the hiring wallet.
-- [ ] A second wallet cannot read or resume the first wallet's job.
-- [ ] No mainnet transaction, unlimited approval, custody, fabricated confirmation, or secret exposure occurs.
+- [ ] Connect a disposable wallet that contains only the minimum mainnet funds
+      the tester is willing to risk.
+- [ ] Verify the UI labels chain ID `56`, the target agent, method, price, token,
+      recipient/contract, and expected wallet steps before approval.
+- [ ] Confirm wrong-network rejection and account-change recovery.
+- [ ] Confirm wallet rejection leaves the task honest and resumable.
+- [ ] For a no-spend check, stop before wallet confirmation and verify no
+      transaction hash or success state is created.
+- [ ] If the owner approves a real mainnet hire, independently verify every
+      receipt and job ID on BscScan and record the exact public evidence.
+- [ ] Reload and recover a pending/confirmed job without duplicate signing.
+- [ ] Sign into the dashboard with the hiring wallet.
+- [ ] Confirm a second wallet cannot read or resume the first wallet's job.
+- [ ] Confirm there is no custody, unlimited approval, silent retry, fabricated
+      confirmation, or automatic mainnet transaction.
 
 ## Submission package
 
-- [x] Architecture and trust boundaries are documented.
-- [x] Safe disposable-wallet/funding procedure and recovery steps are documented.
-- [x] Local release-candidate screenshots are labelled by source.
-- [x] Setup, migration, indexing, testing, deployment, demo, limitations, and roadmap are documented.
-- [ ] Replace the pending live URL and release record after Vercel deployment.
-- [ ] Review repository history, deployment logs, screenshots, and docs for secrets.
-- [ ] Rehearse the timed demo twice from a clean browser profile.
+- [x] Public repository exists at <https://github.com/taiwo-the-dev/sift>.
+- [x] Public application exists at <https://sift-ten-swart.vercel.app>.
+- [x] Architecture, data integrity, deployment, and recovery are documented.
+- [x] Mainnet catalogue, category, 8004scan, health, service, and score evidence
+      is recorded without substituting fake data.
+- [ ] The owner selects and approves a repository license; add `LICENSE` only
+      after that decision.
+- [ ] Confirm hosted migration history and production variables.
+- [ ] Commit, push, deploy, and record the exact new release commit/deployment.
+- [ ] Confirm both scheduled workflows pass on that commit.
+- [ ] Complete three novice sessions and the mainnet wallet/two-wallet checks.
+- [ ] Prepare final screenshots, deck, demo video, form fields, team details,
+      contract/explorer links, and two clean-browser rehearsals.
+- [ ] Review repository history, deployment logs, images, video, and docs for secrets.
 
-M12 remains blocked until every item that protects the core judging path is
-complete. Do not continue into optional post-hackathon features automatically.
+## Current release result
+
+The repository and public baseline have strong automated evidence, but M16 and
+M17 are **not complete**. Hosted migration history, the exact replacement
+deployment, human usability evidence, owner-approved licensing, wallet/two-wallet
+proof, and submission media still require the owner.

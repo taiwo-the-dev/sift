@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready for Development
+Release Validation In Progress
 
 ## Milestone Tracking
 
@@ -15,21 +15,30 @@ Ready for Development
 - M6 — Complete
 - M7 — Complete
 - M8 — Complete
-- M9 — Ready for Testnet Validation
+- M9 — Ready for Mainnet Human Validation
 - M10 — Ready for Hosted Validation
 - M11 — Ready for Manual Validation
 - M12 — Blocked on External Release Validation
 - M13 — Complete
-- M14 — Coverage Pass; Blocked on Forward Migration, Score Query, and Hosted Validation
-- M15 — Blocked on Genuine Studio Agent Supply and Human Testnet Evidence
-- M16 — Not Started
-- M17 — Not Started
+- M14 — Coverage Pass; Hosted Migration-History Confirmation Pending
+- M15 — Blocked on Genuine Studio Agent Supply and Human Mainnet Evidence
+- M16 — In Progress; Automated Mainnet Browser Path Passes
+- M17 — In Progress; Public Baseline Passes, Owner Materials Pending
 - M18 — Blocked Pending Official Phase 2 Criteria
 - M19 — Implemented Locally; Hosted Migration and Human Validation Pending
-- M20 — Implemented Locally; Human Altana Testnet Evidence Pending
+- M20 — Implemented Locally; Excluded from Mainnet Release Until Compatible
 - M21 — Implemented Locally; Browser Validation Pending
 - M22 — Implemented Locally; Hosted Migration and Live Service Validation Pending
 - M23 — Implemented Locally; Hosted Migration and Human Wallet Validation Pending
+
+## Release Scope Decision — 2026-09-10
+
+The owner selected a BSC Mainnet-only release path. Scheduled indexing, release
+evidence, browser validation, and submission materials target chain ID `56`.
+Historical chain-97 compatibility may remain in code until a separately reviewed
+cleanup, but testnet catch-up and testnet transaction proof are not release gates.
+Any mainnet transaction requires the wallet owner's explicit review and approval
+because mainnet assets have real value.
 
 ## Priority
 
@@ -150,9 +159,10 @@ Next.js Application
 Vercel
 ```
 
-Scheduled incremental indexing may use GitHub Actions.
+Scheduled incremental mainnet indexing may use GitHub Actions.
 
-Development and blockchain transaction demonstrations should prefer BSC Testnet where appropriate.
+Automated validation should remain read-only. A BSC Mainnet transaction is
+performed only by the wallet owner after reviewing its real cost and effects.
 
 ---
 
@@ -243,7 +253,7 @@ Do not introduce Elasticsearch for the hackathon.
 ## Blockchain
 
 - BNB Smart Chain
-- BSC Testnet during development
+- BSC Mainnet for the current release
 - ERC-8004 for agent identity/discovery
 - ERC-8183 or current BNB-supported agent commerce mechanism for job/hiring workflow
 
@@ -1436,7 +1446,7 @@ Deliver:
 - RainbowKit
 - wagmi
 - viem
-- BSC Testnet configuration
+- BSC Mainnet configuration
 - network switching
 - wallet states
 - safe disconnected behaviour
@@ -1456,7 +1466,8 @@ Deliver:
 - confirmation screen
 - persisted job record
 
-Use testnet while developing.
+Use read-only simulation and wallet rejection while developing. Never submit a
+mainnet transaction automatically.
 
 ---
 
@@ -1500,7 +1511,7 @@ Deliver:
 
 - deployed Vercel application
 - reliable demo flow
-- sample testnet wallet procedure
+- safe mainnet wallet review procedure
 - README screenshots
 - architecture diagram
 - setup guide
@@ -1523,7 +1534,7 @@ Deliver:
 
 - a source-backed BSC mainnet agent catalogue;
 - network-explicit discovery and profile evidence;
-- safe dual-network indexing with independent checkpoints;
+- current mainnet indexing with a resumable checkpoint;
 - current scheduled data freshness;
 - a documented audit of the event's public-access and live-on-BSC rules.
 
@@ -1553,15 +1564,16 @@ Deliver:
 
 - a verified set of genuinely activatable agents;
 - a minimal-friction find-to-activate journey with no hidden protocol steps;
-- real human-approved testnet activation evidence and correct explorer links;
+- real human-approved mainnet task evidence and correct explorer links when the
+  owner accepts the transaction cost;
 - resumable rejection, pending, reload, and confirmation behavior;
 - honest non-activatable states that do not create broken controls.
 - BNB Agent Studio CLI/TypeScript SDK compatibility evidence against at least
   one genuine Studio agent;
-- the official BSC Testnet faucet/network/explorer path for human-approved
-  activation evidence.
+- the official BSC Mainnet network/BscScan path for human-approved evidence.
 
-Do not introduce custody, autonomous signing, or mainnet financial execution.
+Do not introduce custody, autonomous signing, or any mainnet execution the
+wallet owner has not explicitly reviewed and approved.
 
 ---
 
@@ -1717,7 +1729,8 @@ The project is considered hackathon-ready when a judge can:
 7. Understand why an agent is considered trustworthy/relevant.
 8. Compare multiple agents.
 9. Connect a wallet.
-10. Create or demonstrate a real testnet hiring/job interaction.
+10. Create or demonstrate a real BSC Mainnet agent-task interaction; claim a
+    transaction only when it was human-approved and independently verified.
 11. See the resulting transaction/job information.
 12. View the activity from a dashboard.
 13. Use the application without seeing obvious placeholder or broken states.

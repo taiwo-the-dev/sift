@@ -36,7 +36,6 @@ Set these values in Vercel's Production environment without committing them:
 | `SUPABASE_SECRET_KEY` | Yes | Server-only secret | RLS-bypassing repository access; never prefix with `NEXT_PUBLIC_` |
 | `SIFT_SITE_URL` | Recommended | Server-only configuration | Canonical production HTTPS origin |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public | WalletConnect QR/mobile connection |
-| `NEXT_PUBLIC_BNB_TESTNET_RPC_URL` | Optional | Browser-public | Public browser RPC override; public fallbacks remain |
 | `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public | Public read-only browser RPC override |
 | `SIFT_8004SCAN_API_KEY` | Required for the intended M14 Pro validation run | Server-only secret | Bounded 12-agent 8004scan cross-check; core discovery does not depend on it |
 
@@ -66,12 +65,11 @@ wallet-session tables. Never add a production seed.
 Configure GitHub Actions with repository secrets `SUPABASE_URL` and
 `SUPABASE_SECRET_KEY`. Add `BNB_MAINNET_RPC_PRIMARY` using a reviewed,
 archive-capable free-tier BSC endpoint; optional `_FALLBACK_1` and `_FALLBACK_2`
-variants preserve ordered fallback. Equivalent `BNB_TESTNET_RPC_*` secrets are
-optional because public testnet endpoints remain available. Never place a token
-in a repository variable or `NEXT_PUBLIC_` value.
+variants preserve ordered fallback. Never place a token in a repository variable
+or `NEXT_PUBLIC_` value.
 
-- `sync-agents.yml` incrementally indexes mainnet and testnet every two hours in
-  independent matrix jobs and concurrency groups.
+- `sync-agents.yml` incrementally indexes BSC Mainnet every two hours. The
+  release schedule intentionally does not recreate testnet catalogue rows.
 - `assess-agents.yml` checks health and recalculates scores every six hours.
 - The assessment workflow also refreshes the bounded cached 8004scan
   cross-check after the M14 shortlist exists.

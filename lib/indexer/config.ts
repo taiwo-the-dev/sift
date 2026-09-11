@@ -160,7 +160,7 @@ function parseAddress(value: string | undefined, fallback: Address): Address {
 }
 
 export function parseIndexerConfig(source: EnvironmentSource): IndexerConfig {
-  const networkValue = optionalValue(source.BNB_NETWORK) ?? "bsc-testnet";
+  const networkValue = optionalValue(source.BNB_NETWORK) ?? "bsc-mainnet";
   const networkResult = z.enum(supportedBnbNetworks).safeParse(networkValue);
 
   if (!networkResult.success) {

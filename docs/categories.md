@@ -131,40 +131,30 @@ chain-56 deployment, quote, and wallet transaction before recording a job.
 
 ## Latest hosted coverage evidence
 
-The historical mainnet classification completed on 2026-09-07 after examining
-282,581 valid metadata records and storing 63 source-backed category matches.
-The curated shortlist contains three real agents per category. The anonymous
-8004scan boundary successfully recorded an `available` response for all 12
-shortlisted agents; no API credential was required for this bounded run.
+On 2026-09-10 the curation command reclassified each of the 12 real shortlist
+identities with taxonomy `sift-category-taxonomy-v1.1.0` before atomically
+replacing the shortlist. The anonymous 8004scan boundary then recorded 12
+current `available` responses. The scheduled client now force-refreshes this
+bounded sample each run so the six-hour schedule cannot accidentally preserve
+evidence beyond its freshness window.
 
-The report observed at `2026-09-07T03:51:44.042Z` passed with no coverage
-issues:
+The report observed at `2026-09-10T19:02:45.564Z` passed with no issues:
 
 | Category | Inventory | Shortlist | 8004scan checks | Endpoint | Health | Score | Reputation |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Yield Optimisation | 30 | 3 | 3 | 28 | 1 | 1 | 0 |
-| Grid Trading | 9 | 3 | 3 | 9 | 5 | 5 | 0 |
-| Health Factor Monitoring | 15 | 3 | 3 | 15 | 3 | 4 | 0 |
-| Liquidity Rebalancing | 9 | 3 | 3 | 9 | 5 | 5 | 0 |
+| Yield Optimisation | 16 | 3 | 3 | 16 | 8 | 8 | 0 |
+| Grid Trading | 9 | 3 | 3 | 9 | 8 | 7 | 0 |
+| Health Factor Monitoring | 13 | 3 | 3 | 13 | 7 | 7 | 0 |
+| Liquidity Rebalancing | 7 | 3 | 3 | 7 | 5 | 5 | 0 |
 
 Zero reputation rows are an honest unsupported-source state, not a negative
-rating. A bounded health refresh completed with six reachable observations and
-14 Unknown results across its full queue. The subsequent score refresh did not
-complete because the existing catalogue-wide score candidate query timed out;
-existing scores remain visible with their original timestamps and missing
-scores remain Unknown.
+rating. A bounded health run checked 50 eligible endpoints and recorded four
+online and 46 unknown/client-error outcomes. A bounded service run checked 100
+declarations and found three currently available, 70 unavailable, and 27
+unsupported. The score candidate query now completes without the former
+database timeout; its latest four candidates were withheld because they lacked
+enough verified evidence.
 
-The forward migration
-`20260907120000_fix_category_shortlist_replacement.sql` corrects the legacy
-shortlist replacement function for future reruns and must still be deployed to
-the hosted project. The initial hosted shortlist was safely bootstrapped only
-because the destination table was empty.
-
-The catalogue-wide score candidate timeout is fixed by
-`20260908090000_scale_score_recalculation_queue.sql`. After deploying it, run
-`npm run backfill:scores` once to drain all currently actionable real-evidence
-scores (see `docs/scoring.md`), then the six-hourly `score:agents` job keeps
-them current without creating metadata-only scores across the full index.
-`20260908093000_broaden_health_probe_targets.sql` widens the health queue to
-every safe HTTPS `a2a` declaration, so the next `check:agents` run reaches many
-more agents than the six reachable observations recorded above.
+Hosted runtime behavior confirms that the atomic shortlist function and scaled
+score query work. An authenticated Supabase operator must still compare every
+ordered repository migration with hosted migration history before final release.

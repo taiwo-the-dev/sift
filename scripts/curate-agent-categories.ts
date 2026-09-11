@@ -4,6 +4,10 @@ import {
   CATEGORY_SHORTLIST_VERSION,
   curatedMainnetAgents,
 } from "@/features/categories/shortlist";
+import {
+  CATEGORY_TAXONOMY_VERSION,
+  classifyAgentCategories,
+} from "@/features/categories/taxonomy";
 import { bnbNetworkDefinitions } from "@/lib/indexer/config";
 
 async function main(): Promise<void> {
@@ -11,7 +15,7 @@ async function main(): Promise<void> {
   const [
     { createAgentRepository },
     { createAgentServiceRepository },
-    { createCategoryRepository, mapCategoryEvidenceRecord },
+    { createCategoryRepository },
   ] = await Promise.all([
     import("@/lib/db/agent-repository"),
     import("@/lib/db/agent-service-repository"),
@@ -23,6 +27,7 @@ async function main(): Promise<void> {
   const registryAddress = bnbNetworkDefinitions["bsc-mainnet"].registryAddress;
   const selectedAt = new Date().toISOString();
   const rows = [];
+  const evidenceUpdates = [];
 
   for (const reference of curatedMainnetAgents) {
     const agent = await agents.findByIdentity({
@@ -37,22 +42,36 @@ async function main(): Promise<void> {
       );
     }
 
-    const [declaredServices, evidenceRecords] = await Promise.all([
-      services.listByAgent(agent.id),
-      categories.listEvidence([agent.id]),
-    ]);
+    const declaredServices = await services.listByAgent(agent.id);
     const hasHttpsService = declaredServices.some(
       (service) => service.endpoint?.startsWith("https://"),
     );
-    const matchingEvidence = evidenceRecords
-      .map(mapCategoryEvidenceRecord)
-      .find((evidence) => evidence.category === reference.category);
+    const currentEvidence = classifyAgentCategories({
+      declaredCategories: agent.category ? [agent.category] : [],
+      description: agent.description,
+      name: agent.name,
+      observedAt:
+        agent.metadata_verified_at ?? agent.last_synced_at ?? agent.updated_at,
+      services: declaredServices.map((service) => ({
+        endpoint: service.endpoint,
+        metadata: service.metadata,
+        serviceType: service.service_type,
+        version: service.version,
+      })),
+    });
+    const matchingEvidence = currentEvidence.find(
+      (evidence) =>
+        evidence.category === reference.category &&
+        evidence.ruleVersion === CATEGORY_TAXONOMY_VERSION,
+    );
 
     if (!hasHttpsService || !matchingEvidence) {
       throw new Error(
         `Mainnet agent #${reference.agentId} lacks a declared HTTPS service or current ${reference.category} evidence.`,
       );
     }
+
+    evidenceUpdates.push({ agentDbId: agent.id, evidence: currentEvidence });
 
     rows.push({
       agent_db_id: agent.id,
@@ -64,6 +83,9 @@ async function main(): Promise<void> {
     });
   }
 
+  // Recompute all candidates first so a stale or mismatched identity fails
+  // before either the evidence set or shortlist is changed.
+  await categories.replaceEvidenceBatch(evidenceUpdates);
   await categories.replaceShortlist(rows);
   process.stdout.write(
     `${JSON.stringify({
@@ -71,6 +93,7 @@ async function main(): Promise<void> {
       event: "category_shortlist_complete",
       selectedAt,
       selectionVersion: CATEGORY_SHORTLIST_VERSION,
+      taxonomyVersion: CATEGORY_TAXONOMY_VERSION,
     })}\n`,
   );
 }

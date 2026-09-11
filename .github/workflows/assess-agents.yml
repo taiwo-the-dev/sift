@@ -22,7 +22,9 @@ jobs:
       HEALTH_CHECK_LIMIT: ${{ vars.HEALTH_CHECK_LIMIT || '50' }}
       ACTIVATION_CHECK_CONCURRENCY: ${{ vars.ACTIVATION_CHECK_CONCURRENCY || '3' }}
       ACTIVATION_CHECK_INTERVAL_HOURS: ${{ vars.ACTIVATION_CHECK_INTERVAL_HOURS || '6' }}
-      ACTIVATION_CHECK_LIMIT: ${{ vars.ACTIVATION_CHECK_LIMIT || '25' }}
+      # The checker remains capped at 100, uses three concurrent requests, and
+      # revalidates every target before persisting evidence.
+      ACTIVATION_CHECK_LIMIT: ${{ vars.ACTIVATION_CHECK_LIMIT || '100' }}
       SCORE_BATCH_LIMIT: ${{ vars.SCORE_BATCH_LIMIT || '500' }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

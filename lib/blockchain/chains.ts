@@ -35,8 +35,8 @@ export const publicBnbChainDefinitions: Readonly<
   },
 };
 
-export const defaultWalletChain = bscTestnet;
-export const supportedWalletChains = [bscTestnet, bsc] as const;
+export const defaultWalletChain = bsc;
+export const supportedWalletChains = [bsc, bscTestnet] as const;
 export type SupportedWalletChainId =
   (typeof supportedWalletChains)[number]["id"];
 

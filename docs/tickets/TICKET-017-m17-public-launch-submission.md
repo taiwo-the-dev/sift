@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress — public baseline passes; final candidate and owner materials pending
 
 ## Depends On
 
@@ -32,25 +32,24 @@ for a reproducible public experience.
 - Deploy the exact validated commit to the approved Vercel project.
 - Configure production Supabase, RPC, 8004scan enrichment, wallet, and scheduler
   variables without exposing secrets.
-- Apply/verify migrations, RLS/browser-role restrictions, mainnet and testnet
-  checkpoints, scheduled sync, health, and score assessment.
+- Apply/verify migrations, RLS/browser-role restrictions, the mainnet
+  checkpoint, scheduled sync, health, and score assessment.
 - Pass production-origin smoke tests and verify metadata, OpenGraph, favicon,
   robots, canonical URL, external links, errors, mobile navigation, and data
   freshness.
 - Re-run the complete clean-browser judge path on the public URL, including the
-  approved testnet activation and dashboard recovery evidence.
+  approved mainnet wallet boundary and dashboard recovery evidence.
 - Add a clear user-journey diagram alongside the existing architecture diagram.
 - Finalize README, setup, demo, deployment, limitations, security boundaries,
   sustainability/business model, adoption plan, and post-hackathon roadmap.
 - Record meaningful-use evidence for the official Agent Studio CLI/TypeScript
-  SDK, 8004scan Pro API, BSC network/explorer configuration, and testnet faucet
-  procedure, including versions, provenance, fallback behavior, and secrets
-  review.
+  SDK, 8004scan API, and BSC Mainnet network/explorer configuration, including
+  versions, provenance, fallback behavior, and secrets review.
 - Prepare the official submission fields, concise deck, current screenshots,
   short demo video, live URL, public repo URL, team details, supported chain and
   contract/explorer links.
-- Record at least one real explorer-verifiable integration/activation transaction
-  where the supported protocol path permits it.
+- Record a real explorer-verifiable transaction only when the owner explicitly
+  approves its mainnet cost; otherwise disclose that execution proof remains pending.
 - Rehearse the timed demo twice from clean browser profiles and document recovery
   for RPC, wallet, stale data, or service failure.
 - Monitor the official event page and support channels for submission-form and
@@ -60,7 +59,8 @@ for a reproducible public experience.
 
 ## Out of Scope
 
-- Mainnet financial transactions, custody, or autonomous wallet authority.
+- Custody, autonomous wallet authority, or any mainnet transaction that the
+  owner has not explicitly reviewed and approved.
 - Claims of partnerships, adoption, users, revenue, performance, or transactions
   without documentary evidence.
 - Paid hosting, RPC, analytics, monitoring, AI, or design services without approval.
@@ -89,7 +89,7 @@ for a reproducible public experience.
   must match the public release and include its source/time where material.
 - Never swap in seed/mock data when production services fail.
 - Explorer links must use the correct chain, address, and transaction.
-- Clearly distinguish BSC mainnet discovery from BSC Testnet activation.
+- Clearly identify BSC Mainnet chain ID `56` for discovery and task actions.
 - Limitations and stale/unavailable evidence remain visible in the app and docs.
 
 ## Security Requirements
@@ -97,7 +97,8 @@ for a reproducible public experience.
 - Review git history, deployment settings/logs, workflows, docs, screenshots,
   videos, and browser bundles for secrets/private wallet material.
 - Verify RLS and browser-role revocations for private database tables.
-- Use a disposable testnet wallet and publish only safe public evidence.
+- Use a disposable mainnet wallet with minimum funds and publish only safe
+  public evidence.
 - Confirm security headers, redirect/URL validation, server-only keys, wallet
   chain guards, finite approvals, and two-wallet isolation on production.
 - No mainnet write path may be available in the release candidate.
@@ -117,12 +118,13 @@ for a reproducible public experience.
 - [ ] The repository is public, forkable, organized, documented, and secret-free.
 - [ ] Dependency and asset attribution is current.
 - [ ] The exact release commit is publicly deployed and reachable during judging.
-- [ ] Production schema, RLS, variables, dual-network indexers, health, scores,
+- [ ] Production schema, RLS, variables, mainnet indexer, health, scores,
       RPC fallback, and freshness are verified.
 - [ ] Agent Studio, 8004scan, and official BSC resource usage is documented and
       supported by real compatibility, enrichment, and transaction evidence.
 - [ ] Production-origin smoke tests and the complete judge path pass.
-- [ ] A real supported activation has correct BSC Testnet explorer evidence.
+- [ ] Any claimed real mainnet activation has correct BscScan evidence; if the
+      owner declines the cost, the limitation is explicit.
 - [ ] README, architecture, user journey, demo, security/limitations, business,
       adoption, and roadmap documentation match the release.
 - [ ] Submission form, deck, demo video, screenshots, URLs, and team/contract
@@ -131,6 +133,18 @@ for a reproducible public experience.
 - [ ] The release record names the commit, deployment, time, checkpoints, and
       remaining non-blocking limitations.
 - [ ] No fake data/claim, secret, paid unapproved service, or mainnet-risk path exists.
+
+## Implementation Note — 2026-09-10
+
+The repository and application are public. The production-origin smoke check
+and 12-case desktop/mobile mainnet browser suite pass against the current
+baseline. `docs/submission-package.md` now contains the product narrative, demo
+outline, evidence inventory, deck structure, and explicitly empty owner fields.
+
+M17 remains in progress. The new candidate is not committed or deployed,
+Supabase migration history is not operator-confirmed, the license has not been
+selected, human sessions/wallet checks are not recorded, and the owner still
+needs to create the deck, video, team fields, and final submission entry.
 
 ## Testing Requirements
 

@@ -138,6 +138,27 @@ describe("8004scan adapter", () => {
     assert.equal(cache.writes.length, 2);
   });
 
+  it("allows the scheduled enrichment run to refresh a current cache entry", async () => {
+    const cache = memoryCache();
+    let requests = 0;
+    const options = {
+      cache,
+      fetchImpl: async () => {
+        requests += 1;
+        return scanResponse();
+      },
+      now: () => new Date("2026-09-03T12:00:00.000Z"),
+    } as const;
+
+    await create8004ScanClient(options).crossCheck(localAgent);
+    await create8004ScanClient({ ...options, forceRefresh: true }).crossCheck(
+      localAgent,
+    );
+
+    assert.equal(requests, 2);
+    assert.equal(cache.writes.length, 2);
+  });
+
   it("keeps truly absent API fields distinct from zero-valued evidence", async () => {
     const client = create8004ScanClient({
       apiKey: "test-key",

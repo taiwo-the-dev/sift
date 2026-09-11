@@ -21,13 +21,13 @@ Copy `.env.example` to `.env.local`. The existing hosted Supabase variables are 
 SUPABASE_URL=<hosted-project-url>
 SUPABASE_SECRET_KEY=<server-secret-key>
 
-BNB_NETWORK=bsc-testnet
+BNB_NETWORK=bsc-mainnet
 BNB_RPC_PRIMARY=
 BNB_RPC_FALLBACK_1=
 BNB_RPC_FALLBACK_2=
 ```
 
-Testnet is the safe default. If no RPC overrides are present, Sift uses three ordered public endpoints. Public providers change limits and availability without notice; for sustained mainnet historical indexing, create a free-tier RPC project that supports historical `eth_getLogs` and store its URL in `BNB_RPC_PRIMARY`. BNB's public mainnet endpoints may reject `eth_getLogs`, as documented in the [BNB Chain RPC endpoint guide](https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/).
+Mainnet is the current release default. If no RPC overrides are present, Sift uses three ordered public endpoints. Public providers change limits and availability without notice; for sustained mainnet historical indexing, create a free-tier RPC project that supports historical `eth_getLogs` and store its URL in `BNB_RPC_PRIMARY`. BNB's public mainnet endpoints may reject `eth_getLogs`, as documented in the [BNB Chain RPC endpoint guide](https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/).
 
 All tuning values are optional:
 
@@ -93,16 +93,19 @@ M6 reads this verification timestamp when deciding whether metadata-derived scor
 
 ## Scheduled operation
 
-`.github/workflows/sync-agents.yml` runs isolated mainnet and testnet incremental jobs every two hours and can also be dispatched manually. The matrix uses separate concurrency groups and `fail-fast: false`, so one provider outage neither cancels nor advances the other network. Configure these GitHub repository secrets:
+`.github/workflows/sync-agents.yml` runs one BSC Mainnet incremental job every
+two hours and can also be dispatched manually. Configure these GitHub repository
+secrets:
 
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
 - `BNB_MAINNET_RPC_PRIMARY` with an archive-capable free-tier endpoint
 - optional `BNB_MAINNET_RPC_FALLBACK_1` and `BNB_MAINNET_RPC_FALLBACK_2`
-- optional `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, and `BNB_TESTNET_RPC_FALLBACK_2`
 - legacy generic `BNB_RPC_PRIMARY` / fallback secrets only as a shared fallback
 
-The workflow chooses `BNB_NETWORK` from its reviewed matrix; no repository network variable is needed. It has read-only repository permissions, serializes each network independently, and has no blockchain signing material.
+The workflow fixes `BNB_NETWORK` to `bsc-mainnet`; no repository network
+variable is needed. It has read-only repository permissions, serializes runs,
+and has no blockchain signing material.
 
 Generate a read-only network eligibility snapshot from the hosted database:
 
@@ -110,7 +113,11 @@ Generate a read-only network eligibility snapshot from the hosted database:
 npm run report:catalogue
 ```
 
-The JSON report includes observed time, count, registry, latest agent sync, checkpoint, confirmed head, partial/stale state, and the explicit chain-56/chain-97 hiring policy. It does not expose agent metadata or credentials.
+The JSON report includes observed time, count, registry, latest agent sync,
+checkpoint, confirmed head, partial/stale state, and the configured hiring
+policy. Historical chain-97 rows may appear until the owner completes the
+separate cleanup; they are not part of the current release gate. The report does
+not expose agent metadata or credentials.
 
 ## BNB Agent Studio identity mapping
 

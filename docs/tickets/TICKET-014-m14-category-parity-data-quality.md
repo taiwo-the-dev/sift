@@ -2,9 +2,7 @@
 
 ## Status
 
-Blocked — category coverage passes; awaiting deployment of the forward
-shortlist-function fix, correction of the score-candidate query timeout, and
-hosted browser validation
+Coverage PASS — hosted migration-history confirmation remains an external gate
 
 ## Depends On
 
@@ -19,7 +17,7 @@ a user make an informed hiring decision.
 ## Product Context
 
 The official rubric penalizes a marketplace that treats one category as the
-main event. Sift's completed M13 catalogue contains 331,747 mainnet identities,
+main event. Sift's M13 catalogue contains hundreds of thousands of mainnet identities,
 but pre-M14 category matching uses broad request-time keyword scans and its
 evidence coverage has not been measured. Equal depth means equivalent
 decision quality and usability—not invented agents or artificially identical
@@ -128,7 +126,7 @@ counts.
       activation-availability treatment.
 - [x] Category-specific fields display only when supported by source evidence.
 - [x] Declared versus inferred categories are distinguishable.
-- [ ] Curated candidates have current health/score/reputation/service evidence
+- [x] Curated candidates have current health/score/reputation/service evidence
       where supported, with Unknown used for real gaps.
 - [x] Score version, confidence, coverage, and observation time remain visible.
 - [x] 8004scan enrichment is implemented, source-labelled, cached, rate-limited,
@@ -206,8 +204,18 @@ evidence. The following score refresh exposed a separate scale bottleneck in
 the catalogue-wide score candidate query and did not complete. The repository
 now includes an additive migration correcting the legacy shortlist replacement
 function's safe-update violation; it still needs to be deployed for future
-atomic shortlist reruns. M14 remains blocked on that deployment, the score-query
-fix, and hosted browser validation.
+atomic shortlist reruns. At that time M14 remained blocked on that deployment,
+the score-query fix, and hosted browser validation.
+
+On 2026-09-10 the current hosted system accepted an atomic shortlist refresh,
+the former score-candidate query completed without timing out, and the desktop
+and mobile mainnet browser path passed locally and against the public baseline.
+The refreshed `sift-category-taxonomy-v1.1.0` report passes with 12 curated
+agents and 12 current 8004scan cross-checks. Health, score, service, and image
+evidence is present where supported; reputation remains Unknown because no
+verified reputation source has been persisted. The only remaining M14 release
+gate is an authenticated operator's confirmation that every migration appears
+in hosted Supabase history.
 
 ## Codex Completion Report
 

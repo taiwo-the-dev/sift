@@ -79,6 +79,7 @@ type ScanClientOptions = Readonly<{
   apiKey?: string;
   cache?: ExternalEvidenceRepository;
   fetchImpl?: typeof fetch;
+  forceRefresh?: boolean;
   now?: () => Date;
   wait?: (milliseconds: number) => Promise<void>;
 }>;
@@ -188,6 +189,7 @@ export function create8004ScanClient(options: ScanClientOptions = {}) {
   const apiKey = options.apiKey?.trim() || undefined;
   const cache = options.cache ?? createExternalEvidenceRepository();
   const fetchImpl = options.fetchImpl ?? fetch;
+  const forceRefresh = options.forceRefresh ?? false;
   const now = options.now ?? (() => new Date());
   const wait = options.wait ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   const requestIntervalMs = apiKey ? 125 : 2_100;
@@ -196,7 +198,11 @@ export function create8004ScanClient(options: ScanClientOptions = {}) {
   return {
     async crossCheck(local: ScanLocalAgent): Promise<ScanCrossCheck> {
       const cached = await cache.find(local.agentDbId, "8004scan");
-      if (cached && Date.parse(cached.expires_at) > now().getTime()) {
+      if (
+        !forceRefresh &&
+        cached &&
+        Date.parse(cached.expires_at) > now().getTime()
+      ) {
         const mapped = mapStored8004ScanEvidence(cached);
         if (mapped) return mapped;
       }
@@ -353,5 +359,8 @@ export function create8004ScanClient(options: ScanClientOptions = {}) {
 }
 
 export function createConfigured8004ScanClient() {
-  return create8004ScanClient({ apiKey: process.env.SIFT_8004SCAN_API_KEY });
+  return create8004ScanClient({
+    apiKey: process.env.SIFT_8004SCAN_API_KEY,
+    forceRefresh: true,
+  });
 }

@@ -9,40 +9,25 @@ transactions are real and source-backed; unavailable evidence stays `Unknown`.
 
 ## Release status
 
-M0–M8 are complete. M9 is ready for its human-approved BSC Testnet transaction,
-M10 is ready for two-wallet hosted isolation validation, and M11 is ready for a
-final keyboard pass. The M12 release package is implemented locally but remains
-blocked on those checks and a production deployment. M13 is operational: the
-BSC Mainnet catalogue reached confirmed head `119684064` with 331,747 real
-indexed identities on 2026-09-03. M14 category coverage now passes against the
-hosted catalogue: the historical backfill, 12-agent shortlist, and 12 recorded
-8004scan checks completed on 2026-09-07. M14 remains blocked on deploying its
-forward shortlist-function fix, resolving the score-candidate query timeout,
-and completing the hosted browser matrix.
-M15's compatibility, recovery, tooling, and evidence foundation is implemented,
-but the milestone remains blocked until genuine category representatives and a
-human-approved testnet activation are recorded.
-The chain-aware BSC Mainnet hiring extension is implemented locally with
-verified APEX addresses and real-funds safeguards. It remains unavailable in
-the hosted app until migration `20260908110000_enable_mainnet_hiring.sql` is
-deployed and the release is validated without automated mainnet writes.
-M20 adds an optional Altana passkey wallet with visible, registered, bounded,
-and revocable session permissions plus atomic ERC-8183 hiring. Automated checks
-pass locally; real testnet grant, hire, and revoke evidence still requires a
-human browser test and is not claimed yet.
-M22 adds one evidence-based **Start task** entry point for recently checked
-ERC-8183, A2A, read-only MCP, and x402 services. Its code is implemented
-locally; the hosted migration and live-service validation are still pending.
+Sift is live at <https://sift-ten-swart.vercel.app> and the BSC Mainnet
+catalogue was current at confirmed head `121126225` when checked on 2026-09-10.
+All four hackathon categories pass the hosted coverage report with 12 curated
+mainnet agents and 12 current, source-labelled 8004scan cross-checks. The former
+score-candidate database timeout is resolved; health and scores still remain
+unavailable when their required real evidence is missing.
 
-**Live application:** not deployed or recorded yet. Do not replace this status
-with a URL until the exact Vercel deployment passes the
-[release checklist](docs/release-checklist.md).
+The automated mainnet judge path passes on desktop and mobile, and the public
+release smoke test passes. M16/M17 are still in progress because hosted migration
+history, the exact replacement deployment, three novice sessions, manual
+wallet/two-wallet checks, licensing, and the final submission media need owner
+confirmation. The current release direction is mainnet-only; scheduled indexing
+no longer runs a testnet job. No successful mainnet transaction is claimed.
 
 ## Product preview
 
-The images below were captured from the local release candidate using the
-configured hosted Supabase catalogue. They show real indexed records, not a
-claim that the app is already deployed.
+The images below were captured from a local candidate using the hosted Supabase
+catalogue. They show real indexed records; use the live URL above for the current
+public experience.
 
 ![Sift landing page](docs/screenshots/landing.png)
 
@@ -65,8 +50,8 @@ claim that the app is already deployed.
   insufficient rather than manufactured.
 - URL-backed side-by-side comparison that keeps missing evidence distinct from
   poor evidence.
-- User-controlled BSC Mainnet and BSC Testnet wallet connection with
-  fail-closed, chain-isolated ERC-8183/APEX hiring for compatible services.
+- User-controlled BSC Mainnet wallet connection with fail-closed ERC-8183/APEX
+  hiring for compatible services.
 - A signed-challenge dashboard that exposes only the connected wallet's
   persisted job and on-chain evidence.
 - Optional Altana passkey hiring with a one-hour registered session, exact
@@ -91,7 +76,7 @@ flowchart LR
   app <--> db
   browser <--> wallet["User-controlled\nwallet"]
   browser <--> altana["Altana passkey\n+ bounded session"]
-  wallet --> apex["BSC Mainnet / Testnet\nERC-8183 / APEX"]
+  wallet --> apex["BSC Mainnet\nERC-8183 / APEX"]
   altana --> apex
   apex --> rpc
   rpc --> app
@@ -137,12 +122,11 @@ an honest recovery state and never substitutes demo agents.
 | `SUPABASE_URL` | Yes for real catalogue/jobs | Server-only hosted project URL |
 | `SUPABASE_SECRET_KEY` | Yes for real catalogue/jobs | Server-only secret; never `NEXT_PUBLIC_` |
 | `SIFT_SITE_URL` | Production recommendation | Canonical HTTPS origin |
-| `BNB_NETWORK` | Single indexer run | `bsc-testnet` locally or `bsc-mainnet` for an intentional mainnet run |
+| `BNB_NETWORK` | Single indexer run | Set `bsc-mainnet` for the release catalogue |
 | `BNB_RPC_PRIMARY`, `BNB_RPC_FALLBACK_1`, `BNB_RPC_FALLBACK_2` | Optional | Server/indexer RPC overrides; secrets when token-bearing |
 | `BNB_MAINNET_RPC_PRIMARY`, `BNB_MAINNET_RPC_FALLBACK_1`, `BNB_MAINNET_RPC_FALLBACK_2` | Recommended for mainnet hiring/indexing | Server-only chain-56 RPC overrides |
-| `BNB_TESTNET_RPC_PRIMARY`, `BNB_TESTNET_RPC_FALLBACK_1`, `BNB_TESTNET_RPC_FALLBACK_2` | Optional | Server-only chain-97 RPC overrides |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional | Browser-public QR/mobile wallet project ID |
-| `NEXT_PUBLIC_BNB_TESTNET_RPC_URL`, `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC overrides |
+| `NEXT_PUBLIC_BNB_MAINNET_RPC_URL` | Optional | Browser-public RPC override |
 | `SIFT_8004SCAN_API_KEY` | Optional for core discovery; required for the intended Pro-tier validation run | Server-only external cross-check credential |
 | `ACTIVATION_CHECK_LIMIT`, `ACTIVATION_CHECK_CONCURRENCY`, `ACTIVATION_CHECK_INTERVAL_HOURS` | Optional | Bounded scheduled task-service checks; safe defaults are provided |
 
@@ -170,9 +154,9 @@ deployment order, and type-generation guidance lives in
 ## Indexing and evidence updates
 
 ```bash
-npm run index:smoke
-npm run index:agents       # bootstrap/resume historical ERC-8004 events
-npm run sync:agents        # incremental confirmed ranges
+BNB_NETWORK=bsc-mainnet npm run index:smoke
+BNB_NETWORK=bsc-mainnet npm run index:agents # bootstrap/resume historical events
+BNB_NETWORK=bsc-mainnet npm run sync:agents  # incremental confirmed ranges
 npm run report:catalogue   # per-network hosted counts/checkpoints/freshness
 npm run check:smoke
 npm run score:smoke
@@ -186,11 +170,12 @@ npm run enrich:categories   # bounded cached 8004scan cross-check
 npm run report:categories   # timestamped per-category evidence coverage
 npm run studio:scan         # read-only Agent Studio project detection
 npm run verify:activation   # real category/Studio/live-service readiness proof
-npm run verify:hiring-deployments # read-only chain-56/chain-97 APEX checks
+npm run verify:hiring-deployments # read-only APEX deployment checks
 ```
 
-Production scheduling uses `.github/workflows/sync-agents.yml` every two hours
-and `.github/workflows/assess-agents.yml` every six hours. See
+Production scheduling updates BSC Mainnet through
+`.github/workflows/sync-agents.yml` every two hours and runs assessments through
+`.github/workflows/assess-agents.yml` every six hours. See
 [indexer operations](docs/indexer.md) and [scoring](docs/scoring.md) for RPC
 fallbacks, checkpoints, provenance, freshness, and recovery.
 
@@ -204,6 +189,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run test:wallet-ui
+npm run test:browser:release
 npm run build
 npm audit
 npm run release:data
@@ -224,29 +210,28 @@ security boundaries.
 
 Follow the [Vercel/Supabase deployment runbook](docs/deployment.md), then record
 the exact URL, deployment, commit, workflow results, and wallet evidence in the
-[release checklist](docs/release-checklist.md). The concise
-[five-minute demo guide](docs/demo.md) covers preparation, expected states,
-testnet funding, timing, and recovery under demo pressure.
+[release checklist](docs/release-checklist.md). Use the
+[judge-path protocol](docs/judge-path-validation.md) for desktop, mobile,
+novice, and owner-approved mainnet wallet validation.
 
 ## Known limitations
 
 The full evidence-bound list is maintained in
 [docs/limitations.md](docs/limitations.md).
 
-- Public Vercel deployment and production-origin smoke evidence are not yet
-  recorded.
-- M9 still needs one real, human-approved, fully verified BSC Testnet job; Sift
-  does not claim that an agent delivered work merely because escrow was funded.
-- M10 still needs hosted two-wallet verification to prove job isolation across
-  real browser sessions.
-- ERC-8183/APEX hiring is bound to separate reviewed BSC Mainnet and BSC
-  Testnet deployments and fails closed when an agent service, network, or
-  contract relationship is incompatible.
-- M14 category coverage passes, but the forward shortlist-function safety fix
-  still needs to reach hosted Supabase and the full score refresh currently
-  times out while selecting candidates at catalogue scale.
-- Mainnet hiring code requires the new hosted migration and human validation.
-  Custody, unlimited token approvals, disputes, refunds, pause/revoke writes,
+- The current public baseline passes smoke and browser checks, but the new
+  candidate is not the recorded production commit yet.
+- Hosted Supabase behavior is working, but an authenticated operator must still
+  confirm the complete migration history and RLS/browser-role restrictions.
+- Mainnet wallet rejection, account-change recovery, a real optional hire, and
+  two-wallet dashboard isolation still need human validation. Sift does not
+  claim that an agent delivered work merely because escrow was funded.
+- ERC-8183/APEX hiring fails closed when an agent service, network, quote, owner,
+  or contract relationship is incompatible.
+- Reputation is unavailable because no verified reputation source has been
+  persisted. Many health checks and scores are also unavailable because Sift
+  refuses to guess missing or failed evidence.
+- Custody, unlimited token approvals, disputes, refunds, pause/revoke writes,
   and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;
   invalid, unreachable, stale, and insufficient-evidence states remain visible.
@@ -285,7 +270,8 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Sift Indexer](docs/indexer.md)
 - [Sift Score](docs/scoring.md)
 - [M14 category evidence](docs/categories.md)
-- [M15 activation proof](docs/activation-proof.md)
+- [Mainnet judge-path validation](docs/judge-path-validation.md)
+- [Submission package](docs/submission-package.md)
 - [Starting agent tasks](docs/agent-tasks.md)
 - [Comparison](docs/comparison.md)
 - [Wallet](docs/wallet.md)

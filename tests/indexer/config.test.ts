@@ -8,19 +8,19 @@ import {
 } from "../../lib/indexer/config";
 
 describe("parseIndexerConfig", () => {
-  it("uses the verified BSC Testnet deployment by default", () => {
+  it("uses the verified BSC Mainnet deployment by default", () => {
     const config = parseIndexerConfig({});
 
-    assert.equal(config.chainId, 97);
-    assert.equal(config.deploymentBlock, 84_555_147n);
+    assert.equal(config.chainId, 56);
+    assert.equal(config.deploymentBlock, 79_027_268n);
     assert.equal(
       config.registryAddress,
-      bnbNetworkDefinitions["bsc-testnet"].registryAddress,
+      bnbNetworkDefinitions["bsc-mainnet"].registryAddress,
     );
     assert.deepEqual(config.rpcEndpoints, [
-      "https://bsc-prebsc-dataseed.bnbchain.org",
-      "https://bsc-testnet.nodereal.io/v1/e9a36765eb8a40b9bd12e680a1fd2bc5",
-      "https://bsc-testnet.drpc.org",
+      "https://bsc-rpc.publicnode.com",
+      "https://bsc-mainnet.gateway.tatum.io",
+      "https://1rpc.io/bnb",
     ]);
   });
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress — automated mainnet browser path passes; human sessions pending
 
 ## Depends On
 
@@ -62,8 +62,8 @@ obvious only to the builders.
 - Test production builds where behavior differs from development mode.
 - Keep test selectors accessible and semantic; do not distort product markup
   solely for brittle automation.
-- Do not automate wallet seed entry. Use approved disposable testnet accounts
-  and manual human approval for real transaction evidence.
+- Do not automate wallet seed entry. Use an approved disposable mainnet account
+  with minimum funds and manual human approval for real transaction evidence.
 - Store anonymized test notes and evidence in documentation without personal
   data or secrets.
 - Record the exact commit, environment, viewport/browser, network, and data
@@ -82,7 +82,8 @@ obvious only to the builders.
 
 - Do not record seed phrases, private keys, wallet recovery UI, secrets, or
   sensitive participant information.
-- Use disposable testnet wallets and minimum required funds.
+- Use a disposable mainnet wallet with only the minimum real funds the owner
+  explicitly accepts risking.
 - Recheck two-wallet isolation, session expiry, logout/disconnect, network
   changes, and transaction confirmation boundaries during testing.
 - Sanitize screenshots, recordings, console output, and shared logs.
@@ -112,6 +113,17 @@ obvious only to the builders.
 - [ ] The final report maps functionality, data quality, and diversity criteria
       to evidence and known gaps.
 - [ ] No fabricated feedback, metric, testimonial, or live data is used.
+
+## Implementation Note — 2026-09-10
+
+`tests/e2e/judge-path.spec.ts` and `playwright.config.ts` now cover the stable
+mainnet no-wallet path on desktop Chromium and a Pixel 7 viewport. All 12 tests
+passed against a local production build and the public baseline at
+<https://sift-ten-swart.vercel.app>. The non-coaching protocol and empty real
+session record are in `docs/judge-path-validation.md`.
+
+M16 remains in progress. No novice session, mainnet wallet confirmation,
+two-wallet dashboard result, or final-candidate public retest has been claimed.
 
 ## Testing Requirements
 

@@ -2,28 +2,26 @@
 
 These limitations are product boundaries, not placeholder claims.
 
-- The BSC Mainnet bootstrap completed on 2026-09-03 with 331,747 indexed
-  identities and checkpoint/confirmed head `119684064`. That is a timestamped
+- The BSC Mainnet catalogue was current at checkpoint/confirmed head
+  `121126225` on 2026-09-10. The reported count is approximate and is a timestamped
   observation, not a promise that the catalogue stays current without the
   incremental workflow.
 - M14 category classification, its 12-agent validated shortlist, 12 bounded
   8004scan checks, and the hosted coverage report are populated and passing.
-  The forward shortlist-function safety migration still needs hosted deployment.
-- The latest bounded health refresh completed, but the catalogue-wide score
-  candidate query timed out at current scale. Existing source-backed scores
-  remain visible and missing scores remain `Unknown`; no replacement values are
-  inferred.
+  Hosted runtime behavior confirms the required functions work, but an
+  authenticated operator still needs to confirm the complete migration history.
+- Bounded service, health, and score refreshes complete, but many third-party
+  services are unavailable or lack enough current evidence. Scores and health
+  remain unavailable rather than inferred when their evidence threshold is not met.
 - 8004scan may omit fields, disagree, rate-limit, or become unavailable. It is
   optional validation only; Sift's own indexed identity remains the core.
 - ERC-8004 registration proves an identity event, not endpoint health,
   reputation, work quality, or ERC-8183 compatibility. Missing evidence remains
   unavailable or `Unknown`.
-- Discovery defaults to production-chain identities. Hiring supports only the
-  reviewed BSC Mainnet and BSC Testnet ERC-8183/APEX deployments. Mainnet can
-  spend real assets and remains unavailable in hosted environments until the
-  mainnet-hiring migration and release validation are complete.
-- Altana protected hiring is implemented locally but has no claimed real grant,
-  hire, or revoke until the human BSC Testnet runbook is completed. The live
+- Discovery defaults to BSC Mainnet. Mainnet hiring can spend real assets and
+  has no claimed human transaction proof for the release candidate.
+- Altana protected hiring is implemented locally but is excluded from the
+  mainnet release until compatible human safety evidence exists. The live
   session signer intentionally disappears on reload; its public KeyStore record
   remains inspectable and revocable. Passkey-wallet jobs are not yet accessible
   through the EOA-signed private dashboard.
@@ -33,6 +31,6 @@ These limitations are product boundaries, not placeholder claims.
 - Public/free RPCs, GitHub Actions, Supabase, metadata hosts, and agent services
   may rate-limit or become unavailable. Checkpoints and timestamps disclose the
   last observed evidence instead of promising real-time state.
-- The final public deployment, human-approved testnet hiring proof, two-wallet
-  dashboard isolation check, and organizer eligibility answer remain external
-  release gates documented in the milestone tickets.
+- The replacement public deployment, human-approved mainnet wallet checks,
+  two-wallet dashboard isolation, novice sessions, license, and submission media
+  remain external release gates documented in the milestone tickets.

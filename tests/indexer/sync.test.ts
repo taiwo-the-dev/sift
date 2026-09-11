@@ -132,6 +132,7 @@ describe("indexer range integration", () => {
     const logger = createLogger(() => undefined);
     const rpc = new RegistryRpcPool([provider], logger);
     const config = parseIndexerConfig({
+      BNB_NETWORK: "bsc-testnet",
       ERC8004_DEPLOYMENT_BLOCK: "100",
       INDEXER_BATCH_SIZE: "1",
       INDEXER_CONFIRMATIONS: "1",
@@ -249,6 +250,7 @@ describe("indexer range integration", () => {
     };
     const logger = createLogger(() => undefined);
     const config = parseIndexerConfig({
+      BNB_NETWORK: "bsc-testnet",
       ERC8004_DEPLOYMENT_BLOCK: "100",
       INDEXER_BATCH_SIZE: "1",
       INDEXER_CONFIRMATIONS: "1",
