@@ -45,7 +45,7 @@ export function AltanaSessionControls({
   initialChainId = 97,
 }: Readonly<{ initialChainId?: HiringChainId }>) {
   const altana = useAltanaSession();
-  const [chainId, setChainId] = useState<HiringChainId>(initialChainId);
+  const chainId = initialChainId;
   const [tokenCap, setTokenCap] = useState(initialChainId === 97 ? "1" : "0");
   const [mainnetAccepted, setMainnetAccepted] = useState(false);
   const [pending, setPending] = useState<PendingAction | null>(null);
@@ -119,31 +119,9 @@ export function AltanaSessionControls({
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Network</p>
-            <h2 className="mt-2 text-xl font-semibold text-foreground">Permission details</h2>
-          </div>
-          <div className="inline-flex rounded-lg border border-border bg-background p-1" aria-label="Permission network">
-            {([97, 56] as const).map((candidate) => (
-              <button
-                key={candidate}
-                type="button"
-                onClick={() => {
-                  setChainId(candidate);
-                  setTokenCap(candidate === 97 ? "1" : "0");
-                  setMainnetAccepted(false);
-                  setNotice(null);
-                }}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                  chainId === candidate ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {candidate === 97 ? "BSC Testnet" : "BSC Mainnet"}
-              </button>
-            ))}
-          </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Permission</p>
+          <h2 className="mt-2 text-xl font-semibold text-foreground">Permission details</h2>
         </div>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">

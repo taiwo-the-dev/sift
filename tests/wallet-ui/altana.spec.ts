@@ -16,6 +16,7 @@ describe("Altana browser integration boundaries", () => {
     assert.match(source, /Create protected permission/);
     assert.match(source, /Check on-chain status/);
     assert.match(source, /Revoke permission/);
+    assert.doesNotMatch(source, /setChainId/);
     assert.match(fundingSource, /Fund your passkey wallet/);
     assert.match(fundingSource, /CopyButton/);
     assert.match(fundingSource, /Check balances/);
