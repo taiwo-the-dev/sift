@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
+import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
 import { buttonVariants } from "@/components/ui/button";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import { buildExplorerAddressHref } from "@/features/agents/links";
@@ -30,7 +31,7 @@ import {
 } from "@/features/discovery/format";
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
 import { getHealthPresentation } from "@/features/health/presentation";
-import { describeScoreConfidence } from "@/features/scoring/presentation";
+import { getAgentRating } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
 import {
   currentActivationServices,
@@ -47,7 +48,7 @@ interface EvidenceStatProps {
   detail: string;
   icon: ReactNode;
   label: string;
-  value: string;
+  value: ReactNode;
 }
 
 const provenanceToneStyles = {
@@ -87,16 +88,7 @@ export function ProfileHeader({
     profile.chainId,
     profile.registryAddress,
   );
-  const scoreValue = !profile.score
-    ? "Not available"
-    : profile.score.score === null
-      ? "Not enough data"
-      : `${profile.score.score}/100`;
-  const scoreDetail = !profile.score
-    ? "Waiting for enough verified evidence"
-    : profile.score.score === null
-      ? `${describeScoreConfidence(profile.score.confidence)} · insufficient evidence`
-      : describeScoreConfidence(profile.score.confidence);
+  const rating = getAgentRating(profile);
   const healthPresentation = getHealthPresentation(
     profile.health,
     profile.services,
@@ -253,9 +245,13 @@ export function ProfileHeader({
           />
           <EvidenceStat
             icon={<Gauge className="size-4 text-brand" aria-hidden="true" />}
-            label="Sift Score"
-            value={scoreValue}
-            detail={scoreDetail}
+            label={rating.label}
+            value={
+              <>
+                <AnimatedRatingValue value={rating.value} />/100
+              </>
+            }
+            detail={rating.detail}
           />
           <EvidenceStat
             icon={<RadioTower className="size-4 text-sky-300" aria-hidden="true" />}

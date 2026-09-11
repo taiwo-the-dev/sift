@@ -1,11 +1,12 @@
 import { CircleHelp, Gauge, History } from "lucide-react";
 
+import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
 import {
   describeScoreConfidence,
-  formatScoreConfidence,
+  getAgentRating,
   isScoreStale,
   scoreComponentRows,
 } from "@/features/scoring/presentation";
@@ -13,12 +14,25 @@ import {
 interface ScoreExplanationProps {
   profile: Pick<
     AgentProfile,
-    "health" | "metadataStatus" | "reputation" | "services"
+    | "active"
+    | "description"
+    | "health"
+    | "imageUrl"
+    | "lastSyncedAt"
+    | "metadataStatus"
+    | "metadataVerifiedAt"
+    | "name"
+    | "ownerAddress"
+    | "reputation"
+    | "services"
+    | "x402Supported"
   >;
   score: PersistedSiftScore | null;
 }
 
 export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
+  const rating = getAgentRating({ ...profile, score });
+
   if (!score) {
     const missingEvidence = [
       profile.metadataStatus !== "valid" ? "a verified profile" : null,
@@ -31,16 +45,16 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
       <article className="rounded-xl border border-dashed border-border bg-card px-5 py-7 sm:px-6">
         <CircleHelp className="size-5 text-muted-foreground" aria-hidden="true" />
         <h3 className="mt-4 text-lg font-semibold text-foreground">
-          Sift Score not calculated yet
+          {rating.label} · <AnimatedRatingValue value={rating.value} />/100
         </h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Sift only publishes a score after enough current, verifiable evidence
-          has been recorded. It never fills missing evidence with estimates.
+          This rating measures the verified profile and service information the
+          agent has published. It does not claim that the service performs well.
         </p>
         <p className="mt-3 text-xs leading-5 text-muted-foreground">
           {missingEvidence.length > 0
             ? `Still needed: ${missingEvidence.join(", ")}.`
-            : "The evidence is available, but the scheduled score calculation has not completed yet."}
+            : "More independent evidence is needed before this becomes a verified Sift Score."}
         </p>
       </article>
     );
@@ -58,19 +72,22 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
         </span>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Sift Score · {score.version}
+            {rating.label} · {score.version}
           </p>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <p className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-              {score.score === null ? "Not enough data" : `${score.score}/100`}
+              <AnimatedRatingValue value={rating.value} />/100
             </p>
             <span className="text-sm font-medium text-brand">
-              {describeScoreConfidence(score.confidence)}
+              {rating.kind === "verified"
+                ? describeScoreConfidence(score.confidence)
+                : rating.kind === "provisional"
+                  ? "Provisional evidence"
+                  : "Published details only"}
             </span>
           </div>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {formatScoreConfidence(score.confidence)}. Missing data lowers the
-            confidence level.
+            {rating.detail}. Missing data is never treated as positive evidence.
           </p>
         </div>
         <div className="text-xs text-muted-foreground sm:text-right">
@@ -159,8 +176,8 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
                     missingRows.length === 1 ? "is" : "are"
                   } not included because the data is missing or outdated.`
                 : "All six scoring factors have current data."}
-              {" "}Sift Score supports comparison; it does not certify agent
-              safety or suitability.
+              {" "}This rating supports comparison; it does not certify agent
+              safety, performance, or suitability.
             </p>
           </div>
         </div>

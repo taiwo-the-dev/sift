@@ -13,8 +13,9 @@ Sift is live at <https://sift-ten-swart.vercel.app> and the BSC Mainnet
 catalogue was current at confirmed head `121126225` when checked on 2026-09-10.
 All four hackathon categories pass the hosted coverage report with 12 curated
 mainnet agents and 12 current, source-labelled 8004scan cross-checks. The former
-score-candidate database timeout is resolved; health and scores still remain
-unavailable when their required real evidence is missing.
+score-candidate database timeout is resolved. Every agent now receives a clearly
+labelled Profile, Provisional, or verified Sift rating; health and verified
+scores remain unavailable when their required real evidence is missing.
 
 The automated mainnet judge path passes on desktop and mobile, and the public
 release smoke test passes. M16/M17 are still in progress because hosted migration
@@ -47,7 +48,8 @@ public experience.
 - Professional agent profiles with ownership, service, source, freshness,
   health, reputation, and activity evidence.
 - A versioned, reproducible Sift Score that is withheld when current evidence is
-  insufficient rather than manufactured.
+  insufficient rather than manufactured, with clearly labelled Profile and
+  Provisional ratings for agents that have less evidence.
 - URL-backed side-by-side comparison that keeps missing evidence distinct from
   poor evidence.
 - User-controlled BSC Mainnet wallet connection with fail-closed ERC-8183/APEX
@@ -229,8 +231,9 @@ The full evidence-bound list is maintained in
 - ERC-8183/APEX hiring fails closed when an agent service, network, quote, owner,
   or contract relationship is incompatible.
 - Reputation is unavailable because no verified reputation source has been
-  persisted. Many health checks and scores are also unavailable because Sift
-  refuses to guess missing or failed evidence.
+  persisted. Many health checks and verified Sift Scores are also unavailable;
+  lower-evidence agents receive explicitly labelled Profile or Provisional
+  ratings instead of invented performance evidence.
 - Custody, unlimited token approvals, disputes, refunds, pause/revoke writes,
   and invented fallback transactions are not implemented.
 - Agent metadata and endpoint availability are controlled by external owners;

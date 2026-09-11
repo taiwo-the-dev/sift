@@ -13,6 +13,7 @@ import { AgentArtworkHeader } from "@/components/agents/agent-artwork-header";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
+import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
 import { buildAgentProfileHref } from "@/features/agents/route";
 import {
   formatActivationMethod,
@@ -34,8 +35,8 @@ import {
   type HealthPresentation,
 } from "@/features/health/presentation";
 import {
-  describeScoreConfidence,
   describeScoreTier,
+  getAgentRating,
   isScoreStale,
   type ScoreTier,
 } from "@/features/scoring/presentation";
@@ -202,17 +203,16 @@ export function AgentCard({
             : "View agent";
   const healthPresentation = getHealthPresentation(agent.health, agent.services);
   const healthTierTone = healthStateTone[healthPresentation.state];
-  const scoreIsStale = agent.score
-    ? isScoreStale(agent.score.calculatedAt)
-    : false;
-  const scoreNumber = agent.score?.score ?? null;
-  const scoreTier = describeScoreTier(scoreNumber);
+  const rating = getAgentRating(agent);
+  const scoreIsStale =
+    rating.kind !== "profile" && agent.score
+      ? isScoreStale(agent.score.calculatedAt)
+      : false;
+  const scoreTier = describeScoreTier(rating.value);
   const scoreSignalTone = scoreTierTone[scoreTier.tier];
-  const scoreDetail = agent.score
-    ? scoreIsStale
-      ? "Refresh needed"
-      : describeScoreConfidence(agent.score.confidence)
-    : "Awaiting evidence";
+  const scoreDetail = scoreIsStale
+    ? `${rating.detail} · refresh needed`
+    : rating.detail;
 
   return (
     <article className="sift-card-reveal group flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
@@ -296,41 +296,28 @@ export function AgentCard({
                 )}
                 aria-hidden="true"
               />
-              Sift Score
+              {rating.label}
             </dt>
             <dd className="relative mt-3">
-              {scoreNumber !== null ? (
-                <>
-                  <div className="flex items-end gap-1.5">
-                    <span
-                      className={cn(
-                        "text-3xl leading-none font-semibold tracking-[-0.05em] tabular-nums",
-                        signalToneStyles[scoreSignalTone].value,
-                      )}
-                    >
-                      {scoreNumber}
-                    </span>
-                    <span className="pb-0.5 text-[0.62rem] text-muted-foreground">
-                      / 100
-                    </span>
-                  </div>
-                  <p
-                    className="mt-2 truncate text-[0.65rem] text-muted-foreground"
-                    title={`${scoreTier.label} · ${scoreDetail}`}
-                  >
-                    {scoreTier.label} · {scoreDetail}
-                  </p>
-                </>
-              ) : (
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Not scored yet
-                  </p>
-                  <p className="mt-1 text-[0.65rem] leading-4 text-muted-foreground">
-                    Waiting for enough verified evidence
-                  </p>
-                </div>
-              )}
+              <div className="flex items-end gap-1.5">
+                <span
+                  className={cn(
+                    "text-3xl leading-none font-semibold tracking-[-0.05em] tabular-nums",
+                    signalToneStyles[scoreSignalTone].value,
+                  )}
+                >
+                  <AnimatedRatingValue value={rating.value} />
+                </span>
+                <span className="pb-0.5 text-[0.62rem] text-muted-foreground">
+                  / 100
+                </span>
+              </div>
+              <p
+                className="mt-2 truncate text-[0.65rem] text-muted-foreground"
+                title={`${scoreTier.label} · ${scoreDetail}`}
+              >
+                {scoreTier.label} · {scoreDetail}
+              </p>
             </dd>
           </div>
           <div className="min-w-0 divide-y divide-border">

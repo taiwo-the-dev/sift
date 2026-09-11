@@ -92,6 +92,27 @@ A score is withheld unless at least 40% of total formula weight is supported and
 
 Every assessment, including a withheld `null` result, is persisted with its component values, confidence, formula version, calculation time, source freshness, and an evidence snapshot. Identical inputs and assessment time produce identical output.
 
+### Rating levels in the product
+
+Every indexed agent receives the strongest honest rating Sift can support:
+
+- **Sift Score** — the persisted assessment meets the 40% evidence threshold
+  and includes at least one independent signal.
+- **Provisional Rating** — some independent health, reputation, reliability, or
+  task evidence exists, but total evidence is still below the publication bar.
+- **Profile Rating** — only verified published profile and service information
+  is available. This measures declaration completeness, not performance.
+
+The Profile Rating reuses the formula's profile-quality and service-information
+components, normalized within their combined 20% weight. An invalid or missing
+profile therefore receives a Profile Rating of zero rather than an invented
+performance value. Provisional ratings use the weighted average of the
+available persisted components and always show their evidence coverage.
+
+Only a published Sift Score may influence score-based Featured placement or
+break a supported comparison tie. Provisional and Profile ratings are display
+guidance and never substitute for verified performance evidence.
+
 ## Recalculation
 
 Run a configuration/formula smoke check:

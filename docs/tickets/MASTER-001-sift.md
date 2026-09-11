@@ -632,6 +632,13 @@ Every component of the score must be derived from real data or deterministic rul
 
 If insufficient information exists, reduce confidence instead of inventing a score.
 
+In the product, label the result according to its evidence level: **Sift Score**
+only when the publication threshold and an independent signal are satisfied,
+**Provisional Rating** when limited independent evidence exists, and **Profile
+Rating** when only published profile/service completeness can be measured.
+Always show the label and evidence coverage. Profile and Provisional ratings
+must not be treated as verified performance evidence.
+
 Consider storing:
 
 ```text

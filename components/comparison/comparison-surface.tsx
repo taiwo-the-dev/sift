@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AgentSelectionActions } from "@/components/comparison/comparison-actions";
+import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
 import { collectDeclaredCapabilities } from "@/features/agents/presentation";
@@ -33,7 +34,7 @@ import {
 } from "@/features/health/presentation";
 import {
   describeScoreConfidence,
-  formatScoreConfidence,
+  getAgentRating,
   isScoreStale,
   scoreComponentRows,
 } from "@/features/scoring/presentation";
@@ -62,26 +63,24 @@ function UnknownValue({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 function ScoreValue({ agent }: Readonly<{ agent: AgentProfile }>) {
+  const rating = getAgentRating(agent);
   const score = agent.score;
-
-  if (!score) {
-    return (
-      <UnknownValue>Sift Score is not available for this agent.</UnknownValue>
-    );
-  }
 
   return (
     <div>
       <p className="text-lg font-semibold text-foreground">
-        {score.score === null ? "Not enough data" : `${score.score}/100`}
+        <AnimatedRatingValue value={rating.value} />/100
       </p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        {describeScoreConfidence(score.confidence)} ·{" "}
-        {formatScoreConfidence(score.confidence)}
+        {rating.label} ·{" "}
+        {rating.kind === "verified" && score
+          ? `${describeScoreConfidence(score.confidence)} · ${rating.detail}`
+          : rating.detail}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {isScoreStale(score.calculatedAt) ? "Stale" : "Current"} ·{" "}
-        {formatProfileTimestamp(score.calculatedAt)}
+        {score
+          ? `${isScoreStale(score.calculatedAt) ? "Stale" : "Current"} · ${formatProfileTimestamp(score.calculatedAt)}`
+          : "Calculated from the current published profile"}
       </p>
     </div>
   );
@@ -89,7 +88,16 @@ function ScoreValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   if (!agent.score) {
-    return <UnknownValue>Score details are not available.</UnknownValue>;
+    const rating = getAgentRating(agent);
+    return (
+      <div className="text-sm leading-6">
+        <p className="font-semibold text-foreground">{rating.label}</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          {rating.detail}. This rating uses profile quality and published service
+          information only.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -371,13 +379,13 @@ function LastVerifiedValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 const comparisonRows: readonly ComparisonRow[] = [
   {
-    description: "Score, confidence, available data, and last update.",
-    label: "Sift Score",
+    description: "The strongest supported rating, its evidence level, and last update.",
+    label: "Agent rating",
     render: (agent) => <ScoreValue agent={agent} />,
   },
   {
-    description: "How the six score factors contribute.",
-    label: "Score breakdown",
+    description: "How the available rating factors contribute.",
+    label: "Rating evidence",
     render: (agent) => <ScoreBreakdownValue agent={agent} />,
   },
   {
@@ -470,6 +478,7 @@ function AgentColumnHeader({
   const name = formatAgentName(agent.name, agent.agentId);
   const profileHref = buildAgentProfileHref(agent.chainId, agent.agentId);
   const highlighted = isMatch(agent, contextualMatch);
+  const rating = getAgentRating(agent);
 
   return (
     <div>
@@ -514,9 +523,7 @@ function AgentColumnHeader({
         </span>
         <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-1 text-muted-foreground">
           <Gauge className="size-3 text-brand" aria-hidden="true" />
-          {agent.score?.score === null || !agent.score
-            ? "Score unavailable"
-            : `${agent.score.score}/100`}
+          <AnimatedRatingValue value={rating.value} />/100 · {rating.label}
         </span>
       </div>
       <BookmarkToggle agent={agent} variant="compact" className="mt-3" />

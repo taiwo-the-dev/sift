@@ -6,6 +6,7 @@ import {
   describeScoreConfidence,
   describeScoreTier,
   formatScoreConfidence,
+  getAgentRating,
   isScoreStale,
   scoreComponentRows,
 } from "../../features/scoring/presentation";
@@ -31,6 +32,25 @@ const score: PersistedSiftScore = {
 };
 
 describe("Sift Score presentation", () => {
+  const ratingInput = {
+    active: true,
+    description: "A complete agent profile.",
+    imageUrl: "https://agent.example/avatar.png",
+    lastSyncedAt: "2026-08-22T11:00:00.000Z",
+    metadataStatus: "valid" as const,
+    name: "Example agent",
+    ownerAddress: "0x1111111111111111111111111111111111111111",
+    services: [
+      {
+        endpoint: "https://agent.example/a2a",
+        metadata: { declared: true },
+        serviceType: "A2A",
+        version: "1.0",
+      },
+    ],
+    x402Supported: false,
+  };
+
   it("labels confidence without implying certainty", () => {
     assert.equal(describeScoreConfidence(0), "Not enough data");
     assert.equal(describeScoreConfidence(0.4), "Low confidence");
@@ -79,5 +99,61 @@ describe("Sift Score presentation", () => {
     assert.equal(rows.length, 6);
     assert.equal(rows.find((row) => row.key === "availability")?.contribution, 20);
     assert.equal(rows.find((row) => row.key === "reputation")?.value, null);
+  });
+
+  it("keeps a publishable assessment labelled as a Sift Score", () => {
+    assert.deepEqual(getAgentRating({ ...ratingInput, score }), {
+      coverage: 0.4,
+      detail: "40% data coverage",
+      kind: "verified",
+      label: "Sift Score",
+      value: 82.5,
+    });
+  });
+
+  it("shows a provisional rating when limited independent evidence exists", () => {
+    const result = getAgentRating({
+      ...ratingInput,
+      score: {
+        ...score,
+        components: {
+          availability: 100,
+          capability: null,
+          metadata: null,
+          reliability: null,
+          reputation: null,
+          trackRecord: null,
+        },
+        confidence: 0.2,
+        score: null,
+      },
+    });
+
+    assert.equal(result.kind, "provisional");
+    assert.equal(result.label, "Provisional Rating");
+    assert.equal(result.value, 100);
+    assert.equal(result.coverage, 0.2);
+  });
+
+  it("rates published profile details without calling them performance", () => {
+    const result = getAgentRating({ ...ratingInput, score: null });
+
+    assert.equal(result.kind, "profile");
+    assert.equal(result.label, "Profile Rating");
+    assert.equal(result.value, 77.5);
+    assert.equal(result.coverage, 0.2);
+  });
+
+  it("uses a zero profile rating when no profile evidence is verified", () => {
+    const result = getAgentRating({
+      ...ratingInput,
+      metadataStatus: "invalid",
+      score: null,
+    });
+
+    assert.equal(result.kind, "profile");
+    assert.equal(result.value, 0);
+    assert.equal(result.coverage, 0);
+    assert.equal(result.detail, "No verified profile information");
   });
 });

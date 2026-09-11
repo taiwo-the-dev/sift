@@ -45,7 +45,8 @@ Unknown evidence is never converted to zero and never loses a tie to known evide
 
 The comparison presents only supported persisted or documented derived values:
 
-- Sift Score, confidence, evidence coverage, versioned breakdown, and freshness;
+- the best available Sift, Provisional, or Profile rating, with its evidence
+  level, available versioned breakdown, and freshness;
 - sourced reputation and verified activity where present;
 - bounded observed health and observation time;
 - resolved categories and their source;

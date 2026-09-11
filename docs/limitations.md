@@ -11,8 +11,10 @@ These limitations are product boundaries, not placeholder claims.
   Hosted runtime behavior confirms the required functions work, but an
   authenticated operator still needs to confirm the complete migration history.
 - Bounded service, health, and score refreshes complete, but many third-party
-  services are unavailable or lack enough current evidence. Scores and health
-  remain unavailable rather than inferred when their evidence threshold is not met.
+  services are unavailable or lack enough current evidence. Verified Sift
+  Scores and health remain unavailable when their evidence threshold is not
+  met; Profile and Provisional ratings are labelled separately and do not claim
+  verified performance.
 - 8004scan may omit fields, disagree, rate-limit, or become unavailable. It is
   optional validation only; Sift's own indexed identity remains the core.
 - ERC-8004 registration proves an identity event, not endpoint health,
