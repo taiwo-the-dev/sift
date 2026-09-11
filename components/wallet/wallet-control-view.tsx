@@ -8,9 +8,11 @@ import {
   LoaderCircle,
   LogOut,
   Network,
+  ShieldCheck,
   WalletCards,
   X,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { WalletErrorMessage } from "@/features/wallet/presentation";
@@ -39,6 +41,7 @@ interface WalletControlViewProps {
   onConnect?: () => void;
   onDisconnect?: () => void;
   onDismissNotice?: () => void;
+  onNavigatePermissions?: () => void;
   onOpenChain?: () => void;
   onSwitchToTestnet?: () => void;
   view: WalletConnectionView;
@@ -49,6 +52,7 @@ export function WalletControlView({
   onConnect,
   onDisconnect,
   onDismissNotice,
+  onNavigatePermissions,
   onOpenChain,
   onSwitchToTestnet,
   view,
@@ -202,7 +206,32 @@ export function WalletControlView({
                     </div>
                   </dl>
 
-                  <div className="pt-1.5">
+                  <div className="py-1.5">
+                    <Popover.Close
+                      render={<Link href="/permissions" />}
+                      nativeButton={false}
+                      onClick={onNavigatePermissions}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "default" }),
+                        "h-auto w-full justify-start px-2.5 py-2 text-xs",
+                      )}
+                    >
+                      <ShieldCheck
+                        className="size-4 shrink-0 text-brand"
+                        aria-hidden="true"
+                      />
+                      <span className="grid min-w-0 gap-0.5 text-left">
+                        <span className="font-semibold text-foreground">
+                          Permissions
+                        </span>
+                        <span className="text-[0.65rem] font-normal text-muted-foreground">
+                          Manage hiring access
+                        </span>
+                      </span>
+                    </Popover.Close>
+                  </div>
+
+                  <div className="border-t border-border pt-1.5">
                     <Popover.Close
                       type="button"
                       className={cn(

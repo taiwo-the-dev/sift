@@ -9,7 +9,10 @@ import {
   formatResponseTime,
 } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
-import { describeHealthOutcome } from "@/features/health/presentation";
+import {
+  describeHealthOutcome,
+  getHealthPresentation,
+} from "@/features/health/presentation";
 
 interface ProfileEvidenceProps {
   profile: AgentProfile;
@@ -31,6 +34,11 @@ function EvidenceUnavailable({
 }
 
 export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
+  const healthPresentation = getHealthPresentation(
+    profile.health,
+    profile.services,
+  );
+
   return (
     <ProfileSection
       id="evidence"
@@ -51,8 +59,8 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
               <span className="grid size-10 place-items-center rounded-lg border border-sky-400/20 bg-sky-400/8 text-sky-200">
                 <Activity className="size-4" aria-hidden="true" />
               </span>
-              <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold capitalize text-foreground">
-                {profile.health.status}
+              <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground">
+                {healthPresentation.label}
               </span>
             </div>
             <h3 className="mt-5 text-lg font-semibold text-foreground">
@@ -105,8 +113,8 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
           </article>
         ) : (
           <EvidenceUnavailable
-            title="Health check not available"
-            description="Sift has not checked this agent's service yet."
+            title={healthPresentation.label}
+            description={healthPresentation.detail}
           />
         )}
 

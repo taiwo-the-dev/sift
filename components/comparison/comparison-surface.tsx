@@ -27,7 +27,10 @@ import {
   formatMetadataStatus,
   formatServiceType,
 } from "@/features/discovery/format";
-import { describeHealthOutcome } from "@/features/health/presentation";
+import {
+  describeHealthOutcome,
+  getHealthPresentation,
+} from "@/features/health/presentation";
 import {
   describeScoreConfidence,
   formatScoreConfidence,
@@ -157,16 +160,17 @@ function ReputationValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
 function HealthValue({ agent }: Readonly<{ agent: AgentProfile }>) {
   const health = agent.health;
+  const presentation = getHealthPresentation(health, agent.services);
 
   if (!health) {
-    return <UnknownValue>No health check is available.</UnknownValue>;
+    return <UnknownValue>{presentation.detail}</UnknownValue>;
   }
 
   return (
     <div className="text-sm leading-6">
-      <p className="inline-flex items-center gap-2 font-semibold capitalize text-foreground">
+      <p className="inline-flex items-center gap-2 font-semibold text-foreground">
         <RadioTower className="size-4 text-brand" aria-hidden="true" />
-        {health.status}
+        {presentation.label}
       </p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
         {describeHealthOutcome(health.outcome)}

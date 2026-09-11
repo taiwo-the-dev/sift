@@ -6,8 +6,6 @@ import {
   BriefcaseBusiness,
   Compass,
   Menu,
-  Search,
-  ShieldCheck,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -123,35 +121,6 @@ export function MobileNavigation() {
                 })}
               </nav>
 
-              <div className="my-6 h-px bg-border" />
-
-              <p className="px-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Quick actions
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link
-                  href="/discover#discovery-search"
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    buttonVariants({ variant: "brand", size: "lg" }),
-                    "min-w-0 px-3",
-                  )}
-                >
-                  <Search className="size-4" aria-hidden="true" />
-                  Search
-                </Link>
-                <Link
-                  href="/permissions"
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "min-w-0 px-3",
-                  )}
-                >
-                  <ShieldCheck className="size-4" aria-hidden="true" />
-                  Safety
-                </Link>
-              </div>
             </div>
 
             <div className="shrink-0 border-t border-border bg-card/45 p-4">

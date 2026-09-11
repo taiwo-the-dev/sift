@@ -114,10 +114,12 @@ export function DashboardJobCard({ job }: Readonly<{ job: DashboardJob }>) {
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Agent health</dt>
-            <dd className="mt-1 font-medium capitalize text-foreground">
+            <dd className="mt-1 font-medium text-foreground">
               {job.agent.healthStatus === "unknown"
-                ? "Not checked"
-                : job.agent.healthStatus}
+                ? job.agent.healthCheckedAt
+                  ? "Couldn’t verify"
+                  : "Not checked yet"
+                : `${job.agent.healthStatus.charAt(0).toUpperCase()}${job.agent.healthStatus.slice(1)}`}
             </dd>
             <p className="mt-1 text-[0.7rem] text-muted-foreground">
               {job.agent.healthCheckedAt

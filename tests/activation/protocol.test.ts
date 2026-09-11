@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { encodePaymentResponseHeader } from "@x402/core/http";
 
 import {
   a2aCardUrl,
   callMcpTool,
   callReadOnlyMcpTool,
   extractPreparedEvmTransactions,
+  executeX402Service,
   inspectA2aService,
   inspectMcpService,
   inspectX402Service,
@@ -236,10 +238,14 @@ describe("bounded agent task protocols", () => {
   it("accepts only an exact x402 option on the indexed BNB chain", async () => {
     const challenge = Buffer.from(
       JSON.stringify({
+        x402Version: 2,
+        resource: { url: "https://agent.example/paid" },
         accepts: [
           {
             amount: "1000",
             asset: "0x1111111111111111111111111111111111111111",
+            extra: { assetTransferMethod: "eip3009", name: "USD Test", version: "1" },
+            maxTimeoutSeconds: 120,
             network: "eip155:56",
             payTo: "0x2222222222222222222222222222222222222222",
             scheme: "exact",
@@ -262,10 +268,14 @@ describe("bounded agent task protocols", () => {
   it("rejects x402 options with a non-exact payment scheme", async () => {
     const challenge = Buffer.from(
       JSON.stringify({
+        x402Version: 2,
+        resource: { url: "https://agent.example/paid" },
         accepts: [
           {
             amount: "1000",
             asset: "0x1111111111111111111111111111111111111111",
+            extra: { assetTransferMethod: "eip3009", name: "USD Test", version: "1" },
+            maxTimeoutSeconds: 120,
             network: "eip155:56",
             payTo: "0x2222222222222222222222222222222222222222",
             scheme: "upto",
@@ -282,7 +292,81 @@ describe("bounded agent task protocols", () => {
           }),
         resolveHost: resolvePublicTestHost,
       }),
-      /No x402 option matches/,
+      /did not offer a supported exact BNB Chain payment/,
+    );
+  });
+
+  it("revalidates and relays one signed x402 payment to the indexed endpoint", async () => {
+    const now = Math.floor(Date.now() / 1_000);
+    const challengeBody = {
+      accepts: [
+        {
+          asset: "0x1111111111111111111111111111111111111111",
+          description: "Paid result",
+          extra: { name: "USD Test", transferMethod: "eip3009", version: "1" },
+          maxAmountRequired: "1000",
+          maxTimeoutSeconds: 120,
+          network: "eip155:56",
+          payTo: "0x2222222222222222222222222222222222222222",
+          resource: "/paid",
+          scheme: "exact",
+        },
+      ],
+      x402Version: 1,
+    };
+    const challenge = Buffer.from(JSON.stringify(challengeBody)).toString("base64");
+    const settlement = encodePaymentResponseHeader({
+      network: "eip155:56",
+      payer: "0x3333333333333333333333333333333333333333",
+      success: true,
+      transaction: `0x${"44".repeat(32)}`,
+    });
+    const requests: RequestInit[] = [];
+    const result = await executeX402Service({
+      chainId: 56,
+      endpoint: "https://agent.example/paid",
+      fetchImpl: async (_url, init) => {
+        requests.push(init ?? {});
+        return requests.length === 1
+          ? new Response("", {
+              headers: { "payment-required": challenge },
+              status: 402,
+            })
+          : Response.json(
+              { recommendation: "hold" },
+              { headers: { "x-payment-response": settlement } },
+            );
+      },
+      payer: "0x3333333333333333333333333333333333333333",
+      paymentPayload: {
+        network: "eip155:56",
+        payload: {
+          authorization: {
+            from: "0x3333333333333333333333333333333333333333",
+            nonce: `0x${"55".repeat(32)}`,
+            to: "0x2222222222222222222222222222222222222222",
+            validAfter: String(now - 60),
+            validBefore: String(now + 60),
+            value: "1000",
+          },
+          signature: `0x${"66".repeat(65)}`,
+        },
+        scheme: "exact",
+        x402Version: 1,
+      },
+      resolveHost: resolvePublicTestHost,
+    });
+
+    assert.deepEqual(result.resource, { recommendation: "hold" });
+    const paidHeaders = requests[1]?.headers as Record<string, string> | undefined;
+    assert.equal(typeof paidHeaders?.["X-PAYMENT"], "string");
+    const relayedPayload = JSON.parse(
+      Buffer.from(paidHeaders!["X-PAYMENT"], "base64").toString("utf8"),
+    ) as Readonly<{ x402Version: number }>;
+    assert.equal(relayedPayload.x402Version, 1);
+    assert.equal(
+      (result.settlement as Readonly<Record<string, unknown>>).transaction,
+      `0x${"44".repeat(32)}`,
     );
   });
 });

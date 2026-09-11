@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { StartTaskFlow } from "../../components/activation/start-task-flow";
+import { WalletProvider } from "../../components/wallet/wallet-provider";
 import type { AgentProfileService } from "../../features/agents/model";
 
 const agent = {
@@ -14,10 +15,14 @@ const agent = {
 
 function render(service: AgentProfileService): string {
   return renderToStaticMarkup(
-    createElement(StartTaskFlow, {
-      agent,
-      services: [service],
-    }),
+    createElement(
+      WalletProvider,
+      null,
+      createElement(StartTaskFlow, {
+        agent,
+        services: [service],
+      }),
+    ),
   );
 }
 
@@ -107,7 +112,7 @@ describe("start task forms", () => {
     assert.match(html, /Review request/);
   });
 
-  it("guides x402 quotes through review without implying payment", () => {
+  it("starts x402 with a live price check before wallet approval", () => {
     const html = render({
       activationMethod: "x402",
       availabilityStatus: "available",
@@ -129,7 +134,8 @@ describe("start task forms", () => {
     });
 
     assert.match(html, /aria-label="Task progress"/);
-    assert.match(html, /Review payment request/);
-    assert.match(html, /Sift will not send a payment from this screen/);
+    assert.match(html, /Check current price/);
+    assert.match(html, /asks your wallet before the provider can collect it/);
+    assert.doesNotMatch(html, /Payment execution is not enabled yet/);
   });
 });

@@ -29,7 +29,7 @@ import {
   formatMetadataStatus,
 } from "@/features/discovery/format";
 import type { DiscoveryAgent } from "@/features/discovery/model";
-import { formatHealthCheckTime } from "@/features/health/presentation";
+import { getHealthPresentation } from "@/features/health/presentation";
 import {
   describeScoreConfidence,
   isScoreStale,
@@ -154,12 +154,7 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
             ? "View paid access"
             : "View agent";
   const healthStatus = agent.health?.status ?? "unknown";
-  const healthValue = !agent.health
-    ? "Not checked"
-    : agent.health.status.charAt(0).toUpperCase() + agent.health.status.slice(1);
-  const healthDetail = agent.health
-    ? `Checked ${formatHealthCheckTime(agent.health.lastCheckedAt)}`
-    : "No health check";
+  const healthPresentation = getHealthPresentation(agent.health, agent.services);
   const healthStyle = healthValueStyles[healthStatus];
   const scoreIsStale = agent.score
     ? isScoreStale(agent.score.calculatedAt)
@@ -229,8 +224,8 @@ export function AgentCard({ agent, comparisonGoal = "" }: AgentCardProps) {
       <Signal
         icon={<RadioTower className="size-3" aria-hidden="true" />}
         label="Health"
-        value={healthValue}
-        detail={healthDetail}
+        value={healthPresentation.label}
+        detail={healthPresentation.detail}
         valueClassName={healthStyle}
       />
       <Signal

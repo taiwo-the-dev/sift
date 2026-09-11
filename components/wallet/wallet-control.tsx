@@ -156,6 +156,7 @@ function WalletControlInner({
         });
       }}
       onDismissNotice={() => setNoticeState(null)}
+      onNavigatePermissions={onBeforeWalletAction}
       onOpenChain={() => {
         onBeforeWalletAction?.();
         rainbow.openChainModal();

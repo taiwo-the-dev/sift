@@ -30,6 +30,7 @@ Release Validation In Progress
 - M21 — Implemented Locally; Browser Validation Pending
 - M22 — Implemented Locally; Hosted Migration and Live Service Validation Pending
 - M23 — Implemented Locally; Hosted Migration and Human Wallet Validation Pending
+- M24 — In Progress
 
 ## Release Scope Decision — 2026-09-10
 
@@ -1666,6 +1667,24 @@ from recent live checks. Keep ERC-8183 protected, restrict direct MCP execution
 to explicitly read-only tools, require confirmation for A2A requests, and show
 an exact x402 quote without automatic payment. Never equate ERC-8004 identity
 registration with service availability.
+
+---
+
+## M23 — Multi-Service Agent Access
+
+Allow agents to expose multiple checked task methods without hiding safe external
+Web handoffs. Support confirmed MCP actions and validate any returned BNB Chain
+transactions before individual wallet review.
+
+---
+
+## M24 — Complete Agent Execution
+
+Complete the supported method-aware paths by adding explicitly approved x402
+v1/v2 exact payments and paid-resource retrieval on BNB Chain. Revalidate every
+quote and indexed endpoint at use time, keep signing in the connected wallet, and
+show real settlement evidence without claiming arbitrary broken or non-standard
+third-party services can execute.
 
 ---
 

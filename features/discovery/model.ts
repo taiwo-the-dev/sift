@@ -60,7 +60,7 @@ export const discoveryHealthStatuses = [
   { label: "Online", value: "online" },
   { label: "Degraded", value: "degraded" },
   { label: "Offline", value: "offline" },
-  { label: "Unknown / not checked", value: "unknown" },
+  { label: "Health not verified", value: "unknown" },
 ] as const satisfies readonly Readonly<{
   label: string;
   value: HealthStatus;

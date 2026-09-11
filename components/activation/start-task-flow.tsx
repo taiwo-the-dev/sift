@@ -25,6 +25,7 @@ import {
   type TaskFlowStep,
 } from "@/components/activation/task-flow-progress";
 import { TaskInputFields } from "@/components/activation/task-input-fields";
+import { X402PaymentFlow } from "@/components/activation/x402-payment-flow";
 import { SelectField } from "@/components/ui/select-field";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfileService } from "@/features/agents/model";
@@ -122,26 +123,6 @@ function a2aSkills(service: AgentProfileService | null): readonly A2aSkill[] {
   });
 }
 
-function x402Options(service: AgentProfileService) {
-  const summary = record(service.capabilitySummary);
-  if (!summary || !Array.isArray(summary.options)) return [];
-  return summary.options.flatMap((item) => {
-    const option = record(item);
-    return option &&
-      typeof option.amount === "string" &&
-      typeof option.asset === "string" &&
-      typeof option.network === "string" &&
-      typeof option.payTo === "string"
-      ? [{
-          amount: option.amount,
-          asset: option.asset,
-          network: option.network,
-          payTo: option.payTo,
-        }]
-      : [];
-  });
-}
-
 async function readApiResult(response: Response): Promise<unknown> {
   const value = (await response.json()) as Readonly<{
     error?: unknown;
@@ -204,7 +185,6 @@ export function StartTaskFlow({
     ),
   );
   const [mcpConfirmed, setMcpConfirmed] = useState(false);
-  const [quoteIndex, setQuoteIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<unknown>(null);
@@ -213,7 +193,6 @@ export function StartTaskFlow({
   >([]);
   const service = methods.find((item) => item.activationMethod === method) ?? null;
   const tools = service?.activationMethod === "mcp" ? mcpTools(service) : [];
-  const quotes = service?.activationMethod === "x402" ? x402Options(service) : [];
   const selectedTool = toolName || tools[0]?.name || "";
   const selectedToolDetails =
     tools.find((tool) => tool.name === selectedTool) ?? null;
@@ -224,7 +203,6 @@ export function StartTaskFlow({
   const selectedSkillId = skillId || skills[0]?.id || "";
   const selectedSkill =
     skills.find((skill) => skill.id === selectedSkillId) ?? null;
-  const selectedQuote = quotes[quoteIndex] ?? quotes[0] ?? null;
 
   function resetRequest(nextStep: TaskFlowStep = "details") {
     setConfirmed(false);
@@ -242,7 +220,6 @@ export function StartTaskFlow({
 
     setMethod(nextMethod);
     resetRequest();
-    setQuoteIndex(0);
 
     if (nextMethod === "a2a") {
       setSkillId(a2aSkills(nextService)[0]?.id ?? "");
@@ -262,7 +239,6 @@ export function StartTaskFlow({
   function startAnotherRequest() {
     resetRequest();
     setMessage("");
-    setQuoteIndex(0);
 
     if (selectedToolDetails) {
       setToolValues(
@@ -838,96 +814,8 @@ export function StartTaskFlow({
             </form>
           ) : null}
 
-          {service?.activationMethod === "x402" && flowStep !== "result" ? (
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-                Review before paying
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-foreground">Payment request</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Check the exact network, token, amount, and recipient published by
-                the agent. Sift will not send a payment from this screen.
-              </p>
-              <TaskFlowProgress step={flowStep} />
-
-              {flowStep === "details" ? (
-                <div>
-                  {quotes.length > 1 ? (
-                    <SelectField
-                      label="Payment option"
-                      onValueChange={(value) => {
-                        setQuoteIndex(Number(value));
-                        setError(null);
-                      }}
-                      options={quotes.map((quote, index) => ({
-                        label: `${quote.network} · ${quote.amount}`,
-                        value: String(index),
-                      }))}
-                      value={String(quoteIndex)}
-                    />
-                  ) : null}
-                  {selectedQuote ? (
-                    <dl className="mt-5 grid gap-4 rounded-xl border border-border bg-background/45 p-4 text-xs sm:grid-cols-2">
-                      <div><dt className="text-muted-foreground">Network</dt><dd className="mt-1 font-mono text-foreground">{selectedQuote.network}</dd></div>
-                      <div><dt className="text-muted-foreground">Amount (raw units)</dt><dd className="mt-1 font-mono text-foreground">{selectedQuote.amount}</dd></div>
-                      <div><dt className="text-muted-foreground">Token</dt><dd className="mt-1 break-all font-mono text-foreground">{selectedQuote.asset}</dd></div>
-                      <div><dt className="text-muted-foreground">Recipient</dt><dd className="mt-1 break-all font-mono text-foreground">{selectedQuote.payTo}</dd></div>
-                    </dl>
-                  ) : (
-                    <p className="rounded-xl border border-border bg-background/45 p-4 text-sm text-muted-foreground">
-                      The agent did not return a payment option Sift can review.
-                    </p>
-                  )}
-                  <Button
-                    type="button"
-                    className="mt-5"
-                    variant="brand"
-                    size="lg"
-                    disabled={!selectedQuote}
-                    onClick={() => setFlowStep("review")}
-                  >
-                    Review payment request
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                  </Button>
-                </div>
-              ) : null}
-
-              {flowStep === "review" && selectedQuote ? (
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    Confirm the payment details
-                  </h3>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    These values came from the agent&apos;s checked x402 request.
-                  </p>
-                  <dl className="mt-5 divide-y divide-border rounded-xl border border-border bg-background/45 px-4">
-                    {[
-                      ["Network", selectedQuote.network],
-                      ["Amount (raw units)", selectedQuote.amount],
-                      ["Token", selectedQuote.asset],
-                      ["Recipient", selectedQuote.payTo],
-                    ].map(([label, value]) => (
-                      <div className="grid gap-1 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5" key={label}>
-                        <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-                        <dd className="break-all font-mono text-xs leading-5 text-foreground">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <p className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/6 p-4 text-xs leading-5 text-muted-foreground">
-                    Payment execution is not enabled yet. Finishing this review will
-                    not move tokens or request a wallet signature.
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Button type="button" variant="outline" size="lg" onClick={() => setFlowStep("details")}>
-                      Back to details
-                    </Button>
-                    <Button type="button" variant="brand" size="lg" onClick={() => setFlowStep("result")}>
-                      Finish review
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
+          {service?.activationMethod === "x402" ? (
+            <X402PaymentFlow chainId={agent.chainId} service={service} />
           ) : null}
 
           {error ? (
@@ -937,22 +825,19 @@ export function StartTaskFlow({
           ) : null}
           {service &&
           service.activationMethod !== "erc8183" &&
+          service.activationMethod !== "x402" &&
           flowStep === "result" ? (
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-                {service.activationMethod === "x402" ? "Review complete" : "Request complete"}
+                Request complete
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                {service.activationMethod === "x402"
-                  ? "Payment details reviewed"
-                  : transactions.length > 0
+                {transactions.length > 0
                     ? "Action ready for wallet review"
                     : "The agent responded"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {service.activationMethod === "x402"
-                  ? "No payment was sent and no wallet signature was requested."
-                  : transactions.length > 0
+                {transactions.length > 0
                     ? "Review every transaction below before deciding whether to continue in your wallet."
                     : "Review the result below. Sift keeps the original response available for technical inspection."}
               </p>
@@ -960,12 +845,10 @@ export function StartTaskFlow({
               <div className="flex items-start gap-3 border-l-2 border-emerald-400/60 py-1 pl-4">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" aria-hidden="true" />
                 <p className="text-sm text-foreground">
-                  {service.activationMethod === "x402"
-                    ? "Quote review finished safely."
-                    : "The request finished without Sift automatically signing or sending a wallet transaction."}
+                  The request finished without Sift automatically signing or sending a wallet transaction.
                 </p>
               </div>
-              {service.activationMethod !== "x402" && result !== null ? (
+              {result !== null ? (
                 <ServiceResponse value={result} />
               ) : null}
               {service.activationMethod === "mcp" ? (

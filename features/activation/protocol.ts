@@ -1,3 +1,4 @@
+import { decodePaymentResponseHeader } from "@x402/core/http";
 import { getAddress, isAddress, isHex, type Address, type Hex } from "viem";
 import { z } from "zod";
 
@@ -9,6 +10,14 @@ import {
   parseJsonOrSse,
   requestActivationService,
 } from "@/features/activation/remote";
+import {
+  parseBnbX402Challenge,
+  validateX402PaymentPayload,
+  x402OptionsFromChallenge,
+  x402PaymentHeader,
+  type BnbX402PaymentPayload,
+  type X402OptionPreference,
+} from "@/features/activation/x402";
 
 const jsonRpcEnvelopeSchema = z.object({
   error: z.unknown().optional(),
@@ -68,22 +77,6 @@ const a2aCardSchema = z
       .optional(),
     url: z.url().optional(),
   })
-  .loose();
-
-const x402RequirementSchema = z
-  .object({
-    amount: z.string().regex(/^(0|[1-9][0-9]*)$/).optional(),
-    asset: z.string(),
-    maxAmountRequired: z.string().regex(/^(0|[1-9][0-9]*)$/).optional(),
-    network: z.string().min(1).max(80),
-    payTo: z.string(),
-    scheme: z.string().min(1).max(80),
-  })
-  .loose()
-  .refine((value) => value.amount !== undefined || value.maxAmountRequired !== undefined);
-
-const x402ChallengeSchema = z
-  .object({ accepts: z.array(x402RequirementSchema).min(1).max(20) })
   .loose();
 
 function object(value: unknown): Record<string, unknown> {
@@ -660,36 +653,140 @@ export async function inspectX402Service(
 ) {
   const response = await requestActivationService(endpoint, { ...options, method: "GET" });
   if (response.status >= 200 && response.status < 300) {
-    return { free: true, options: [], responseTimeMs: response.responseTimeMs };
+    return {
+      challenge: null,
+      free: true,
+      options: [],
+      resource: parsePaidResource(response.body),
+      responseTimeMs: response.responseTimeMs,
+    };
   }
   if (response.status !== 402) {
     throw new ActivationRemoteError("http-error", "The x402 service is unavailable.");
   }
   const header = response.headers.get("payment-required");
   const raw = header ? decodePaymentRequired(header) : parseJsonBody(response.body);
-  const challenge = x402ChallengeSchema.parse(object(raw));
-  const accepted = challenge.accepts.flatMap((option) => {
-    const requiredChain = option.network === `eip155:${chainId}` ||
-      (chainId === 56 && option.network === "bsc") ||
-      (chainId === 97 && option.network === "bsc-testnet");
-    const amount = option.amount ?? option.maxAmountRequired!;
-    if (
-      !requiredChain ||
-      option.scheme !== "exact" ||
-      BigInt(amount) === 0n ||
-      !isAddress(option.asset) ||
-      !isAddress(option.payTo)
-    ) return [];
-    return [{
-      amount,
-      asset: option.asset,
-      network: option.network,
-      payTo: option.payTo,
-      scheme: option.scheme,
-    }];
-  });
-  if (accepted.length === 0) {
-    throw new ActivationRemoteError("invalid-response", "No x402 option matches this agent's BNB network.");
+  let challenge;
+  try {
+    challenge = parseBnbX402Challenge(raw, chainId);
+  } catch (error) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      error instanceof Error
+        ? error.message
+        : "The x402 payment challenge is unsupported.",
+    );
   }
-  return { free: false, options: accepted, responseTimeMs: response.responseTimeMs };
+  return {
+    challenge,
+    free: false,
+    options: x402OptionsFromChallenge(challenge),
+    resource: null,
+    responseTimeMs: response.responseTimeMs,
+  };
+}
+
+function parsePaidResource(body: string): Json {
+  const normalized = body.trim();
+  if (!normalized) return null;
+  try {
+    return json(JSON.parse(normalized) as unknown);
+  } catch {
+    return normalized;
+  }
+}
+
+export type X402ExecutionResult = Readonly<{
+  resource: Json;
+  settlement: Json | null;
+}>;
+
+/**
+ * Re-read the current quote, bind the signed authorization to it, and relay it
+ * only to the indexed endpoint. This function never signs or retries payment.
+ */
+export async function executeX402Service(input: Readonly<{
+  chainId: number;
+  endpoint: string;
+  fetchImpl?: typeof fetch;
+  maxBytes?: number;
+  payer: string;
+  paymentPayload: unknown;
+  preference?: X402OptionPreference;
+  resolveHost?: HostResolver;
+  timeoutMs?: number;
+}>): Promise<X402ExecutionResult> {
+  const inspection = await inspectX402Service(input.endpoint, input.chainId, input);
+  if (inspection.free || !inspection.challenge) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      "This resource no longer requires the payment that was reviewed.",
+    );
+  }
+
+  let payment: Readonly<{ payload: BnbX402PaymentPayload }>;
+  try {
+    payment = validateX402PaymentPayload(
+      input.paymentPayload,
+      inspection.challenge,
+      input.chainId,
+      input.payer,
+    );
+  } catch (error) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      error instanceof Error
+        ? error.message
+        : "The signed payment does not match the live quote.",
+    );
+  }
+
+  const paymentHeader = x402PaymentHeader(payment.payload);
+  const response = await requestActivationService(input.endpoint, {
+    body: undefined,
+    fetchImpl: input.fetchImpl,
+    headers: { [paymentHeader.name]: paymentHeader.value },
+    maxBytes: input.maxBytes,
+    method: "GET",
+    resolveHost: input.resolveHost,
+    timeoutMs: input.timeoutMs,
+  });
+  if (response.status === 402) {
+    throw new ActivationRemoteError(
+      "invalid-response",
+      "The provider rejected the payment authorization. Check the token balance and try again with a new quote.",
+    );
+  }
+  if (response.status < 200 || response.status >= 300) {
+    throw new ActivationRemoteError(
+      "http-error",
+      "The provider could not deliver the paid result.",
+    );
+  }
+
+  const settlementHeader =
+    response.headers.get("payment-response") ??
+    response.headers.get("x-payment-response");
+  let settlement: Json | null = null;
+  if (settlementHeader) {
+    try {
+      const decoded = decodePaymentResponseHeader(settlementHeader);
+      if (!decoded.success) {
+        throw new Error("The provider reported that settlement failed.");
+      }
+      settlement = json(decoded);
+    } catch (error) {
+      throw new ActivationRemoteError(
+        "invalid-response",
+        error instanceof Error
+          ? error.message
+          : "The provider returned invalid settlement evidence.",
+      );
+    }
+  }
+
+  return {
+    resource: parsePaidResource(response.body),
+    settlement,
+  };
 }

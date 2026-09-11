@@ -45,7 +45,7 @@ export type DashboardJob = Readonly<{
     agentId: string;
     chainId: number;
     healthCheckedAt: string | null;
-    healthStatus: "online" | "offline" | "unknown";
+    healthStatus: "degraded" | "online" | "offline" | "unknown";
     imageUrl: string | null;
     name: string;
     profileHref: string;
@@ -87,4 +87,3 @@ export type DashboardSnapshot = Readonly<{
   summary: DashboardSummary;
   walletAddress: string;
 }>;
-

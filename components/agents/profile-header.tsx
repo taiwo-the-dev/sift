@@ -29,6 +29,7 @@ import {
   formatMetadataStatus,
 } from "@/features/discovery/format";
 import { assessHiringCompatibility } from "@/features/hiring/compatibility";
+import { getHealthPresentation } from "@/features/health/presentation";
 import { describeScoreConfidence } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
 import {
@@ -96,12 +97,10 @@ export function ProfileHeader({
     : profile.score.score === null
       ? `${describeScoreConfidence(profile.score.confidence)} · insufficient evidence`
       : describeScoreConfidence(profile.score.confidence);
-  const healthValue = profile.health
-    ? profile.health.status
-    : "Not checked";
-  const healthDetail = profile.health
-    ? `Checked ${formatProfileTimestamp(profile.health.lastCheckedAt)}`
-    : "No health check available";
+  const healthPresentation = getHealthPresentation(
+    profile.health,
+    profile.services,
+  );
   const hiring = assessHiringCompatibility(profile);
   const hireable = hiring.compatibility !== null;
   const taskServices = currentActivationServices(profile.services);
@@ -264,8 +263,8 @@ export function ProfileHeader({
           <EvidenceStat
             icon={<RadioTower className="size-4 text-sky-300" aria-hidden="true" />}
             label="Health"
-            value={healthValue}
-            detail={healthDetail}
+            value={healthPresentation.label}
+            detail={healthPresentation.detail}
           />
           <EvidenceStat
             icon={<BriefcaseBusiness className="size-4 text-violet-300" aria-hidden="true" />}

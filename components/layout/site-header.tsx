@@ -1,13 +1,10 @@
-import { Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { ComparisonNavLink } from "@/components/comparison/comparison-nav-link";
 import { Brand } from "@/components/layout/brand";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { navigationItems } from "@/components/layout/navigation";
-import { buttonVariants } from "@/components/ui/button";
 import { WalletControl } from "@/components/wallet/wallet-control";
-import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   return (
@@ -37,23 +34,7 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="hidden items-center justify-self-end gap-2 lg:flex">
-          <Link
-            href="/discover#discovery-search"
-            aria-label="Search for agents"
-            title="Search for agents"
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
-          >
-            <Search className="size-4" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/permissions"
-            aria-label="Wallet safety and permissions"
-            title="Wallet safety and permissions"
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
-          >
-            <ShieldCheck className="size-4" aria-hidden="true" />
-          </Link>
+        <div className="hidden items-center justify-self-end lg:flex">
           <WalletControl />
         </div>
 

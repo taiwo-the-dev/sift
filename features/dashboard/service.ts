@@ -193,7 +193,9 @@ export async function getWalletDashboard(
     });
     const name = record.agent?.name?.trim() || `Agent #${record.job.agent_id}`;
     const healthStatus: DashboardJob["agent"]["healthStatus"] =
-      record.health?.status === "online" || record.health?.status === "offline"
+      record.health?.status === "online" ||
+      record.health?.status === "offline" ||
+      record.health?.status === "degraded"
         ? record.health.status
         : "unknown";
 

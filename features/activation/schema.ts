@@ -41,5 +41,31 @@ export const mcpToolCallSchema = z
   })
   .strict();
 
+const x402OptionPreferenceSchema = z
+  .object({
+    asset: z.string().trim().min(1).max(128),
+    network: z.string().trim().min(1).max(80),
+    payTo: z.string().trim().min(1).max(128),
+  })
+  .strict();
+
+export const x402PrepareSchema = z
+  .object({
+    preference: x402OptionPreferenceSchema.optional(),
+    serviceId: z.uuid(),
+    walletAddress: z.string().trim().min(1).max(128),
+  })
+  .strict();
+
+export const x402ExecuteSchema = z
+  .object({
+    paymentPayload: z.unknown(),
+    serviceId: z.uuid(),
+    walletAddress: z.string().trim().min(1).max(128),
+  })
+  .strict();
+
 export type A2aTaskInput = z.infer<typeof a2aTaskSchema>;
 export type McpToolCallInput = z.infer<typeof mcpToolCallSchema>;
+export type X402ExecuteInput = z.infer<typeof x402ExecuteSchema>;
+export type X402PrepareInput = z.infer<typeof x402PrepareSchema>;
