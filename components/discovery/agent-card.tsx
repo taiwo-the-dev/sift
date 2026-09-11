@@ -1,8 +1,6 @@
 import {
   ArrowUpRight,
-  BadgeCheck,
   BriefcaseBusiness,
-  CircleAlert,
   Gauge,
   RadioTower,
 } from "lucide-react";
@@ -10,6 +8,10 @@ import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 
 import { AgentArtworkHeader } from "@/components/agents/agent-artwork-header";
+import {
+  AgentCardContext,
+  AgentVerificationStatus,
+} from "@/components/agents/agent-card-context";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
@@ -24,8 +26,6 @@ import {
   formatAgentDescription,
   formatAgentName,
   formatCategory,
-  formatChainName,
-  formatMetadataStatus,
   formatRegistrationDate,
   formatServiceType,
 } from "@/features/discovery/format";
@@ -47,13 +47,6 @@ interface AgentCardProps {
   comparisonGoal?: string;
   position?: number;
 }
-
-const metadataStatusStyles = {
-  invalid: "border-amber-400/20 bg-amber-400/8 text-amber-200",
-  pending: "border-sky-400/20 bg-sky-400/8 text-sky-200",
-  unavailable: "border-border bg-secondary text-muted-foreground",
-  valid: "border-emerald-400/20 bg-emerald-400/8 text-emerald-200",
-} as const;
 
 type SignalTone = "brand" | "caution" | "negative" | "neutral" | "positive";
 
@@ -217,32 +210,11 @@ export function AgentCard({
   return (
     <article className="sift-card-reveal group flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
       <AgentArtworkHeader position={position}>
-        <div className="flex items-center justify-between gap-3">
-          <span
-            title={categoryTitle}
-            className={cn(
-              "rounded-full border px-2.5 py-1 text-[0.62rem] font-semibold backdrop-blur-sm",
-              primaryCategory
-                ? "border-brand/25 bg-brand/15 text-brand"
-                : "border-white/10 bg-black/25 text-white/70",
-            )}
-          >
-            {primaryCategory ? formatCategory(primaryCategory) : "Other"}
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.62rem] font-semibold backdrop-blur-sm",
-              metadataStatusStyles[agent.metadataStatus],
-            )}
-          >
-            {agent.metadataStatus === "valid" ? (
-              <BadgeCheck className="size-2.5" aria-hidden="true" />
-            ) : (
-              <CircleAlert className="size-2.5" aria-hidden="true" />
-            )}
-            {formatMetadataStatus(agent.metadataStatus)}
-          </span>
-        </div>
+        <AgentCardContext
+          category={primaryCategory}
+          categoryTitle={categoryTitle}
+          chainId={agent.chainId}
+        />
 
         <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
           <div className="relative rounded-full bg-black/20 p-1 shadow-[0_14px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/10">
@@ -262,7 +234,7 @@ export function AgentCard({
               title={`Registered ${formatRegistrationDate(agent.registeredAt)}`}
               className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-white/50"
             >
-              {formatChainName(agent.chainId)} · #{agent.agentId}
+              ERC-8004 · #{agent.agentId}
             </p>
             <h2 className="mt-1.5 line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-white">
               {profileHref ? (
@@ -277,6 +249,7 @@ export function AgentCard({
                 agentName
               )}
             </h2>
+            <AgentVerificationStatus status={agent.metadataStatus} />
           </div>
         </div>
       </AgentArtworkHeader>

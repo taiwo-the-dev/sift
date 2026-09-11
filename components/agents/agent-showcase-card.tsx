@@ -1,12 +1,11 @@
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  CalendarDays,
-  CircleAlert,
-} from "lucide-react";
+import { ArrowUpRight, CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 import { AgentArtworkHeader } from "@/components/agents/agent-artwork-header";
+import {
+  AgentCardContext,
+  AgentVerificationStatus,
+} from "@/components/agents/agent-card-context";
 import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { buildAgentProfileHref } from "@/features/agents/route";
@@ -14,13 +13,9 @@ import type { BookmarkableAgent } from "@/features/bookmarks/model";
 import {
   formatAgentDescription,
   formatAgentName,
-  formatCategory,
-  formatChainName,
-  formatMetadataStatus,
   formatServiceType,
 } from "@/features/discovery/format";
 import type { DiscoveryService } from "@/features/discovery/model";
-import { cn } from "@/lib/utils";
 
 type ShowcaseAgent = BookmarkableAgent &
   Readonly<{
@@ -33,13 +28,6 @@ interface AgentShowcaseCardProps {
   dateValue: string;
   position: number;
 }
-
-const metadataStatusStyles = {
-  invalid: "border-amber-400/20 bg-amber-400/8 text-amber-200",
-  pending: "border-sky-400/20 bg-sky-400/8 text-sky-200",
-  unavailable: "border-border bg-secondary text-muted-foreground",
-  valid: "border-emerald-400/20 bg-emerald-400/8 text-emerald-200",
-} as const;
 
 export function AgentShowcaseCard({
   agent,
@@ -62,24 +50,7 @@ export function AgentShowcaseCard({
   return (
     <article className="sift-card-reveal group flex h-full min-h-[25rem] flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] motion-reduce:transform-none">
       <AgentArtworkHeader position={position}>
-        <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[0.62rem] font-semibold text-white/75 backdrop-blur-sm">
-            {formatChainName(agent.chainId)}
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[0.62rem] font-semibold backdrop-blur-sm",
-              metadataStatusStyles[agent.metadataStatus],
-            )}
-          >
-            {agent.metadataStatus === "valid" ? (
-              <BadgeCheck className="size-2.5" aria-hidden="true" />
-            ) : (
-              <CircleAlert className="size-2.5" aria-hidden="true" />
-            )}
-            {formatMetadataStatus(agent.metadataStatus)}
-          </span>
-        </div>
+        <AgentCardContext category={category} chainId={agent.chainId} />
 
         <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
           <div className="rounded-full bg-black/20 p-1 shadow-[0_14px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/10">
@@ -102,6 +73,7 @@ export function AgentShowcaseCard({
                 {name}
               </Link>
             </h3>
+            <AgentVerificationStatus status={agent.metadataStatus} />
           </div>
         </div>
       </AgentArtworkHeader>
@@ -118,26 +90,23 @@ export function AgentShowcaseCard({
 
         <div className="mt-4">
           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Capabilities
+            Services
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {category ? (
-              <span className="rounded-md border border-dashed border-brand/35 px-2 py-1 text-[0.65rem] font-semibold text-brand">
-                {formatCategory(category)}
-              </span>
+            {services.length > 0 ? (
+              services.map((service) => (
+                <span
+                  key={service}
+                  className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground"
+                >
+                  {service}
+                </span>
+              ))
             ) : (
-              <span className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-semibold text-muted-foreground">
-                Other
+              <span className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground">
+                No services listed
               </span>
             )}
-            {services.map((service) => (
-              <span
-                key={service}
-                className="rounded-md border border-dashed border-border px-2 py-1 text-[0.65rem] font-medium text-muted-foreground"
-              >
-                {service}
-              </span>
-            ))}
           </div>
         </div>
 
