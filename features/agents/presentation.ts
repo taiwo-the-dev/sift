@@ -86,6 +86,26 @@ export function collectDeclaredCapabilities(
   return [...new Set(labels)].slice(0, 24);
 }
 
+export function formatCapabilityLabel(value: string): string {
+  const seen = new Set<string>();
+  const parts = value
+    .split(/[/>|]+/)
+    .map((part) => part.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim())
+    .filter((part) => {
+      const key = part.toLowerCase();
+
+      if (!key || seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`);
+
+  return parts.join(" · ") || value;
+}
+
 export function describeDeclaredService(
   service: AgentProfileService,
 ): string | null {

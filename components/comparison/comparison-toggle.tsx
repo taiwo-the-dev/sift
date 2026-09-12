@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, X } from "lucide-react";
+import { Scale, X } from "lucide-react";
 import { useState } from "react";
 
 import { useComparisonSelection } from "@/components/comparison/use-comparison-selection";
@@ -70,10 +70,8 @@ export function ComparisonToggle({
     >
       {selected ? (
         <X className="size-3.5" aria-hidden="true" />
-      ) : unavailable ? (
-        <Check className="size-3.5" aria-hidden="true" />
       ) : (
-        <Plus className="size-3.5" aria-hidden="true" />
+        <Scale className="size-3.5" aria-hidden="true" />
       )}
       {iconOnly ? null : (
         <>

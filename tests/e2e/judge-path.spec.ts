@@ -131,7 +131,29 @@ test("a real shortlisted agent opens and two real agents compare", async ({
       name: "Evaluate agents against your task.",
     }),
   ).toBeVisible();
-  await expect(page.getByText("2 available agents", { exact: true })).toBeVisible();
+  await expect(page.getByText("2 selected agents", { exact: true })).toBeVisible();
+  await expectNoViewportOverflow(page);
+  await expectNoPageErrors(errors);
+});
+
+test("comparison controls preserve a valid shareable selection", async ({
+  page,
+}) => {
+  const errors = recordPageErrors(page);
+  await page.goto(
+    "/compare?agent=56%3A326106&agent=56%3A322046&goal=compare+yield+capabilities",
+  );
+
+  await page.getByRole("button", { name: "Remove", exact: true }).first().click();
+  await expect(page.getByText("1 selected agent", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/agent=56%3A322046/);
+  await expect(page).not.toHaveURL(/agent=56%3A326106/);
+
+  await page.getByRole("button", { name: "Clear all", exact: true }).click();
+  await expect(page).toHaveURL(/\/compare$/);
+  await expect(
+    page.getByRole("heading", { name: "Start with two real agents" }),
+  ).toBeVisible();
   await expectNoViewportOverflow(page);
   await expectNoPageErrors(errors);
 });

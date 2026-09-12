@@ -50,8 +50,10 @@ describe("discovery query parsing", () => {
       network: "bsc-testnet",
       page: "7",
       q: "  grid   trading  ",
+      rating: ["excellent", "fair", "invented", "excellent"],
+      registered: "week",
       size: "24",
-      sort: "name-asc",
+      sort: "score-desc",
     });
 
     assert.equal(query.query, "grid trading");
@@ -59,11 +61,13 @@ describe("discovery query parsing", () => {
     assert.deepEqual(query.effectiveCategories, ["grid-trading"]);
     assert.deepEqual(query.metadataStatuses, ["valid", "invalid"]);
     assert.deepEqual(query.healthStatuses, ["online", "offline"]);
+    assert.deepEqual(query.scoreBands, ["excellent", "fair"]);
+    assert.equal(query.registrationPeriod, "week");
     assert.equal(query.network, "bsc-testnet");
     assert.deepEqual(query.networkChainIds, [97]);
     assert.equal(query.page, 7);
     assert.equal(query.pageSize, 24);
-    assert.equal(query.sort, "name-asc");
+    assert.equal(query.sort, "score-desc");
   });
 
   it("uses the mapped intent only when no explicit category overrides it", () => {
@@ -103,6 +107,15 @@ describe("discovery query parsing", () => {
       parseDiscoverySearchParams({ sort: "name-desc" }).sort,
       "name-desc",
     );
+    for (const sort of [
+      "score-desc",
+      "score-asc",
+      "available-first",
+      "health-recent",
+      "services-desc",
+    ] as const) {
+      assert.equal(parseDiscoverySearchParams({ sort }).sort, sort);
+    }
   });
 
   it("serializes shareable combined state with repeated filters", () => {
@@ -112,6 +125,8 @@ describe("discovery query parsing", () => {
       health: ["degraded", "unknown"],
       network: "bsc-testnet",
       q: "yield",
+      rating: ["good", "excellent"],
+      registered: "month",
       size: "24",
     });
     const href = buildDiscoveryHref(query, { page: 3, sort: "recent" });
@@ -128,6 +143,8 @@ describe("discovery query parsing", () => {
       "degraded",
       "unknown",
     ]);
+    assert.deepEqual(url.searchParams.getAll("rating"), ["good", "excellent"]);
+    assert.equal(url.searchParams.get("registered"), "month");
     assert.equal(url.searchParams.get("network"), "bsc-testnet");
     assert.equal(url.searchParams.get("sort"), "recent");
     assert.equal(url.searchParams.get("size"), "24");

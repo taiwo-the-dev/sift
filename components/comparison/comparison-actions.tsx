@@ -11,6 +11,7 @@ import {
   buildComparisonHref,
   buildDiscoveryHrefForComparison,
 } from "@/features/comparison/query";
+import { cn } from "@/lib/utils";
 
 interface SelectionActionProps {
   goal: string;
@@ -18,6 +19,7 @@ interface SelectionActionProps {
 }
 
 interface AgentSelectionActionsProps extends SelectionActionProps {
+  className?: string;
   reference: AgentReference;
 }
 
@@ -33,6 +35,7 @@ function withoutReference(
 }
 
 export function AgentSelectionActions({
+  className,
   goal,
   reference,
   references,
@@ -52,7 +55,7 @@ export function AgentSelectionActions({
   }
 
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
+    <div className={cn("mt-4 flex flex-wrap gap-2", className)}>
       <Button
         type="button"
         size="sm"

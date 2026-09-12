@@ -6,7 +6,11 @@ import {
   formatHealthStatus,
   formatMetadataStatus,
 } from "@/features/discovery/format";
-import type { DiscoveryQuery } from "@/features/discovery/model";
+import {
+  discoveryRegistrationPeriods,
+  discoveryScoreBands,
+  type DiscoveryQuery,
+} from "@/features/discovery/model";
 import {
   buildDiscoveryHref,
   isReadyAvailabilityQuery,
@@ -24,6 +28,8 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
     query.categories.length > 0 ||
     query.healthStatuses.length > 0 ||
     query.metadataStatuses.length > 0 ||
+    query.scoreBands.length > 0 ||
+    query.registrationPeriod !== null ||
     query.network !== "bsc-mainnet" ||
     hiringAvailabilitySelected;
 
@@ -125,6 +131,46 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           <X className="size-3" aria-hidden="true" />
         </Link>
       ))}
+
+      {query.scoreBands.map((band) => {
+        const option = discoveryScoreBands.find(
+          (candidate) => candidate.value === band,
+        );
+        const label = option
+          ? `${option.label} rating (${option.rangeLabel})`
+          : band;
+
+        return (
+          <Link
+            key={band}
+            href={buildDiscoveryHref(query, {
+              page: 1,
+              scoreBands: query.scoreBands.filter((value) => value !== band),
+            })}
+            className="inline-flex items-center gap-1.5 rounded-full border border-input bg-secondary px-3 py-1.5 text-xs font-medium text-foreground outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
+            aria-label={`Remove ${label} filter`}
+          >
+            {label}
+            <X className="size-3" aria-hidden="true" />
+          </Link>
+        );
+      })}
+
+      {query.registrationPeriod ? (
+        <Link
+          href={buildDiscoveryHref(query, {
+            page: 1,
+            registrationPeriod: null,
+          })}
+          className="inline-flex items-center gap-1.5 rounded-full border border-input bg-secondary px-3 py-1.5 text-xs font-medium text-foreground outline-none hover:border-brand/60 focus-visible:ring-3 focus-visible:ring-ring/30"
+          aria-label="Remove registration date filter"
+        >
+          {discoveryRegistrationPeriods.find(
+            (period) => period.value === query.registrationPeriod,
+          )?.label ?? "Registration date"}
+          <X className="size-3" aria-hidden="true" />
+        </Link>
+      ) : null}
 
       <Link
         href="/discover"

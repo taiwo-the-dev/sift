@@ -35,30 +35,30 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         references={selection.references}
       />
 
-      <section className="relative overflow-hidden border-b border-border bg-card">
+      <section className="relative overflow-hidden border-b border-border bg-background">
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(240,185,11,0.18),transparent_31rem),linear-gradient(118deg,transparent_0%,rgba(240,185,11,0.035)_62%,transparent_100%)]"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_82%_-10%,rgba(240,185,11,0.16),transparent_28rem),linear-gradient(118deg,transparent_0%,rgba(240,185,11,0.025)_62%,transparent_100%)]"
         />
-        <div className="relative mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(25rem,1.1fr)] lg:items-end lg:px-8">
+        <div className="relative mx-auto grid w-full max-w-7xl gap-7 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(25rem,1.1fr)] lg:items-end lg:px-8">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               <GitCompareArrows className="size-4" aria-hidden="true" />
               Agent comparison
             </p>
-            <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
+            <h1 className="mt-3 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
               Evaluate agents against your task.
             </h1>
-            <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-              Compare capabilities, health checks, reputation, and services.
-              Matches are based on the task you provide.
+            <p className="mt-4 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
+              Review ratings, health, services, and reputation side by side.
+              Add your task to highlight the strongest supported match.
             </p>
           </div>
 
           <form
             action="/compare"
             method="get"
-            className="rounded-xl border border-border bg-background/85 p-4 shadow-2xl shadow-black/10 sm:p-5"
+            className="rounded-2xl border border-border bg-card/90 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.16)] backdrop-blur-sm sm:p-5"
           >
             {selection.references.map((reference) => (
               <input
@@ -72,7 +72,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               htmlFor="comparison-goal"
               className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground"
             >
-              Task requirements
+              What do you need the agent to do?
             </label>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <input
@@ -81,7 +81,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 type="search"
                 maxLength={180}
                 defaultValue={selection.goal}
-                placeholder="e.g. Protect my loan from liquidation"
+                placeholder="e.g. Monitor my loan health"
                 className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-3.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20"
               />
               <button
@@ -96,7 +96,8 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               </button>
             </div>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Included in the shareable comparison link.
+              This helps Sift compare task relevance. It is included in the
+              shareable link.
             </p>
           </form>
         </div>

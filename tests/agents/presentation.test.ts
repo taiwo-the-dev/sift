@@ -5,6 +5,7 @@ import {
   collectDeclaredCapabilities,
   describeDeclaredService,
   describeProfileProvenance,
+  formatCapabilityLabel,
   resolveProfileCategories,
 } from "../../features/agents/presentation";
 import type { AgentProfileService } from "../../features/agents/model";
@@ -78,5 +79,15 @@ describe("agent profile presentation", () => {
       describeDeclaredService({ ...services[0], metadata: { name: "MCP" } }),
       null,
     );
+  });
+
+  it("formats technical capability paths as readable labels", () => {
+    assert.equal(
+      formatCapabilityLabel(
+        "natural_language_processing/analytical_reasoning/analytical_reasoning",
+      ),
+      "Natural language processing · Analytical reasoning",
+    );
+    assert.equal(formatCapabilityLabel("DeFi"), "DeFi");
   });
 });

@@ -41,14 +41,14 @@ export async function ComparisonResults({
       <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Selected agents
+            Comparison workspace
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground">
-            {result.agents.length} available agent
+            {result.agents.length} selected agent
             {result.agents.length === 1 ? "" : "s"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Select 2–4 agents to compare.
+            Compare up to four agents. Empty rows are hidden.
           </p>
         </div>
         {selection.references.length > 0 ? <ComparisonPageActions /> : null}

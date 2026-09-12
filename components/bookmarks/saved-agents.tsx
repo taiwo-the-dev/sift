@@ -78,7 +78,7 @@ export function SavedAgents({ chainId }: Readonly<{ chainId: 56 | 97 }>) {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {visibleAgents.map((agent, index) => (
           <AgentShowcaseCard
             key={`${agent.chainId}:${agent.agentId}`}

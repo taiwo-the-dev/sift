@@ -31,7 +31,15 @@ import {
 } from "@/lib/db/validation";
 
 type SearchAgentRow =
-  Database["public"]["Functions"]["search_agents_with_health"]["Returns"][number];
+  Database["public"]["Functions"]["search_agents_advanced"]["Returns"][number];
+
+const advancedDiscoverySorts = new Set<DiscoveryQuery["sort"]>([
+  "available-first",
+  "health-recent",
+  "score-asc",
+  "score-desc",
+  "services-desc",
+]);
 
 type RecentAgentRow = Pick<
   TableRow<"agents">,
@@ -471,11 +479,17 @@ export function createDiscoveryRepository(
       query.taskAvailability === null &&
       query.effectiveCategories.length === 0 &&
       query.healthStatuses.length === 0 &&
+      query.registrationPeriod === null &&
+      query.scoreBands.length === 0 &&
       query.searchTerms.length === 0
     ) {
       return searchRecentAgents(query);
     }
 
+    const useAdvancedSearch =
+      advancedDiscoverySorts.has(query.sort) ||
+      query.registrationPeriod !== null ||
+      query.scoreBands.length > 0;
     const functionName = query.taskAvailability === "ready"
       ? "search_ready_agents"
       : query.healthStatuses.length > 0
@@ -490,9 +504,16 @@ export function createDiscoveryRepository(
       p_search_terms: [...query.searchTerms],
       p_sort: query.sort,
     };
-    const { data, error } =
-      functionName === "search_agents_with_health" ||
-      functionName === "search_ready_agents"
+    const { data, error } = useAdvancedSearch
+      ? await client.rpc("search_agents_advanced", {
+          ...sharedParameters,
+          p_health_statuses: [...query.healthStatuses],
+          p_ready_only: query.taskAvailability === "ready",
+          p_registration_period: query.registrationPeriod,
+          p_score_bands: [...query.scoreBands],
+        })
+      : functionName === "search_agents_with_health" ||
+          functionName === "search_ready_agents"
         ? await client.rpc(functionName, {
             ...sharedParameters,
             p_health_statuses: [...query.healthStatuses],
@@ -533,6 +554,8 @@ export function createDiscoveryRepository(
         page: 1,
         pageSize,
         query: "",
+        registrationPeriod: null,
+        scoreBands: [],
         searchTerms: [],
         sort: "recent",
         taskAvailability: null,

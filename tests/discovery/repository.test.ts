@@ -231,6 +231,44 @@ describe("discovery repository integration boundary", () => {
     ]);
   });
 
+  it("uses the advanced database function for rating, registration, and decision sorts", async () => {
+    const calls: unknown[] = [];
+    const client = {
+      async rpc(name: string, parameters: unknown) {
+        calls.push({ name, parameters });
+        return { data: fixtureRows, error: null };
+      },
+    } as unknown as SupabaseClient<Database>;
+    const query = parseDiscoverySearchParams({
+      availability: "ready",
+      health: "online",
+      rating: ["excellent", "good"],
+      registered: "month",
+      sort: "services-desc",
+    });
+
+    await createDiscoveryRepository(client, noEvidence).search(query);
+
+    assert.deepEqual(calls, [
+      {
+        name: "search_agents_advanced",
+        parameters: {
+          p_categories: [],
+          p_chain_ids: [56],
+          p_health_statuses: ["online"],
+          p_metadata_statuses: [],
+          p_page: 1,
+          p_page_size: 12,
+          p_ready_only: true,
+          p_registration_period: "month",
+          p_score_bands: ["excellent", "good"],
+          p_search_terms: [],
+          p_sort: "services-desc",
+        },
+      },
+    ]);
+  });
+
   it("delegates current task availability and pagination to one bounded RPC", async () => {
     const calls: Readonly<{ name: string; parameters: unknown }>[] = [];
     const firstBatch = Array.from({ length: 12 }, (_, index) => ({

@@ -230,11 +230,11 @@ export function AgentCard({
             ) : null}
           </div>
           <div className="min-w-0">
-            <p
-              title={`Registered ${formatRegistrationDate(agent.registeredAt)}`}
-              className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-white/50"
-            >
-              ERC-8004 · #{agent.agentId}
+            <p className="truncate font-mono text-[0.62rem] uppercase tracking-[0.12em] text-white/50">
+              #{agent.agentId}
+            </p>
+            <p className="mt-0.5 truncate text-[0.6rem] text-white/40">
+              Registered {formatRegistrationDate(agent.registeredAt)}
             </p>
             <h2 className="mt-1.5 line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-white">
               {profileHref ? (
