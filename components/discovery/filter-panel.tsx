@@ -74,13 +74,13 @@ const agentStatusOptions = [
   {
     icon: FileWarning,
     kind: "metadata",
-    label: "Invalid profile",
+    label: "Invalid",
     value: "invalid",
   },
   {
     icon: Clock3,
     kind: "metadata",
-    label: "Verification pending",
+    label: "Pending",
     value: "pending",
   },
 ] as const;
@@ -307,7 +307,7 @@ function FilterOptions({ query }: FilterPanelProps) {
 
       <FilterSection
         icon={Gauge}
-        label="Sift rating"
+        label="Rating"
         layout="wide"
         count={
           query.scoreBands.length > 0 ? `${query.scoreBands.length} selected` : "Any"
@@ -337,12 +337,13 @@ function FilterOptions({ query }: FilterPanelProps) {
         })}
       </FilterSection>
       <p className="-mt-2.5 pl-1 text-[0.64rem] leading-5 text-muted-foreground/70">
-        Agents without a published rating are not included.
+        Uses the rating shown on each agent card.
       </p>
 
       <FilterSection
         icon={CalendarRange}
         label="Registered"
+        layout="wide"
         count={query.registrationPeriod ? "1 selected" : "Any time"}
       >
         {discoveryRegistrationPeriods.map((period) => {
@@ -359,6 +360,7 @@ function FilterOptions({ query }: FilterPanelProps) {
               label={period.label}
               role="radio"
               selected={selected}
+              wide
             />
           );
         })}

@@ -236,7 +236,7 @@ export function AgentCard({
             <p className="mt-0.5 truncate text-[0.6rem] text-white/40">
               Registered {formatRegistrationDate(agent.registeredAt)}
             </p>
-            <h2 className="mt-1.5 h-12 line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-white">
+            <h2 className="mt-1.5 line-clamp-2 text-xl leading-6 font-semibold tracking-[-0.03em] text-white">
               {profileHref ? (
                 <Link
                   href={profileHref}

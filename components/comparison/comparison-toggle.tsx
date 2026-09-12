@@ -1,6 +1,7 @@
 "use client";
 
-import { Scale, X } from "lucide-react";
+import { Tooltip } from "@base-ui/react/tooltip";
+import { Columns2, X } from "lucide-react";
 import { useState } from "react";
 
 import { useComparisonSelection } from "@/components/comparison/use-comparison-selection";
@@ -33,8 +34,12 @@ export function ComparisonToggle({
     : unavailable
       ? `Comparison is full at ${maximumComparisonAgents} agents`
       : `Add agent ${reference.agentId} to comparison`;
+  const tooltipTitle = selected ? "Remove from compare" : "Compare agents";
+  const tooltipDescription = selected
+    ? "Remove this agent from your comparison."
+    : "View this agent side by side with others.";
 
-  return (
+  const control = (
     <Button
       type="button"
       variant={selected ? "outline" : iconOnly ? "outline" : "brand"}
@@ -43,11 +48,9 @@ export function ComparisonToggle({
       aria-pressed={selected}
       aria-label={label}
       title={
-        iconOnly
-          ? label
-          : unavailable
-            ? `Remove an agent before adding another (maximum ${maximumComparisonAgents})`
-            : undefined
+        !iconOnly && unavailable
+          ? `Remove an agent before adding another (maximum ${maximumComparisonAgents})`
+          : undefined
       }
       className={cn(
         iconOnly && selected && "border-brand/35 bg-brand/8 text-brand hover:bg-brand/12",
@@ -71,7 +74,7 @@ export function ComparisonToggle({
       {selected ? (
         <X className="size-3.5" aria-hidden="true" />
       ) : (
-        <Scale className="size-3.5" aria-hidden="true" />
+        <Columns2 className="size-3.5" aria-hidden="true" />
       )}
       {iconOnly ? null : (
         <>
@@ -83,5 +86,25 @@ export function ComparisonToggle({
         {announcement}
       </span>
     </Button>
+  );
+
+  if (!iconOnly || unavailable) {
+    return control;
+  }
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger delay={250} closeDelay={80} render={control} />
+      <Tooltip.Portal>
+        <Tooltip.Positioner side="top" sideOffset={8} className="z-50">
+          <Tooltip.Popup className="origin-[var(--transform-origin)] rounded-lg border border-border bg-popover px-3 py-2 text-popover-foreground shadow-xl shadow-black/40 outline-none transition-[opacity,transform] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none">
+            <span className="block text-xs font-semibold">{tooltipTitle}</span>
+            <span className="mt-0.5 block max-w-52 text-[0.65rem] leading-4 text-muted-foreground">
+              {tooltipDescription}
+            </span>
+          </Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }
