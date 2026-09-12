@@ -202,6 +202,22 @@ exact agent rows, registry checkpoints, and category evidence are unchanged.
 This informational estimate prevents a full-table count from blocking each
 request on the hosted free tier.
 
+## Indexed discovery projection
+
+`20260912180000_add_indexed_discovery_projection.sql` creates
+`agent_discovery_documents`, a protected search projection derived entirely
+from the canonical agent, service, category, health, and score tables. Search,
+filter, and sort requests use its bounded indexes, then load full evidence only
+for the requested page. This prevents each browser request from rebuilding
+aggregates across the complete catalogue.
+
+Database triggers refresh only the affected agent document when canonical
+evidence changes. The initial migration performs one controlled full backfill
+under a source-table write lock, so let the Supabase deployment finish and do
+not run index, health, activation, score, or category writers concurrently.
+The projection has RLS enabled, is inaccessible to browser roles, and never
+replaces or invents source evidence.
+
 ## Optional CLI verification
 
 The Supabase CLI remains pinned as a development dependency for inspecting the hosted project. Docker is not needed for these linked-project commands.

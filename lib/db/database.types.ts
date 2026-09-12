@@ -154,6 +154,89 @@ export type Database = {
           },
         ];
       };
+      agent_discovery_documents: {
+        Row: {
+          a2a_success_at: string | null;
+          access_last_success_at: string | null;
+          active: boolean | null;
+          agent_db_id: string;
+          agent_id: string;
+          categories: string[];
+          chain_id: number;
+          display_rating: number;
+          erc8183_success_at: string | null;
+          health_checked_at: string | null;
+          health_status: string;
+          mcp_success_at: string | null;
+          metadata_status: string;
+          normalized_name: string | null;
+          registered_at: string | null;
+          registered_block: number | null;
+          registry_address: string;
+          search_document: unknown;
+          service_count: number;
+          sift_score: number | null;
+          updated_at: string;
+          x402_success_at: string | null;
+        };
+        Insert: {
+          a2a_success_at?: string | null;
+          access_last_success_at?: string | null;
+          active?: boolean | null;
+          agent_db_id: string;
+          agent_id: string;
+          categories?: string[];
+          chain_id: number;
+          display_rating: number;
+          erc8183_success_at?: string | null;
+          health_checked_at?: string | null;
+          health_status?: string;
+          mcp_success_at?: string | null;
+          metadata_status: string;
+          normalized_name?: string | null;
+          registered_at?: string | null;
+          registered_block?: number | null;
+          registry_address: string;
+          search_document: unknown;
+          service_count?: number;
+          sift_score?: number | null;
+          updated_at?: string;
+          x402_success_at?: string | null;
+        };
+        Update: {
+          a2a_success_at?: string | null;
+          access_last_success_at?: string | null;
+          active?: boolean | null;
+          agent_db_id?: string;
+          agent_id?: string;
+          categories?: string[];
+          chain_id?: number;
+          display_rating?: number;
+          erc8183_success_at?: string | null;
+          health_checked_at?: string | null;
+          health_status?: string;
+          mcp_success_at?: string | null;
+          metadata_status?: string;
+          normalized_name?: string | null;
+          registered_at?: string | null;
+          registered_block?: number | null;
+          registry_address?: string;
+          search_document?: unknown;
+          service_count?: number;
+          sift_score?: number | null;
+          updated_at?: string;
+          x402_success_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agent_discovery_documents_agent_db_id_fkey";
+            columns: ["agent_db_id"];
+            isOneToOne: true;
+            referencedRelation: "agents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       agent_health: {
         Row: {
           agent_db_id: string;
@@ -843,6 +926,10 @@ export type Database = {
           p_transaction_status: string;
         };
         Returns: undefined;
+      };
+      refresh_agent_discovery_documents: {
+        Args: { p_agent_ids?: string[] | null };
+        Returns: number;
       };
       replace_agent_category_evidence: {
         Args: {
