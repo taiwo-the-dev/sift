@@ -175,7 +175,7 @@ describe("discovery repository integration boundary", () => {
       page: "2",
       q: "automate grid trading",
       size: "12",
-      sort: "profile-first",
+      sort: "recent",
     });
 
     const result = await createDiscoveryRepository(client, noEvidence).search(query);
@@ -190,7 +190,7 @@ describe("discovery repository integration boundary", () => {
           p_page: 2,
           p_page_size: 12,
           p_search_terms: ["automate", "grid", "trading"],
-          p_sort: "profile-first",
+          p_sort: "recent",
         },
       },
     ]);
@@ -231,27 +231,47 @@ describe("discovery repository integration boundary", () => {
     ]);
   });
 
-  it("uses the advanced database function for rating, registration, and decision sorts", async () => {
+  it("uses bounded keys for registration and decision sorts", async () => {
     const calls: unknown[] = [];
     const client = {
+      from(table: string) {
+        calls.push({ operation: "from", table });
+        return {
+          select() {
+            return {
+              async in() {
+                return { data: [], error: null };
+              },
+            };
+          },
+        };
+      },
       async rpc(name: string, parameters: unknown) {
         calls.push({ name, parameters });
-        return { data: fixtureRows, error: null };
+        return {
+          data: [
+            {
+              agent_db_id: fixtureRows[0]!.agent_db_id,
+              has_more: false,
+              result_page: 1,
+            },
+          ],
+          error: null,
+        };
       },
     } as unknown as SupabaseClient<Database>;
     const query = parseDiscoverySearchParams({
       availability: "ready",
       health: "online",
-      rating: ["excellent", "good"],
       registered: "month",
       sort: "services-desc",
     });
 
     await createDiscoveryRepository(client, noEvidence).search(query);
 
-    assert.deepEqual(calls, [
+    assert.deepEqual(calls[0],
       {
-        name: "search_agents_advanced",
+        name: "search_agent_discovery_keys",
         parameters: {
           p_categories: [],
           p_chain_ids: [56],
@@ -261,12 +281,122 @@ describe("discovery repository integration boundary", () => {
           p_page_size: 12,
           p_ready_only: true,
           p_registration_period: "month",
-          p_score_bands: ["excellent", "good"],
+          p_score_bands: [],
           p_search_terms: [],
           p_sort: "services-desc",
         },
       },
-    ]);
+    );
+  });
+
+  it("loads only the bounded agent page selected by the rating function", async () => {
+    const calls: unknown[] = [];
+    const agentDetails = fixtureRows.map((row) => ({
+      active: row.active,
+      agent_category_evidence: Array.isArray(row.category_evidence)
+        ? row.category_evidence.map((evidence) => ({
+            category:
+              typeof evidence === "object" &&
+              evidence !== null &&
+              !Array.isArray(evidence) &&
+              "category" in evidence
+                ? evidence.category
+                : null,
+            confidence: 0.65,
+            evidence: { matchedTerms: ["grid strategy"] },
+            facts: [],
+            observed_at: "2026-08-22T09:00:00.000Z",
+            rule_version: "sift-category-taxonomy-v1.0.0",
+            source: "deterministic-rule",
+          }))
+        : [],
+      agent_id: row.agent_id,
+      agent_services: [],
+      chain_id: row.chain_id,
+      description: row.description,
+      id: row.agent_db_id,
+      image_url: row.image_url,
+      last_synced_at: row.last_synced_at,
+      metadata_status: row.metadata_status,
+      name: row.name,
+      owner_address: row.owner_address,
+      registered_at: row.registered_at,
+      registered_block: row.registered_block,
+      registry_address: row.registry_address,
+      x402_supported: row.x402_supported,
+    }));
+    const client = {
+      from(table: string) {
+        calls.push({ table, operation: "from" });
+        return {
+          select() {
+            calls.push({ operation: "select" });
+            return {
+              async in(column: string, values: readonly string[]) {
+                calls.push({ column, operation: "in", values });
+                return { data: agentDetails, error: null };
+              },
+            };
+          },
+        };
+      },
+      async rpc(name: string, parameters: unknown) {
+        calls.push({ name, parameters });
+        return {
+          data: [
+            {
+              agent_db_id: fixtureRows[1]!.agent_db_id,
+              has_more: true,
+              result_page: 2,
+            },
+            {
+              agent_db_id: fixtureRows[0]!.agent_db_id,
+              has_more: true,
+              result_page: 2,
+            },
+          ],
+          error: null,
+        };
+      },
+    } as unknown as SupabaseClient<Database>;
+    const query = parseDiscoverySearchParams({
+      availability: "ready",
+      health: "online",
+      page: "2",
+      rating: ["excellent", "good"],
+      registered: "month",
+      sort: "services-desc",
+    });
+
+    const result = await createDiscoveryRepository(client, noEvidence).search(query);
+
+    assert.deepEqual(calls[0], {
+      name: "search_agent_discovery_keys",
+      parameters: {
+        p_categories: [],
+        p_chain_ids: [56],
+        p_health_statuses: ["online"],
+        p_metadata_statuses: [],
+        p_page: 2,
+        p_page_size: 12,
+        p_ready_only: true,
+        p_registration_period: "month",
+        p_score_bands: ["excellent", "good"],
+        p_search_terms: [],
+        p_sort: "services-desc",
+      },
+    });
+    assert.deepEqual(calls.at(-1), {
+      column: "id",
+      operation: "in",
+      values: [fixtureRows[1]!.agent_db_id, fixtureRows[0]!.agent_db_id],
+    });
+    assert.deepEqual(
+      result.agents.map((agent) => agent.agentId),
+      ["103", "104"],
+    );
+    assert.equal(result.hasNextPage, true);
+    assert.equal(result.page, 2);
   });
 
   it("delegates current task availability and pagination to one bounded RPC", async () => {

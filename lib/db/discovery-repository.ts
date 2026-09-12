@@ -32,10 +32,16 @@ import {
 
 type SearchAgentRow =
   Database["public"]["Functions"]["search_agents_advanced"]["Returns"][number];
+type DiscoveryAgentKeyRow =
+  Database["public"]["Functions"]["search_agent_discovery_keys"]["Returns"][number];
 
 const advancedDiscoverySorts = new Set<DiscoveryQuery["sort"]>([
   "available-first",
   "health-recent",
+  "name-asc",
+  "name-desc",
+  "oldest",
+  "profile-first",
   "score-asc",
   "score-desc",
   "services-desc",
@@ -471,6 +477,49 @@ export function createDiscoveryRepository(
     };
   }
 
+  async function loadDiscoveryKeyPage(
+    query: DiscoveryQuery,
+    keys: readonly DiscoveryAgentKeyRow[],
+  ): Promise<DiscoveryResult> {
+    const ids = keys.map((key) => key.agent_db_id);
+
+    if (ids.length === 0) {
+      return {
+        agents: [],
+        hasNextPage: false,
+        page: query.page,
+        pageSize: query.pageSize,
+        totalCount: null,
+      };
+    }
+
+    const { data, error } = await client
+      .from("agents")
+      .select(recentAgentSelect)
+      .in("id", ids);
+
+    if (error) {
+      throw new DatabaseOperationError("load filtered agents", error);
+    }
+
+    const agentsById = new Map(
+      data.map((row) => [row.id, mapRecentAgent(row)]),
+    );
+    const orderedAgents = keys.flatMap((key) => {
+      const agent = agentsById.get(key.agent_db_id);
+      return agent ? [agent] : [];
+    });
+    const firstKey = keys[0];
+
+    return {
+      agents: await attachEvidence(orderedAgents),
+      hasNextPage: firstKey?.has_more ?? false,
+      page: firstKey?.result_page ?? query.page,
+      pageSize: query.pageSize,
+      totalCount: null,
+    };
+  }
+
   async function searchDatabasePage(
     query: DiscoveryQuery,
   ): Promise<DiscoveryResult> {
@@ -486,10 +535,33 @@ export function createDiscoveryRepository(
       return searchRecentAgents(query);
     }
 
-    const useAdvancedSearch =
+    const useKeySearch =
       advancedDiscoverySorts.has(query.sort) ||
       query.registrationPeriod !== null ||
       query.scoreBands.length > 0;
+
+    if (useKeySearch) {
+      const { data, error } = await client.rpc("search_agent_discovery_keys", {
+        p_categories: [...query.effectiveCategories],
+        p_chain_ids: [...query.networkChainIds],
+        p_health_statuses: [...query.healthStatuses],
+        p_metadata_statuses: [...query.metadataStatuses],
+        p_page: query.page,
+        p_page_size: query.pageSize,
+        p_ready_only: query.taskAvailability === "ready",
+        p_registration_period: query.registrationPeriod,
+        p_score_bands: [...query.scoreBands],
+        p_search_terms: [...query.searchTerms],
+        p_sort: query.sort,
+      });
+
+      if (error) {
+        throw new DatabaseOperationError("search filtered agents", error);
+      }
+
+      return loadDiscoveryKeyPage(query, data);
+    }
+
     const functionName = query.taskAvailability === "ready"
       ? "search_ready_agents"
       : query.healthStatuses.length > 0
@@ -504,21 +576,13 @@ export function createDiscoveryRepository(
       p_search_terms: [...query.searchTerms],
       p_sort: query.sort,
     };
-    const { data, error } = useAdvancedSearch
-      ? await client.rpc("search_agents_advanced", {
+    const { data, error } = functionName === "search_agents_with_health" ||
+        functionName === "search_ready_agents"
+      ? await client.rpc(functionName, {
           ...sharedParameters,
           p_health_statuses: [...query.healthStatuses],
-          p_ready_only: query.taskAvailability === "ready",
-          p_registration_period: query.registrationPeriod,
-          p_score_bands: [...query.scoreBands],
         })
-      : functionName === "search_agents_with_health" ||
-          functionName === "search_ready_agents"
-        ? await client.rpc(functionName, {
-            ...sharedParameters,
-            p_health_statuses: [...query.healthStatuses],
-          })
-        : await client.rpc(functionName, sharedParameters);
+      : await client.rpc(functionName, sharedParameters);
 
     if (error) {
       throw new DatabaseOperationError("search indexed agents", error);

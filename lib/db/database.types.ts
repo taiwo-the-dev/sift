@@ -1076,6 +1076,46 @@ export type Database = {
           x402_supported: boolean | null;
         }[];
       };
+      search_agent_rating_keys: {
+        Args: {
+          p_categories?: string[];
+          p_chain_ids?: number[];
+          p_health_statuses?: string[];
+          p_metadata_statuses?: string[];
+          p_page?: number;
+          p_page_size?: number;
+          p_ready_only?: boolean;
+          p_registration_period?: string | null;
+          p_score_bands?: string[];
+          p_search_terms?: string[];
+          p_sort?: string;
+        };
+        Returns: {
+          agent_db_id: string;
+          has_more: boolean;
+          result_page: number;
+        }[];
+      };
+      search_agent_discovery_keys: {
+        Args: {
+          p_categories?: string[];
+          p_chain_ids?: number[];
+          p_health_statuses?: string[];
+          p_metadata_statuses?: string[];
+          p_page?: number;
+          p_page_size?: number;
+          p_ready_only?: boolean;
+          p_registration_period?: string | null;
+          p_score_bands?: string[];
+          p_search_terms?: string[];
+          p_sort?: string;
+        };
+        Returns: {
+          agent_db_id: string;
+          has_more: boolean;
+          result_page: number;
+        }[];
+      };
       search_ready_agents: {
         Args: {
           p_categories?: string[];
