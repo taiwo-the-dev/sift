@@ -19,9 +19,9 @@ import {
   WifiOff,
   type LucideIcon,
 } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { DiscoveryNavigationLink } from "@/components/discovery/discovery-navigation";
 import {
   discoveryCategories,
   discoveryRegistrationPeriods,
@@ -161,7 +161,7 @@ function FilterChip({
   wide?: boolean;
 }>) {
   return (
-    <Link
+    <DiscoveryNavigationLink
       href={href}
       prefetch={false}
       role={role}
@@ -205,7 +205,7 @@ function FilterChip({
       >
         <Check className="size-2.5" strokeWidth={3} />
       </span>
-    </Link>
+    </DiscoveryNavigationLink>
   );
 }
 
@@ -366,14 +366,14 @@ function FilterOptions({ query }: FilterPanelProps) {
         })}
       </FilterSection>
 
-      <Link
+      <DiscoveryNavigationLink
         href="/discover"
         prefetch={false}
         className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background text-xs font-semibold text-foreground outline-none transition-colors hover:border-brand/25 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
       >
         <RotateCcw className="size-3.5" aria-hidden="true" />
         Clear filters
-      </Link>
+      </DiscoveryNavigationLink>
     </div>
   );
 }

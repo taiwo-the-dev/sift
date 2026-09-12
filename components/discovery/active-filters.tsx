@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
-import Link from "next/link";
 
+import { DiscoveryNavigationLink } from "@/components/discovery/discovery-navigation";
 import {
   formatCategory,
   formatHealthStatus,
@@ -41,7 +41,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
     <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
       <span className="mr-1 text-xs font-medium text-muted-foreground">Active</span>
       {query.network === "bsc-testnet" ? (
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, {
             network: "bsc-mainnet",
             page: 1,
@@ -51,10 +51,10 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
         >
           BSC Testnet
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ) : null}
       {hiringAvailabilitySelected ? (
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, {
             page: 1,
             taskAvailability: null,
@@ -64,10 +64,10 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
         >
           Available
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ) : null}
       {query.query ? (
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, {
             page: 1,
             query: "",
@@ -80,11 +80,11 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
             “{query.query}”
           </span>
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ) : null}
 
       {query.categories.map((category) => (
-        <Link
+        <DiscoveryNavigationLink
           key={category}
           href={buildDiscoveryHref(query, {
             categories: query.categories.filter((value) => value !== category),
@@ -95,11 +95,11 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
         >
           {formatCategory(category)}
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ))}
 
       {visibleMetadataStatuses.map((status) => (
-        <Link
+        <DiscoveryNavigationLink
           key={status}
           href={buildDiscoveryHref(query, {
             metadataStatuses: query.metadataStatuses.filter(
@@ -112,11 +112,11 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
         >
           {formatMetadataStatus(status)}
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ))}
 
       {query.healthStatuses.map((status) => (
-        <Link
+        <DiscoveryNavigationLink
           key={status}
           href={buildDiscoveryHref(query, {
             healthStatuses: query.healthStatuses.filter(
@@ -129,7 +129,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
         >
           {formatHealthStatus(status)}
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ))}
 
       {query.scoreBands.map((band) => {
@@ -141,7 +141,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           : band;
 
         return (
-          <Link
+          <DiscoveryNavigationLink
             key={band}
             href={buildDiscoveryHref(query, {
               page: 1,
@@ -152,12 +152,12 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           >
             {label}
             <X className="size-3" aria-hidden="true" />
-          </Link>
+          </DiscoveryNavigationLink>
         );
       })}
 
       {query.registrationPeriod ? (
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, {
             page: 1,
             registrationPeriod: null,
@@ -169,15 +169,15 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
             (period) => period.value === query.registrationPeriod,
           )?.label ?? "Registration date"}
           <X className="size-3" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       ) : null}
 
-      <Link
+      <DiscoveryNavigationLink
         href="/discover"
         className="rounded-sm px-1 py-1 text-xs font-semibold text-brand outline-none hover:text-brand-hover focus-visible:ring-3 focus-visible:ring-ring/30"
       >
         Clear all
-      </Link>
+      </DiscoveryNavigationLink>
     </div>
   );
 }

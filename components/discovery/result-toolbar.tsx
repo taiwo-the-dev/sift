@@ -3,6 +3,7 @@
 import { ArrowUpDown, Rows3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { useDiscoveryNavigation } from "@/components/discovery/discovery-navigation";
 import { SelectField } from "@/components/ui/select-field";
 import {
   discoveryPageSizes,
@@ -27,6 +28,7 @@ export function ResultToolbar({
   totalCount,
 }: ResultToolbarProps) {
   const router = useRouter();
+  const { startNavigation } = useDiscoveryNavigation();
   const displayedCount = totalCount ?? resultCount;
   const availableSortOptions = discoverySortOptions.filter(
     (option) => query.query || option.value !== "relevance",
@@ -54,7 +56,9 @@ export function ResultToolbar({
           icon={ArrowUpDown}
           label="Sort by"
           onValueChange={(sort) => {
-            router.push(buildDiscoveryHref(query, { page: 1, sort }), {
+            const href = buildDiscoveryHref(query, { page: 1, sort });
+            startNavigation(href);
+            router.push(href, {
               scroll: false,
             });
           }}
@@ -66,7 +70,9 @@ export function ResultToolbar({
           icon={Rows3}
           label="Per page"
           onValueChange={(pageSize) => {
-            router.push(buildDiscoveryHref(query, { page: 1, pageSize }), {
+            const href = buildDiscoveryHref(query, { page: 1, pageSize });
+            startNavigation(href);
+            router.push(href, {
               scroll: false,
             });
           }}

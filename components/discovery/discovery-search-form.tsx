@@ -1,6 +1,9 @@
+"use client";
+
 import { ArrowRight, Search } from "lucide-react";
 import Form from "next/form";
 
+import { useDiscoveryNavigation } from "@/components/discovery/discovery-navigation";
 import { Button } from "@/components/ui/button";
 import { formatCategory } from "@/features/discovery/format";
 import type { DiscoveryQuery } from "@/features/discovery/model";
@@ -10,12 +13,27 @@ interface DiscoverySearchFormProps {
 }
 
 export function DiscoverySearchForm({ query }: DiscoverySearchFormProps) {
+  const { startNavigation } = useDiscoveryNavigation();
+
   return (
     <div>
       <Form
         action="/discover"
         id="discovery-search"
         className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+        onSubmit={(event) => {
+          const formData = new FormData(event.currentTarget);
+          const searchParams = new URLSearchParams();
+
+          for (const [name, value] of formData.entries()) {
+            if (typeof value === "string" && value.length > 0) {
+              searchParams.append(name, value);
+            }
+          }
+
+          const queryString = searchParams.toString();
+          startNavigation(`/discover${queryString ? `?${queryString}` : ""}`);
+        }}
       >
         {query.network !== "bsc-mainnet" ? (
           <input type="hidden" name="network" value={query.network} />

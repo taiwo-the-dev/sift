@@ -1,6 +1,6 @@
 import { RotateCcw, SearchX } from "lucide-react";
-import Link from "next/link";
 
+import { DiscoveryNavigationLink } from "@/components/discovery/discovery-navigation";
 import { discoveryCategories } from "@/features/discovery/model";
 
 export function EmptyState() {
@@ -16,21 +16,21 @@ export function EmptyState() {
         Try a broader search or clear one of the active filters.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Link
+        <DiscoveryNavigationLink
           href="/discover"
           className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-brand-foreground outline-none hover:bg-brand-hover focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <RotateCcw className="size-4" aria-hidden="true" />
           Clear search
-        </Link>
+        </DiscoveryNavigationLink>
         {discoveryCategories.slice(0, 2).map((category) => (
-          <Link
+          <DiscoveryNavigationLink
             key={category.slug}
             href={`/discover?category=${category.slug}`}
             className="inline-flex h-10 items-center rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             {category.label}
-          </Link>
+          </DiscoveryNavigationLink>
         ))}
       </div>
     </div>

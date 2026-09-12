@@ -147,29 +147,6 @@ export function ProfileHeader({
                 <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-[0.68rem] font-semibold text-muted-foreground">
                   ERC-8004 #{profile.agentId}
                 </span>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold",
-                    profile.active === true
-                      ? "border-emerald-400/25 bg-emerald-400/8 text-emerald-200"
-                      : "border-border bg-background/60 text-muted-foreground",
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "size-1.5 rounded-full",
-                      profile.active === true
-                        ? "bg-emerald-300"
-                        : "bg-muted-foreground",
-                    )}
-                  />
-                  {profile.active === null
-                    ? "Status not listed"
-                    : profile.active
-                      ? "Listed as active"
-                      : "Listed as inactive"}
-                </span>
               </div>
 
               <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">

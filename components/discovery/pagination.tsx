@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import Link from "next/link";
 
+import { DiscoveryNavigationLink } from "@/components/discovery/discovery-navigation";
 import type { DiscoveryQuery } from "@/features/discovery/model";
 import { buildDiscoveryHref } from "@/features/discovery/query";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,7 @@ export function Pagination({
       className="mt-10 border-t border-border pt-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, { page: Math.max(1, currentPage - 1) })}
           aria-disabled={currentPage === 1}
           tabIndex={currentPage === 1 ? -1 : undefined}
@@ -54,7 +54,7 @@ export function Pagination({
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Previous
-        </Link>
+        </DiscoveryNavigationLink>
 
         <div className="order-3 flex w-full items-center justify-center gap-1.5 sm:order-none sm:w-auto">
           {visiblePages.map((page, index) => {
@@ -71,7 +71,7 @@ export function Pagination({
                     …
                   </span>
                 ) : null}
-                <Link
+                <DiscoveryNavigationLink
                   href={buildDiscoveryHref(query, { page })}
                   aria-current={current ? "page" : undefined}
                   className={cn(
@@ -82,13 +82,13 @@ export function Pagination({
                   )}
                 >
                   {page}
-                </Link>
+                </DiscoveryNavigationLink>
               </span>
             );
           })}
         </div>
 
-        <Link
+        <DiscoveryNavigationLink
           href={buildDiscoveryHref(query, {
             page: currentPage + 1,
           })}
@@ -101,7 +101,7 @@ export function Pagination({
         >
           Next
           <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
+        </DiscoveryNavigationLink>
       </div>
 
     </nav>
