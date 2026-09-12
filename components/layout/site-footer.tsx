@@ -8,7 +8,6 @@ const footerGroups = [
     links: [
       { label: "Discover", href: "/discover" },
       { label: "Bookmarked agents", href: "/saved" },
-      { label: "Wallet safety", href: "/permissions" },
       { label: "My jobs", href: "/dashboard" },
       { label: "Categories", href: "/#categories" },
     ],
@@ -18,6 +17,8 @@ const footerGroups = [
     links: [
       { label: "How it works", href: "/#how-it-works" },
       { label: "Trust approach", href: "/#trust" },
+      { label: "Wallet safety", href: "/permissions" },
+      { label: "Terms of use", href: "/terms" },
     ],
   },
 ] as const;
