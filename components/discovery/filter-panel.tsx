@@ -3,14 +3,16 @@ import {
   BriefcaseBusiness,
   CalendarRange,
   Check,
-  CircleEllipsis,
+  ChevronDown,
   Clock3,
   FileWarning,
   Gauge,
   Grid3X3,
+  Layers3,
   RadioTower,
   RefreshCw,
   RotateCcw,
+  ShieldCheck,
   SlidersHorizontal,
   TrendingUp,
   TriangleAlert,
@@ -103,22 +105,38 @@ function FilterSection({
   children,
   count,
   first = false,
+  icon: Icon,
   label,
+  layout = "compact",
 }: Readonly<{
   children: ReactNode;
   count: string;
   first?: boolean;
+  icon: LucideIcon;
   label: string;
+  layout?: "compact" | "wide";
 }>) {
   return (
-    <fieldset className={cn(!first && "border-t border-border pt-4")}>
-      <legend className="flex w-full items-center justify-between gap-3 text-[0.66rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-        {label}
-        <span className="font-mono text-[0.58rem] tracking-normal text-muted-foreground/60">
+    <fieldset className={cn(!first && "border-t border-border/80 pt-5")}>
+      <legend className="flex w-full items-center justify-between gap-3 text-xs font-semibold text-foreground">
+        <span className="inline-flex items-center gap-2.5">
+          <Icon className="size-3.5 text-brand" aria-hidden="true" />
+          {label}
+        </span>
+        <span className="text-[0.64rem] font-medium text-muted-foreground">
           {count}
         </span>
       </legend>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">{children}</div>
+      <div
+        className={cn(
+          "mt-3",
+          layout === "wide"
+            ? "grid grid-cols-1 gap-2"
+            : "grid grid-cols-2 gap-2",
+        )}
+      >
+        {children}
+      </div>
     </fieldset>
   );
 }
@@ -131,6 +149,7 @@ function FilterChip({
   selected,
   sublabel,
   title,
+  wide = false,
 }: Readonly<{
   href: string;
   icon: LucideIcon;
@@ -139,6 +158,7 @@ function FilterChip({
   selected: boolean;
   sublabel?: string;
   title?: string;
+  wide?: boolean;
 }>) {
   return (
     <Link
@@ -148,30 +168,43 @@ function FilterChip({
       aria-checked={selected}
       title={title}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium whitespace-nowrap outline-none transition-[border-color,background-color,color] focus-visible:ring-3 focus-visible:ring-ring/30",
+        "group/filter relative flex min-h-10 min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs font-medium outline-none transition-[border-color,background-color,color,transform] focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.98]",
+        wide && "w-full",
         selected
-          ? "border-brand/55 bg-brand/14 text-brand"
-          : "border-border bg-background/40 text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground",
+          ? "border-brand/55 bg-brand/12 text-foreground"
+          : "border-transparent bg-secondary/55 text-muted-foreground hover:border-border hover:bg-secondary hover:text-foreground",
       )}
     >
-      <Icon
-        className={cn("size-3.5 shrink-0", selected && "text-brand")}
+      <span
+        className={cn(
+          "grid size-6 shrink-0 place-items-center rounded-md border border-border bg-background/70 text-muted-foreground transition-colors group-hover/filter:text-foreground",
+          selected && "border-brand/35 bg-brand/10 text-brand",
+        )}
+      >
+        <Icon className="size-3.5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block leading-4">{label}</span>
+        {sublabel ? (
+          <span
+            className={cn(
+              "mt-0.5 block text-[0.62rem] font-normal leading-3.5",
+              selected ? "text-brand/80" : "text-muted-foreground/70",
+            )}
+          >
+            {sublabel}
+          </span>
+        ) : null}
+      </span>
+      <span
+        className={cn(
+          "grid size-4 shrink-0 place-items-center rounded-[0.3rem] border border-border bg-background/70 text-transparent transition-colors",
+          selected && "border-brand bg-brand text-brand-foreground",
+        )}
         aria-hidden="true"
-      />
-      {label}
-      {sublabel ? (
-        <span
-          className={cn(
-            "text-[0.6rem]",
-            selected ? "text-brand/70" : "text-muted-foreground/70",
-          )}
-        >
-          {sublabel}
-        </span>
-      ) : null}
-      {selected ? (
-        <Check className="size-3 shrink-0" aria-hidden="true" />
-      ) : null}
+      >
+        <Check className="size-2.5" strokeWidth={3} />
+      </span>
     </Link>
   );
 }
@@ -184,7 +217,9 @@ function FilterOptions({ query }: FilterPanelProps) {
     <div className="space-y-4">
       <FilterSection
         first
+        icon={Layers3}
         label="Category"
+        layout="wide"
         count={
           query.categories.length > 0
             ? `${query.categories.length} selected`
@@ -208,12 +243,14 @@ function FilterOptions({ query }: FilterPanelProps) {
               label={category.label}
               role="checkbox"
               selected={selected}
+              wide
             />
           );
         })}
       </FilterSection>
 
       <FilterSection
+        icon={ShieldCheck}
         label="Agent status"
         count={
           selectedAgentStatusCount > 0 ? `${selectedAgentStatusCount} selected` : "Any"
@@ -269,7 +306,9 @@ function FilterOptions({ query }: FilterPanelProps) {
       </FilterSection>
 
       <FilterSection
+        icon={Gauge}
         label="Sift rating"
+        layout="wide"
         count={
           query.scoreBands.length > 0 ? `${query.scoreBands.length} selected` : "Any"
         }
@@ -292,15 +331,17 @@ function FilterOptions({ query }: FilterPanelProps) {
               role="checkbox"
               selected={selected}
               sublabel={band.rangeLabel}
+              wide
             />
           );
         })}
       </FilterSection>
-      <p className="-mt-2.5 text-[0.62rem] leading-5 text-muted-foreground/70">
-        Uses published Sift Scores. Unscored agents are excluded.
+      <p className="-mt-2.5 pl-1 text-[0.64rem] leading-5 text-muted-foreground/70">
+        Agents without a published rating are not included.
       </p>
 
       <FilterSection
+        icon={CalendarRange}
         label="Registered"
         count={query.registrationPeriod ? "1 selected" : "Any time"}
       >
@@ -355,7 +396,10 @@ export function FilterPanel({ query }: FilterPanelProps) {
           </span>
           <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
             {activeCount > 0 ? `${activeCount} active` : "All agents"}
-            <CircleEllipsis className="size-4" aria-hidden="true" />
+            <ChevronDown
+              className="size-4 transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
           </span>
         </summary>
         <div className="border-t border-border p-4">
@@ -363,23 +407,28 @@ export function FilterPanel({ query }: FilterPanelProps) {
         </div>
       </details>
 
-      <aside className="hidden self-start overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-24 lg:block">
-        <div className="border-b border-border bg-[linear-gradient(135deg,rgba(240,185,11,0.09),transparent_62%)] px-5 py-4">
+      <aside className="hidden self-start border-r border-border/80 pr-6 lg:sticky lg:top-24 lg:block">
+        <div className="pb-5">
           <div className="flex items-center justify-between gap-3">
             <span className="inline-flex items-center gap-2.5 text-base font-semibold text-foreground">
-              <span className="grid size-8 place-items-center rounded-lg border border-brand/20 bg-brand/10 text-brand">
+              <span className="grid size-8 place-items-center rounded-lg bg-brand text-brand-foreground">
                 <SlidersHorizontal className="size-4" aria-hidden="true" />
               </span>
-              Filters
+              <span>
+                Refine results
+                <span className="mt-0.5 block text-[0.66rem] font-normal text-muted-foreground">
+                  Choose what matters to you
+                </span>
+              </span>
             </span>
             {activeCount > 0 ? (
-              <span className="rounded-full border border-brand/20 bg-brand/8 px-2 py-1 text-[0.62rem] font-semibold text-brand">
+              <span className="rounded-md border border-brand/25 bg-brand/10 px-2 py-1 text-[0.62rem] font-semibold text-brand">
                 {activeCount} active
               </span>
             ) : null}
           </div>
         </div>
-        <div className="p-4">
+        <div className="border-t border-border/80 pt-5">
           <FilterOptions query={query} />
         </div>
       </aside>
