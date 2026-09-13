@@ -23,11 +23,18 @@ import {
   serializeAgentReference,
 } from "@/features/comparison/query";
 import { getAgentComparison } from "@/features/comparison/service";
+import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 import { cn } from "@/lib/utils";
 
 export async function ComparisonResults({
+  network,
+  networkLabel,
   selection,
-}: Readonly<{ selection: ComparisonSelection }>) {
+}: Readonly<{
+  network: SupportedBnbNetwork;
+  networkLabel: string;
+  selection: ComparisonSelection;
+}>) {
   const result = await getAgentComparison(selection.references);
   const contextualMatch = findContextualMatch(result.agents, selection.goal);
   const ignoredCount =
@@ -48,7 +55,7 @@ export async function ComparisonResults({
             {result.agents.length === 1 ? "" : "s"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Compare up to four agents. Empty rows are hidden.
+            Compare up to four {networkLabel} agents. Empty rows are hidden.
           </p>
         </div>
         {selection.references.length > 0 ? <ComparisonPageActions /> : null}
@@ -97,6 +104,7 @@ export async function ComparisonResults({
                 </p>
                 <AgentSelectionActions
                   goal={selection.goal}
+                  network={network}
                   reference={missing.reference}
                   references={selection.references}
                 />
@@ -115,10 +123,10 @@ export async function ComparisonResults({
             Start with two real agents
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-            Select agents from Discover or an agent profile.
+            Select {networkLabel} agents from Discover or an agent profile.
           </p>
           <Link
-            href="/discover"
+            href={buildDiscoveryHrefForComparison("", network)}
             className={cn(
               buttonVariants({ variant: "brand", size: "lg" }),
               "mt-7",
@@ -150,7 +158,7 @@ export async function ComparisonResults({
                 </p>
               </div>
               <Link
-                href={buildDiscoveryHrefForComparison(selection.goal)}
+                href={buildDiscoveryHrefForComparison(selection.goal, network)}
                 className={cn(buttonVariants({ variant: "brand" }))}
               >
                 <Plus className="size-4" aria-hidden="true" />
@@ -190,13 +198,14 @@ export async function ComparisonResults({
             agents={result.agents}
             contextualMatch={canCompare ? contextualMatch : null}
             goal={selection.goal}
+            network={network}
             references={selection.references}
           />
 
           {selection.references.length < 4 ? (
             <div className="mt-6 flex justify-center">
               <Link
-                href={buildDiscoveryHrefForComparison(selection.goal)}
+                href={buildDiscoveryHrefForComparison(selection.goal, network)}
                 className={cn(buttonVariants({ variant: "outline" }))}
               >
                 <Plus className="size-4" aria-hidden="true" />

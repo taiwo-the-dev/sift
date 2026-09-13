@@ -42,12 +42,14 @@ import {
   isScoreStale,
   scoreComponentRows,
 } from "@/features/scoring/presentation";
+import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 import { cn } from "@/lib/utils";
 
 interface ComparisonSurfaceProps {
   agents: readonly AgentProfile[];
   contextualMatch: ContextualMatch | null;
   goal: string;
+  network: SupportedBnbNetwork;
   references: readonly AgentReference[];
 }
 
@@ -529,11 +531,13 @@ function AgentColumnHeader({
   agent,
   contextualMatch,
   goal,
+  network,
   references,
 }: Readonly<{
   agent: AgentProfile;
   contextualMatch: ContextualMatch | null;
   goal: string;
+  network: SupportedBnbNetwork;
   references: readonly AgentReference[];
 }>) {
   const name = formatAgentName(agent.name, agent.agentId);
@@ -597,6 +601,7 @@ function AgentColumnHeader({
         <AgentSelectionActions
           className="mt-0"
           goal={goal}
+          network={network}
           reference={{ agentId: agent.agentId, chainId: agent.chainId }}
           references={references}
         />
@@ -609,6 +614,7 @@ export function ComparisonSurface({
   agents,
   contextualMatch,
   goal,
+  network,
   references,
 }: ComparisonSurfaceProps) {
   const visibleSections = comparisonSections
@@ -638,6 +644,7 @@ export function ComparisonSurface({
                 agent={agent}
                 contextualMatch={contextualMatch}
                 goal={goal}
+                network={network}
                 references={references}
               />
             </header>
@@ -718,6 +725,7 @@ export function ComparisonSurface({
                       agent={agent}
                       contextualMatch={contextualMatch}
                       goal={goal}
+                      network={network}
                       references={references}
                     />
                   </th>

@@ -4,6 +4,11 @@ import {
   type AgentReference,
   type ComparisonSelection,
 } from "@/features/comparison/model";
+import {
+  catalogueNetworkForChainId,
+  defaultCatalogueNetwork,
+} from "@/features/network/selection";
+import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 
 export type ComparisonSearchParams = Readonly<
   Record<string, string | string[] | undefined>
@@ -99,6 +104,26 @@ export function parseComparisonSearchParams(
   );
 }
 
+export function scopeComparisonSelectionToChain(
+  selection: ComparisonSelection,
+  chainId: number,
+): Readonly<{
+  excludedNetworkCount: number;
+  selection: ComparisonSelection;
+}> {
+  const references = selection.references.filter(
+    (reference) => reference.chainId === chainId,
+  );
+
+  return {
+    excludedNetworkCount: selection.references.length - references.length,
+    selection: {
+      ...selection,
+      references,
+    },
+  };
+}
+
 export function buildComparisonHref(
   references: readonly AgentReference[],
   goal = "",
@@ -113,6 +138,14 @@ export function buildComparisonHref(
     params.append("agent", serializeAgentReference(reference));
   }
 
+  const network = catalogueNetworkForChainId(
+    selection.references[0]?.chainId,
+  );
+
+  if (network && network !== defaultCatalogueNetwork) {
+    params.set("network", network);
+  }
+
   if (selection.goal) {
     params.set("goal", selection.goal);
   }
@@ -121,9 +154,16 @@ export function buildComparisonHref(
   return serialized ? `/compare?${serialized}` : "/compare";
 }
 
-export function buildDiscoveryHrefForComparison(goal: string): string {
+export function buildDiscoveryHrefForComparison(
+  goal: string,
+  network: SupportedBnbNetwork = defaultCatalogueNetwork,
+): string {
   const normalizedGoal = normalizeComparisonGoal(goal);
   const params = new URLSearchParams();
+
+  if (network !== defaultCatalogueNetwork) {
+    params.set("network", network);
+  }
 
   if (normalizedGoal) {
     params.set("q", normalizedGoal);

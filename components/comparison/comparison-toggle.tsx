@@ -1,7 +1,7 @@
 "use client";
 
 import { Tooltip } from "@base-ui/react/tooltip";
-import { Columns2, X } from "lucide-react";
+import { GitCompareArrows } from "lucide-react";
 import { useState } from "react";
 
 import { useComparisonSelection } from "@/components/comparison/use-comparison-selection";
@@ -34,9 +34,9 @@ export function ComparisonToggle({
     : unavailable
       ? `Comparison is full at ${maximumComparisonAgents} agents`
       : `Add agent ${reference.agentId} to comparison`;
-  const tooltipTitle = selected ? "Remove from compare" : "Compare agents";
+  const tooltipTitle = selected ? "Added to comparison" : "Compare agents";
   const tooltipDescription = selected
-    ? "Remove this agent from your comparison."
+    ? "This agent is selected. Click to remove it from the comparison."
     : "View this agent side by side with others.";
 
   const control = (
@@ -53,8 +53,9 @@ export function ComparisonToggle({
           : undefined
       }
       className={cn(
-        iconOnly && selected && "border-brand/35 bg-brand/8 text-brand hover:bg-brand/12",
         className,
+        selected &&
+          "border-brand/35 bg-brand/8 text-brand hover:border-brand/45 hover:bg-brand/12 hover:text-brand",
       )}
       onClick={() => {
         if (selected) {
@@ -71,14 +72,10 @@ export function ComparisonToggle({
         );
       }}
     >
-      {selected ? (
-        <X className="size-3.5" aria-hidden="true" />
-      ) : (
-        <Columns2 className="size-3.5" aria-hidden="true" />
-      )}
+      <GitCompareArrows className="size-3.5" aria-hidden="true" />
       {iconOnly ? null : (
         <>
-          {selected ? "Remove" : unavailable ? "Limit reached" : "Compare"} ·{" "}
+          {selected ? "Added" : unavailable ? "Limit reached" : "Compare"} ·{" "}
           {count}/{maximumComparisonAgents}
         </>
       )}

@@ -12,47 +12,95 @@ import {
   parseComparisonSelection,
   serializeAgentReference,
 } from "@/features/comparison/query";
+import {
+  catalogueChainId,
+  catalogueNetworkCookie,
+  defaultCatalogueNetwork,
+  parseCatalogueNetwork,
+} from "@/features/network/selection";
 
 type SelectionSnapshot = Readonly<{
   goal: string;
   references: readonly AgentReference[];
 }>;
 
-const storageKey = "sift:comparison-selection:v1";
+type ComparisonChainId = 56 | 97;
+
+const legacyStorageKey = "sift:comparison-selection:v1";
+const storageKeyPrefix = "sift:comparison-selection:v2";
 const emptySnapshot: SelectionSnapshot = Object.freeze({
   goal: "",
   references: Object.freeze([]),
 });
 const listeners = new Set<() => void>();
 let currentSnapshot = emptySnapshot;
+let activeChainId: ComparisonChainId = catalogueChainId(
+  defaultCatalogueNetwork,
+);
 let storageLoaded = false;
 
-function readStoredSnapshot(): SelectionSnapshot {
-  try {
-    const raw = window.localStorage.getItem(storageKey);
+function comparisonStorageKey(chainId: ComparisonChainId): string {
+  return `${storageKeyPrefix}:${chainId}`;
+}
 
-    if (!raw) {
-      return emptySnapshot;
+function supportedComparisonChainId(value: number): ComparisonChainId | null {
+  return value === 56 || value === 97 ? value : null;
+}
+
+function readSelectedChainId(): ComparisonChainId {
+  const selectedCookie = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${catalogueNetworkCookie}=`))
+    ?.slice(catalogueNetworkCookie.length + 1);
+
+  return catalogueChainId(
+    parseCatalogueNetwork(selectedCookie) ?? defaultCatalogueNetwork,
+  );
+}
+
+function parseStoredSnapshot(
+  raw: string,
+  chainId: ComparisonChainId,
+): SelectionSnapshot {
+  const parsed = JSON.parse(raw) as Readonly<{
+    goal?: unknown;
+    references?: unknown;
+  }>;
+  const references = Array.isArray(parsed.references)
+    ? parsed.references.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : [];
+  const selection = parseComparisonSelection(
+    references,
+    typeof parsed.goal === "string" ? parsed.goal : "",
+  );
+  const networkReferences = selection.references.filter(
+    (reference) => reference.chainId === chainId,
+  );
+
+  return networkReferences.length > 0
+    ? {
+        goal: selection.goal,
+        references: networkReferences,
+      }
+    : emptySnapshot;
+}
+
+function readStoredSnapshot(chainId: ComparisonChainId): SelectionSnapshot {
+  try {
+    const raw = window.localStorage.getItem(comparisonStorageKey(chainId));
+
+    if (raw) {
+      return parseStoredSnapshot(raw, chainId);
     }
 
-    const parsed = JSON.parse(raw) as Readonly<{
-      goal?: unknown;
-      references?: unknown;
-    }>;
-    const references = Array.isArray(parsed.references)
-      ? parsed.references.filter(
-          (value): value is string => typeof value === "string",
-        )
-      : [];
-    const selection = parseComparisonSelection(
-      references,
-      typeof parsed.goal === "string" ? parsed.goal : "",
-    );
+    const legacyRaw = window.localStorage.getItem(legacyStorageKey);
 
-    return {
-      goal: selection.goal,
-      references: selection.references,
-    };
+    return legacyRaw
+      ? parseStoredSnapshot(legacyRaw, chainId)
+      : emptySnapshot;
   } catch {
     return emptySnapshot;
   }
@@ -60,7 +108,8 @@ function readStoredSnapshot(): SelectionSnapshot {
 
 function ensureStorageLoaded() {
   if (!storageLoaded && typeof window !== "undefined") {
-    currentSnapshot = readStoredSnapshot();
+    activeChainId = readSelectedChainId();
+    currentSnapshot = readStoredSnapshot(activeChainId);
     storageLoaded = true;
   }
 }
@@ -86,7 +135,7 @@ function writeSnapshot(snapshot: SelectionSnapshot) {
 
   try {
     window.localStorage.setItem(
-      storageKey,
+      comparisonStorageKey(activeChainId),
       JSON.stringify({
         goal: snapshot.goal,
         references: snapshot.references.map(serializeAgentReference),
@@ -104,8 +153,11 @@ function subscribe(listener: () => void): () => void {
   listeners.add(listener);
 
   function onStorage(event: StorageEvent) {
-    if (event.key === storageKey) {
-      currentSnapshot = readStoredSnapshot();
+    if (
+      event.key === comparisonStorageKey(activeChainId) ||
+      event.key === legacyStorageKey
+    ) {
+      currentSnapshot = readStoredSnapshot(activeChainId);
       emit();
     }
   }
@@ -128,16 +180,43 @@ function sameReference(
 export function replaceComparisonSelection(
   references: readonly AgentReference[],
   goal = "",
+  chainId?: ComparisonChainId,
 ) {
   const selection = parseComparisonSelection(
     references.map(serializeAgentReference),
     goal,
   );
+  const selectedChainId =
+    chainId ??
+    supportedComparisonChainId(selection.references[0]?.chainId ?? -1);
+
+  if (selectedChainId) {
+    switchComparisonSelectionChain(selectedChainId);
+  } else {
+    ensureStorageLoaded();
+  }
 
   writeSnapshot({
     goal: selection.goal,
-    references: selection.references,
+    references: selection.references.filter(
+      (reference) => reference.chainId === activeChainId,
+    ),
   });
+}
+
+export function switchComparisonSelectionChain(
+  chainId: ComparisonChainId,
+): SelectionSnapshot {
+  ensureStorageLoaded();
+
+  if (chainId === activeChainId) {
+    return currentSnapshot;
+  }
+
+  activeChainId = chainId;
+  currentSnapshot = readStoredSnapshot(activeChainId);
+  emit();
+  return currentSnapshot;
 }
 
 export function useComparisonSelection() {
@@ -148,11 +227,18 @@ export function useComparisonSelection() {
   );
 
   const add = useCallback((reference: AgentReference, goal?: string) => {
-    const current = getSnapshot();
+    const chainId = supportedComparisonChainId(reference.chainId);
+
+    if (!chainId) {
+      return;
+    }
+
+    const current = switchComparisonSelectionChain(chainId);
 
     if (
-      current.references.some((candidate) => sameReference(candidate, reference)) ||
-      current.references.length >= maximumComparisonAgents
+      current.references.some((candidate) =>
+        sameReference(candidate, reference),
+      ) || current.references.length >= maximumComparisonAgents
     ) {
       return;
     }

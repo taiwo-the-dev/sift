@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 
+import { switchComparisonSelectionChain } from "@/components/comparison/use-comparison-selection";
 import {
   catalogueChainId,
   catalogueNetworkForChainId,
@@ -13,6 +14,7 @@ import {
   catalogueNetworkOptions,
   parseCatalogueNetwork,
 } from "@/features/network/selection";
+import { buildComparisonHref } from "@/features/comparison/query";
 import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 import { cn } from "@/lib/utils";
 
@@ -60,13 +62,17 @@ export function CatalogueNetworkSelector({
 
   useEffect(() => {
     const contextualNetwork = routeNetwork ?? urlNetwork;
+    const activeNetwork = contextualNetwork ?? initialNetwork;
+
     if (contextualNetwork) persistNetwork(contextualNetwork);
-  }, [routeNetwork, urlNetwork]);
+    switchComparisonSelectionChain(catalogueChainId(activeNetwork));
+  }, [initialNetwork, routeNetwork, urlNetwork]);
 
   function selectNetwork(network: SupportedBnbNetwork): void {
     if (network === selectedNetwork) return;
 
     const chainId = catalogueChainId(network);
+    const comparison = switchComparisonSelectionChain(chainId);
     setLocalNetwork(network);
     persistNetwork(network);
 
@@ -75,7 +81,25 @@ export function CatalogueNetworkSelector({
     }
 
     startTransition(() => {
-      if (/^\/(agents|hire|start)\//.test(pathname) || pathname === "/compare") {
+      if (pathname === "/compare") {
+        const href = buildComparisonHref(
+          comparison.references,
+          comparison.goal,
+        );
+        const params = new URLSearchParams(href.split("?")[1] ?? "");
+
+        if (network === "bsc-testnet") {
+          params.set("network", network);
+        }
+
+        const query = params.toString();
+        router.replace(query ? `/compare?${query}` : "/compare", {
+          scroll: false,
+        });
+        return;
+      }
+
+      if (/^\/(agents|hire|start)\//.test(pathname)) {
         router.push(
           network === "bsc-mainnet"
             ? "/discover"

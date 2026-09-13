@@ -11,6 +11,7 @@ import {
   buildComparisonHref,
   buildDiscoveryHrefForComparison,
 } from "@/features/comparison/query";
+import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 import { cn } from "@/lib/utils";
 
 interface SelectionActionProps {
@@ -20,6 +21,7 @@ interface SelectionActionProps {
 
 interface AgentSelectionActionsProps extends SelectionActionProps {
   className?: string;
+  network: SupportedBnbNetwork;
   reference: AgentReference;
 }
 
@@ -37,6 +39,7 @@ function withoutReference(
 export function AgentSelectionActions({
   className,
   goal,
+  network,
   reference,
   references,
 }: AgentSelectionActionsProps) {
@@ -47,7 +50,7 @@ export function AgentSelectionActions({
     replaceComparisonSelection(nextReferences, goal);
 
     if (replace) {
-      router.push(buildDiscoveryHrefForComparison(goal));
+      router.push(buildDiscoveryHrefForComparison(goal, network));
       return;
     }
 

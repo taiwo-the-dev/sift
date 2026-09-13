@@ -8,10 +8,17 @@ import { ComparisonUrlSync } from "@/components/comparison/comparison-url-sync";
 import { buttonVariants } from "@/components/ui/button";
 import {
   parseComparisonSearchParams,
+  scopeComparisonSelectionToChain,
   serializeAgentReference,
   type ComparisonSearchParams,
 } from "@/features/comparison/query";
+import {
+  catalogueChainId,
+  catalogueNetworkOptions,
+  parseCatalogueNetwork,
+} from "@/features/network/selection";
 import { createPageMetadata } from "@/lib/metadata";
+import { getSelectedCatalogueNetwork } from "@/lib/network/selection";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = createPageMetadata({
@@ -26,11 +33,28 @@ interface ComparePageProps {
 }
 
 export default async function ComparePage({ searchParams }: ComparePageProps) {
-  const selection = parseComparisonSearchParams(await searchParams);
+  const [params, persistedNetwork] = await Promise.all([
+    searchParams,
+    getSelectedCatalogueNetwork(),
+  ]);
+  const rawNetwork = Array.isArray(params.network)
+    ? params.network[0]
+    : params.network;
+  const selectedNetwork = parseCatalogueNetwork(rawNetwork) ?? persistedNetwork;
+  const selectedChainId = catalogueChainId(selectedNetwork);
+  const networkLabel =
+    catalogueNetworkOptions.find(
+      (option) => option.value === selectedNetwork,
+    )?.label ?? "BNB Chain";
+  const { selection } = scopeComparisonSelectionToChain(
+    parseComparisonSearchParams(params),
+    selectedChainId,
+  );
 
   return (
     <div className="min-w-0 flex-1 bg-background">
       <ComparisonUrlSync
+        chainId={selectedChainId}
         goal={selection.goal}
         references={selection.references}
       />
@@ -44,7 +68,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               <GitCompareArrows className="size-4" aria-hidden="true" />
-              Agent comparison
+              {networkLabel} comparison
             </p>
             <h1 className="mt-3 text-balance text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl">
               Evaluate agents against your task.
@@ -68,6 +92,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 value={serializeAgentReference(reference)}
               />
             ))}
+            {selectedNetwork === "bsc-testnet" ? (
+              <input
+                type="hidden"
+                name="network"
+                value={selectedNetwork}
+              />
+            ) : null}
             <label
               htmlFor="comparison-goal"
               className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground"
@@ -104,7 +135,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       </section>
 
       <Suspense fallback={<ComparisonResultsLoading />}>
-        <ComparisonResults selection={selection} />
+        <ComparisonResults
+          network={selectedNetwork}
+          networkLabel={networkLabel}
+          selection={selection}
+        />
       </Suspense>
     </div>
   );

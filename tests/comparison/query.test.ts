@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import {
   buildComparisonHref,
+  buildDiscoveryHrefForComparison,
   parseAgentReference,
   parseComparisonSearchParams,
   parseComparisonSelection,
+  scopeComparisonSelectionToChain,
 } from "../../features/comparison/query";
 
 describe("comparison selection parsing", () => {
@@ -72,5 +74,32 @@ describe("comparison selection parsing", () => {
     assert.equal(url.pathname, "/compare");
     assert.deepEqual(url.searchParams.getAll("agent"), ["56:12", "56:44"]);
     assert.equal(url.searchParams.get("goal"), "grid trading");
+  });
+
+  it("keeps Mainnet and Testnet comparison selections separate", () => {
+    const scoped = scopeComparisonSelectionToChain(
+      parseComparisonSelection(["56:12", "97:44", "56:18"]),
+      97,
+    );
+
+    assert.deepEqual(scoped.selection.references, [
+      { agentId: "44", chainId: 97 },
+    ]);
+    assert.equal(scoped.excludedNetworkCount, 2);
+  });
+
+  it("preserves Testnet context in comparison and discovery links", () => {
+    const comparisonUrl = new URL(
+      buildComparisonHref([{ agentId: "44", chainId: 97 }], "monitor"),
+      "https://sift.example",
+    );
+    const discoveryUrl = new URL(
+      buildDiscoveryHrefForComparison("monitor", "bsc-testnet"),
+      "https://sift.example",
+    );
+
+    assert.equal(comparisonUrl.searchParams.get("network"), "bsc-testnet");
+    assert.equal(discoveryUrl.searchParams.get("network"), "bsc-testnet");
+    assert.equal(discoveryUrl.searchParams.get("q"), "monitor");
   });
 });
