@@ -35,7 +35,9 @@ describe("ordered RPC fallback", () => {
       [
         provider("primary", {
           getLogs: async () => {
-            throw new Error("failed https://rpc.example?apiKey=super-secret");
+            throw new Error(
+              "failed https://rpc.example/v3/path-secret?apiKey=query-secret",
+            );
           },
         }),
         provider("fallback"),
@@ -46,7 +48,8 @@ describe("ordered RPC fallback", () => {
     await pool.validate(56, registry);
     assert.deepEqual(await pool.getLogs(registry, 1n, 2n), []);
     assert.equal(lines.some((line) => line.includes("rpc_fallback_used")), true);
-    assert.equal(lines.some((line) => line.includes("super-secret")), false);
+    assert.equal(lines.some((line) => line.includes("path-secret")), false);
+    assert.equal(lines.some((line) => line.includes("query-secret")), false);
   });
 
   it("rejects providers connected to a different chain", async () => {

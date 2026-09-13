@@ -15,14 +15,14 @@ describe("production security headers", () => {
       headers.get("cross-origin-opener-policy"),
       "same-origin-allow-popups",
     );
+    assert.equal(headers.get("cross-origin-resource-policy"), "same-origin");
+    assert.equal(headers.get("origin-agent-cluster"), "?1");
     assert.match(headers.get("permissions-policy") ?? "", /camera=\(\)/);
-    assert.match(
-      headers.get("content-security-policy") ?? "",
-      /frame-ancestors 'none'/,
-    );
-    assert.doesNotMatch(
-      headers.get("content-security-policy") ?? "",
-      /script-src|connect-src/,
-    );
+    const policy = headers.get("content-security-policy") ?? "";
+    assert.match(policy, /default-src 'self'/);
+    assert.match(policy, /script-src 'self'/);
+    assert.match(policy, /connect-src 'self' https: wss:/);
+    assert.match(policy, /frame-ancestors 'none'/);
+    assert.match(policy, /object-src 'none'/);
   });
 });

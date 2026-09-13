@@ -5,6 +5,11 @@ import { DASHBOARD_SESSION_COOKIE } from "@/features/dashboard/session";
 import { isHiringChainId } from "@/features/hiring/protocol";
 import { getWalletDashboard } from "@/features/dashboard/service";
 import { getDashboardSession } from "@/lib/db/dashboard-session-repository";
+import {
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -16,6 +21,17 @@ function json(body: unknown, status = 200): Response {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  if (!isSameOriginRequest(request, { allowMissingOrigin: true })) {
+    return json({ error: "Cross-site dashboard requests are not allowed." }, 403);
+  }
+
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 30,
+    namespace: "dashboard:read",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
     const requestedWallet = request.headers.get("x-sift-wallet-address");
     const requestedChainId = Number(request.headers.get("x-sift-chain-id"));

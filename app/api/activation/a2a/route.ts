@@ -5,20 +5,30 @@ import { sendA2aTask } from "@/features/activation/protocol";
 import { ActivationRemoteError } from "@/features/activation/remote";
 import { a2aTaskSchema } from "@/features/activation/schema";
 import { createActivationRepository } from "@/lib/db/activation-repository";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
-function sameOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get("origin");
-  const site = request.headers.get("sec-fetch-site");
-  return site !== "cross-site" && origin === request.nextUrl.origin;
-}
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) {
+  if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: "Cross-site task requests are not allowed." }, { status: 403 });
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 12,
+    namespace: "activation:a2a",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const input = a2aTaskSchema.parse(await request.json());
+    const input = a2aTaskSchema.parse(await readBoundedJson(request, 4_096));
     const repository = createActivationRepository();
     const service = await repository.findService(input.serviceId);
     const identity = service
@@ -54,6 +64,9 @@ export async function POST(request: NextRequest) {
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     const message =
       error instanceof ActivationRemoteError
         ? error.message

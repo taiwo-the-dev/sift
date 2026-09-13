@@ -1,7 +1,20 @@
 import { buildCategoryCoverageReport } from "@/features/categories/coverage";
 import { createCategoryRepository } from "@/lib/db/category-repository";
+import {
+  checkApiRateLimit,
+  rateLimitResponse,
+} from "@/lib/security/api-request";
 
-export async function GET() {
+export const runtime = "nodejs";
+
+export async function GET(request: Request) {
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 30,
+    namespace: "reports:category-coverage",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
     const observedAt = new Date().toISOString();
     const coverage = await createCategoryRepository().listCoverage(56);

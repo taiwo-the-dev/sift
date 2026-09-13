@@ -16,6 +16,13 @@ import {
   exchangeDashboardChallenge,
   loadDashboardChallenge,
 } from "@/lib/db/dashboard-session-repository";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -28,14 +35,6 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { "cache-control": "no-store" },
   });
-}
-
-function safeSameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  return (
-    request.headers.get("sec-fetch-site") !== "cross-site" &&
-    (!origin || origin === new URL(request.url).origin)
-  );
 }
 
 function cookieOptions(request: Request, maxAge: number) {
@@ -62,13 +61,20 @@ export async function GET(request: Request): Promise<Response> {
   const rawChainId = Number(url.searchParams.get("chainId"));
 
   if (
-    !safeSameOrigin(request) ||
+    !isSameOriginRequest(request, { allowMissingOrigin: true }) ||
     !rawAddress ||
     !isAddress(rawAddress) ||
     !isHiringChainId(rawChainId)
   ) {
     return json({ error: "Connect a valid wallet before authorizing the dashboard." }, 400);
   }
+
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 6,
+    namespace: "dashboard:challenge",
+    windowMs: 5 * 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
   try {
     const stored = await createDashboardChallenge({
@@ -91,17 +97,21 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (
-    !safeSameOrigin(request) ||
-    contentLength > 2_048 ||
-    !request.headers.get("content-type")?.startsWith("application/json")
-  ) {
+  if (!isSameOriginRequest(request)) {
     return json({ error: "Invalid dashboard authorization request." }, 400);
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 8,
+    namespace: "dashboard:verify",
+    windowMs: 5 * 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const { signature } = signatureSchema.parse(await request.json());
+    const { signature } = signatureSchema.parse(
+      await readBoundedJson(request, 2_048),
+    );
     const cookieStore = await cookies();
     const challengeToken = cookieStore.get(DASHBOARD_CHALLENGE_COOKIE)?.value;
     const challenge = challengeToken
@@ -137,6 +147,9 @@ export async function POST(request: Request): Promise<Response> {
     );
     return json({ session: session.identity });
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return json({ error: error.message }, error.status);
+    }
     if (error instanceof z.ZodError) {
       return json({ error: "The wallet returned an invalid signature." }, 400);
     }
@@ -148,9 +161,16 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function DELETE(request: Request): Promise<Response> {
-  if (!safeSameOrigin(request)) {
+  if (!isSameOriginRequest(request)) {
     return json({ error: "Invalid dashboard session request." }, 400);
   }
+
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 12,
+    namespace: "dashboard:delete",
+    windowMs: 5 * 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
   try {
     const cookieStore = await cookies();

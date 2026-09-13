@@ -24,9 +24,14 @@ export function sanitizeLogText(value: string): string {
     sanitized = sanitized.replace(pattern, "$1[redacted]");
   }
 
-  return sanitized.replace(
+  sanitized = sanitized.replace(
     /(https?:\/\/[^\s?#]+)\?[^\s#]*/gi,
     "$1?[redacted]",
+  );
+
+  return sanitized.replace(
+    /(https?:\/\/[^/\s?#]+)\/[^\s?#]*/gi,
+    "$1/[redacted]",
   );
 }
 

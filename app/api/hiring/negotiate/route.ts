@@ -19,6 +19,13 @@ import {
   getHiringPublicClient,
   verifyErc8183Runtime,
 } from "@/lib/blockchain/hiring-client";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -43,18 +50,7 @@ function json(
 }
 
 function requestIsAcceptable(request: Request): boolean {
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  const contentType = request.headers.get("content-type") ?? "";
-  const fetchSite = request.headers.get("sec-fetch-site");
-  const origin = request.headers.get("origin");
-  const expectedOrigin = new URL(request.url).origin;
-
-  return (
-    contentLength <= 16_384 &&
-    contentType.toLowerCase().startsWith("application/json") &&
-    fetchSite !== "cross-site" &&
-    (!origin || origin === expectedOrigin)
-  );
+  return isSameOriginRequest(request);
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -62,8 +58,15 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: "Invalid quote request." }, 400);
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 8,
+    namespace: "hiring:negotiate",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const raw = requestSchema.parse(await request.json());
+    const raw = requestSchema.parse(await readBoundedJson(request, 16_384));
     const identity = parseAgentProfileIdentity(
       String(raw.chainId),
       raw.agentId,
@@ -137,6 +140,9 @@ export async function POST(request: Request): Promise<Response> {
 
     return json({ quote });
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return json({ error: error.message }, error.status);
+    }
     if (error instanceof HiringQuoteError) {
       const status =
         error.code === "quote-over-budget" ||

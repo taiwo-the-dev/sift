@@ -8,6 +8,10 @@ import {
 } from "@/features/altana/protocol";
 import { isHiringChainId } from "@/features/hiring/protocol";
 import { getHiringPublicClient } from "@/lib/blockchain/hiring-client";
+import {
+  checkApiRateLimit,
+  rateLimitResponse,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -32,6 +36,13 @@ function json(body: unknown, status = 200): Response {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 20,
+    namespace: "altana:session",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
     const query = querySchema.parse(
       Object.fromEntries(new URL(request.url).searchParams),

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
+import { useAccount, useSignMessage } from "wagmi";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { McpTransactionReview } from "@/components/activation/mcp-transaction-review";
@@ -145,6 +146,8 @@ export function StartTaskFlow({
   externalServices?: readonly ExternalService[];
   services: readonly AgentProfileService[];
 }>) {
+  const account = useAccount();
+  const signMessage = useSignMessage();
   const methods = useMemo(
     () =>
       services.reduce<AgentProfileService[]>((result, service) => {
@@ -307,9 +310,59 @@ export function StartTaskFlow({
     setTransactions([]);
     try {
       const parsed = buildTaskArguments(selectedToolFields, toolValues);
+      let authorization:
+        | Readonly<{
+            signature: `0x${string}`;
+            token: string;
+            walletAddress: string;
+          }>
+        | undefined;
+
+      if (selectedToolDetails?.readOnly !== true) {
+        if (!account.address) {
+          throw new Error("Connect your wallet before approving this action.");
+        }
+        if (account.chainId !== agent.chainId) {
+          throw new Error(
+            "Switch your wallet to the agent's BNB network before approving this action.",
+          );
+        }
+
+        const challengeResponse = await fetch("/api/activation/mcp/challenge", {
+          body: JSON.stringify({
+            arguments: parsed,
+            serviceId: service.id ?? "",
+            toolName: selectedTool,
+            walletAddress: account.address,
+          }),
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+        const challenge = record(await readApiResult(challengeResponse));
+        if (
+          !challenge ||
+          typeof challenge.message !== "string" ||
+          typeof challenge.token !== "string" ||
+          typeof challenge.walletAddress !== "string" ||
+          challenge.walletAddress.toLowerCase() !== account.address.toLowerCase()
+        ) {
+          throw new Error("Sift received an invalid tool approval request.");
+        }
+
+        const signature = await signMessage.signMessageAsync({
+          message: challenge.message,
+        });
+        authorization = {
+          signature,
+          token: challenge.token,
+          walletAddress: account.address,
+        };
+      }
+
       const response = await fetch("/api/activation/mcp", {
         body: JSON.stringify({
           arguments: parsed,
+          ...(authorization ? { authorization } : {}),
           confirmedSideEffects:
             selectedToolDetails?.readOnly === true ? false : mcpConfirmed,
           serviceId: service.id ?? "",
@@ -775,8 +828,9 @@ export function StartTaskFlow({
                       />
                       <span>
                         I understand this sends one request to an external agent. It
-                        may prepare a transaction or change external data. Sift will
-                        not sign or send a wallet transaction automatically.
+                        may prepare a transaction or change external data. My wallet
+                        will sign a one-time approval message, but Sift will not sign
+                        or send a blockchain transaction automatically.
                       </span>
                     </label>
                   ) : null}

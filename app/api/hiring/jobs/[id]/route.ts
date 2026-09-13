@@ -24,6 +24,13 @@ import {
   persistVerifiedHiringTransaction,
   updateHiringIntent,
 } from "@/lib/db/hiring-repository";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -120,6 +127,17 @@ export async function GET(
   request: Request,
   context: Readonly<{ params: Promise<{ id: string }> }>,
 ): Promise<Response> {
+  if (!isSameOriginRequest(request, { allowMissingOrigin: true })) {
+    return json({ error: "Cross-site hiring requests are not allowed." }, 403);
+  }
+
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 60,
+    namespace: "hiring:read",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   const id = await routeId(context);
   const token = resumeToken(request);
 
@@ -148,22 +166,24 @@ export async function PATCH(
 ): Promise<Response> {
   const id = await routeId(context);
   const token = resumeToken(request);
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
 
   if (
     !id ||
     !token ||
-    contentLength > 4_096 ||
-    !request.headers.get("content-type")?.startsWith("application/json") ||
-    request.headers.get("sec-fetch-site") === "cross-site" ||
-    (request.headers.get("origin") &&
-      request.headers.get("origin") !== new URL(request.url).origin)
+    !isSameOriginRequest(request)
   ) {
     return json({ error: "Invalid saved hiring request." }, 400);
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 20,
+    namespace: "hiring:update",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const action = actionSchema.parse(await request.json());
+    const action = actionSchema.parse(await readBoundedJson(request, 4_096));
     const authorized = await getAuthorizedHiringIntent(id, token);
     let job = authorized.record;
 
@@ -369,6 +389,9 @@ export async function PATCH(
     );
     return json({ intent: snapshot });
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return json({ error: error.message }, error.status);
+    }
     if (error instanceof z.ZodError) {
       return json({ error: "Invalid hiring status update." }, 400);
     }

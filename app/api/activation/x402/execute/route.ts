@@ -4,39 +4,37 @@ import { resolveCurrentX402Service } from "@/app/api/activation/x402/service";
 import { executeX402Service } from "@/features/activation/protocol";
 import { ActivationRemoteError } from "@/features/activation/remote";
 import { x402ExecuteSchema } from "@/features/activation/schema";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
 const MAX_REQUEST_BYTES = 32_768;
 
-function sameOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get("origin");
-  const site = request.headers.get("sec-fetch-site");
-  return site !== "cross-site" && origin === request.nextUrl.origin;
-}
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  if (!sameOrigin(request)) {
+  if (!isSameOriginRequest(request)) {
     return NextResponse.json(
       { error: "Cross-site payment requests are not allowed." },
       { status: 403 },
     );
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 6,
+    namespace: "activation:x402:execute",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const declaredLength = Number(request.headers.get("content-length") ?? 0);
-    if (declaredLength > MAX_REQUEST_BYTES) {
-      return NextResponse.json(
-        { error: "The signed payment request is too large." },
-        { status: 413 },
-      );
-    }
-    const body = await request.text();
-    if (new TextEncoder().encode(body).byteLength > MAX_REQUEST_BYTES) {
-      return NextResponse.json(
-        { error: "The signed payment request is too large." },
-        { status: 413 },
-      );
-    }
-    const input = x402ExecuteSchema.parse(JSON.parse(body) as unknown);
+    const input = x402ExecuteSchema.parse(
+      await readBoundedJson(request, MAX_REQUEST_BYTES),
+    );
     const service = await resolveCurrentX402Service(input.serviceId);
     if (!service) {
       return NextResponse.json(
@@ -56,6 +54,9 @@ export async function POST(request: NextRequest) {
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     const indeterminate =
       error instanceof ActivationRemoteError && error.code === "timeout";
     const message = indeterminate

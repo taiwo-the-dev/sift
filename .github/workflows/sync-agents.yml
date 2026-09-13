@@ -26,17 +26,12 @@ jobs:
       cancel-in-progress: false
     env:
       BNB_NETWORK: ${{ matrix.network }}
-      BNB_RPC_PRIMARY: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_PRIMARY || secrets.BNB_RPC_PRIMARY) || secrets.BNB_TESTNET_RPC_PRIMARY }}
-      BNB_RPC_FALLBACK_1: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_1 || secrets.BNB_RPC_FALLBACK_1) || secrets.BNB_TESTNET_RPC_FALLBACK_1 }}
-      BNB_RPC_FALLBACK_2: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_2 || secrets.BNB_RPC_FALLBACK_2) || secrets.BNB_TESTNET_RPC_FALLBACK_2 }}
-      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           cache: npm
           node-version: 22
@@ -49,3 +44,9 @@ jobs:
 
       - name: Incrementally sync confirmed ${{ matrix.label }} events
         run: npm run sync:agents
+        env:
+          BNB_RPC_PRIMARY: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_PRIMARY || secrets.BNB_RPC_PRIMARY) || secrets.BNB_TESTNET_RPC_PRIMARY }}
+          BNB_RPC_FALLBACK_1: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_1 || secrets.BNB_RPC_FALLBACK_1) || secrets.BNB_TESTNET_RPC_FALLBACK_1 }}
+          BNB_RPC_FALLBACK_2: ${{ matrix.network == 'bsc-mainnet' && (secrets.BNB_MAINNET_RPC_FALLBACK_2 || secrets.BNB_RPC_FALLBACK_2) || secrets.BNB_TESTNET_RPC_FALLBACK_2 }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

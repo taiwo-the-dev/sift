@@ -157,7 +157,7 @@ export default function TermsPage() {
               <section
                 key={section.id}
                 id={section.id}
-                className="scroll-mt-24 py-8 first:pt-0"
+                className="scroll-mt-24 py-8"
               >
                 <h2 className="text-xl font-semibold tracking-[-0.025em] text-foreground sm:text-2xl">
                   {section.title}

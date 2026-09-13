@@ -611,6 +611,62 @@ export type Database = {
         };
         Relationships: [];
       };
+      mcp_action_authorizations: {
+        Row: {
+          agent_id: string;
+          arguments_hash: string;
+          chain_id: number;
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          issued_at: string;
+          request_origin: string;
+          service_id: string;
+          token_hash: string;
+          tool_name: string;
+          wallet_address: string;
+        };
+        Insert: {
+          agent_id: string;
+          arguments_hash: string;
+          chain_id: number;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          issued_at: string;
+          request_origin: string;
+          service_id: string;
+          token_hash: string;
+          tool_name: string;
+          wallet_address: string;
+        };
+        Update: {
+          agent_id?: string;
+          arguments_hash?: string;
+          chain_id?: number;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          issued_at?: string;
+          request_origin?: string;
+          service_id?: string;
+          token_hash?: string;
+          tool_name?: string;
+          wallet_address?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mcp_action_authorizations_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "agent_services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       job_activity: {
         Row: {
           activity_type: string;

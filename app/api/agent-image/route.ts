@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 
 import { AgentImageError, fetchAgentImage } from "@/lib/images/agent-image";
+import {
+  checkApiRateLimit,
+  rateLimitResponse,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -18,6 +22,15 @@ function failureResponse(error: unknown): Response {
 }
 
 export async function GET(request: NextRequest): Promise<Response> {
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 80,
+    namespace: "agent-image",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit, "Too many image requests. Wait briefly and try again.");
+  }
+
   const source = request.nextUrl.searchParams.get("url");
 
   if (!source) {

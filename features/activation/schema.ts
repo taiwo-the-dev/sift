@@ -35,9 +35,26 @@ export const a2aTaskSchema = z
 export const mcpToolCallSchema = z
   .object({
     arguments: z.record(z.string(), z.unknown()),
+    authorization: z
+      .object({
+        signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/),
+        token: z.string().min(32).max(128),
+        walletAddress: z.string().trim().min(1).max(128),
+      })
+      .strict()
+      .optional(),
     confirmedSideEffects: z.boolean(),
     serviceId: z.uuid(),
     toolName: z.string().trim().min(1).max(128),
+  })
+  .strict();
+
+export const mcpActionChallengeSchema = z
+  .object({
+    arguments: z.record(z.string(), z.unknown()),
+    serviceId: z.uuid(),
+    toolName: z.string().trim().min(1).max(128),
+    walletAddress: z.string().trim().min(1).max(128),
   })
   .strict();
 

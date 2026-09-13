@@ -14,6 +14,21 @@ import { AltanaSessionProvider } from "@/components/altana/altana-session-provid
 import { defaultWalletChain } from "@/lib/blockchain/chains";
 import { getWalletConfig } from "@/lib/blockchain/wallet-config";
 
+type WalletConfig = ReturnType<typeof getWalletConfig>;
+
+const walletConfigGlobal = globalThis as typeof globalThis & {
+  __siftWalletConfig?: WalletConfig;
+};
+
+function getStableWalletConfig(): WalletConfig {
+  if (typeof window === "undefined") {
+    return getWalletConfig();
+  }
+
+  walletConfigGlobal.__siftWalletConfig ??= getWalletConfig();
+  return walletConfigGlobal.__siftWalletConfig;
+}
+
 const siftWalletTheme: Theme = {
   ...darkTheme({
     accentColor: "#f0b90b",
@@ -32,7 +47,7 @@ const siftWalletTheme: Theme = {
 };
 
 export function WalletProvider({ children }: Readonly<PropsWithChildren>) {
-  const [config] = useState(getWalletConfig);
+  const [config] = useState(getStableWalletConfig);
   const [queryClient] = useState(
     () =>
       new QueryClient({

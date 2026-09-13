@@ -20,6 +20,13 @@ import {
   createHiringIntent,
   HiringConflictError,
 } from "@/lib/db/hiring-repository";
+import {
+  ApiRequestError,
+  checkApiRateLimit,
+  isSameOriginRequest,
+  rateLimitResponse,
+  readBoundedJson,
+} from "@/lib/security/api-request";
 
 export const runtime = "nodejs";
 
@@ -46,21 +53,19 @@ function json(body: unknown, status = 200): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  const fetchSite = request.headers.get("sec-fetch-site");
-  const origin = request.headers.get("origin");
-
-  if (
-    contentLength > 24_576 ||
-    fetchSite === "cross-site" ||
-    (origin && origin !== new URL(request.url).origin) ||
-    !request.headers.get("content-type")?.startsWith("application/json")
-  ) {
+  if (!isSameOriginRequest(request)) {
     return json({ error: "Invalid hiring request." }, 400);
   }
 
+  const rateLimit = checkApiRateLimit(request, {
+    capacity: 8,
+    namespace: "hiring:create",
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   try {
-    const raw = requestSchema.parse(await request.json());
+    const raw = requestSchema.parse(await readBoundedJson(request, 24_576));
     const identity = parseAgentProfileIdentity(
       String(raw.chainId),
       raw.agentId,
@@ -145,6 +150,9 @@ export async function POST(request: Request): Promise<Response> {
       result.created ? 201 : 200,
     );
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return json({ error: error.message }, error.status);
+    }
     if (error instanceof z.ZodError) {
       return json(
         { error: error.issues[0]?.message ?? "Invalid hiring request." },
