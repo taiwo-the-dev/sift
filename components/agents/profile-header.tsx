@@ -22,10 +22,8 @@ import {
   describeProfileProvenance,
   hasHumanReadableMetadata,
 } from "@/features/agents/presentation";
-import { shouldShowOtherCategory } from "@/features/categories/presentation";
 import {
   formatAgentName,
-  formatCategory,
   formatChainName,
   formatMetadataStatus,
 } from "@/features/discovery/format";
@@ -60,9 +58,11 @@ const provenanceToneStyles = {
 function EvidenceStat({ detail, icon, label, value }: EvidenceStatProps) {
   return (
     <div className="min-w-0 bg-card p-4 sm:p-5">
-      <dt className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        {icon}
-        {label}
+      <dt className="flex min-h-4 items-center gap-2 text-xs leading-none font-medium text-muted-foreground">
+        <span className="grid size-4 shrink-0 place-items-center [&>svg]:block">
+          {icon}
+        </span>
+        <span className="leading-none">{label}</span>
       </dt>
       <dd className="mt-3 truncate text-sm font-semibold capitalize text-foreground">
         {value}
@@ -103,7 +103,10 @@ export function ProfileHeader({
   const taskReady = agentCanBeUsed && taskServices.length > 0;
   const externalReady = agentCanBeUsed && externalServices.length > 0;
   const canUseAgent = taskReady || externalReady;
-  const showOtherCategory = shouldShowOtherCategory(profile.categories);
+  const ratingDetail =
+    rating.kind === "verified"
+      ? rating.detail
+      : `${rating.kind === "provisional" ? "Provisional" : "Profile-only estimate"} · ${rating.detail}`;
 
   return (
     <header className="relative overflow-hidden border-b border-border bg-card">
@@ -152,26 +155,23 @@ export function ProfileHeader({
               <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
                 {name}
               </h1>
-              {profile.categories.length > 0 || showOtherCategory ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {profile.categories.map((category) => (
-                    <span
-                      key={category}
-                      className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-foreground"
-                    >
-                      {formatCategory(category)}
-                    </span>
-                  ))}
-                  {showOtherCategory ? (
-                    <span
-                      className="rounded-md border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                      title="This agent does not match one of Sift's four supported marketplace categories."
-                    >
-                      Other
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
+              <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold",
+                    profile.metadataStatus === "valid"
+                      ? "border-emerald-400/25 bg-emerald-400/8 text-emerald-200"
+                      : "border-amber-400/25 bg-amber-400/8 text-amber-100",
+                  )}
+                >
+                  {profile.metadataStatus === "valid" ? (
+                    <BadgeCheck className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <CircleAlert className="size-3.5" aria-hidden="true" />
+                  )}
+                  {formatMetadataStatus(profile.metadataStatus)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -207,28 +207,21 @@ export function ProfileHeader({
           </div>
         </div>
 
-        <dl className="mt-7 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="mt-7 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-3">
           <EvidenceStat
             icon={
-              profile.metadataStatus === "valid" ? (
-                <BadgeCheck className="size-4 text-emerald-300" aria-hidden="true" />
-              ) : (
-                <CircleAlert className="size-4 text-amber-300" aria-hidden="true" />
-              )
+              <Gauge
+                className="size-4 translate-y-px text-brand"
+                aria-hidden="true"
+              />
             }
-            label="Profile"
-            value={formatMetadataStatus(profile.metadataStatus)}
-            detail={`Verified ${formatProfileTimestamp(profile.metadataVerifiedAt)}`}
-          />
-          <EvidenceStat
-            icon={<Gauge className="size-4 text-brand" aria-hidden="true" />}
-            label={rating.label}
+            label="Sift Score"
             value={
               <>
                 <AnimatedRatingValue value={rating.value} />/100
               </>
             }
-            detail={rating.detail}
+            detail={ratingDetail}
           />
           <EvidenceStat
             icon={<RadioTower className="size-4 text-sky-300" aria-hidden="true" />}

@@ -203,9 +203,13 @@ export function AgentCard({
       : false;
   const scoreTier = describeScoreTier(rating.value);
   const scoreSignalTone = scoreTierTone[scoreTier.tier];
+  const ratingEvidenceDetail =
+    rating.kind === "verified"
+      ? rating.detail
+      : `${rating.kind === "provisional" ? "Provisional" : "Profile-only estimate"} · ${rating.detail}`;
   const scoreDetail = scoreIsStale
-    ? `${rating.detail} · refresh needed`
-    : rating.detail;
+    ? `${ratingEvidenceDetail} · refresh needed`
+    : ratingEvidenceDetail;
 
   return (
     <article className="sift-card-reveal group flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
@@ -261,15 +265,15 @@ export function AgentCard({
 
         <dl className="mt-4 grid min-h-32 grid-cols-1 overflow-hidden rounded-xl border border-border bg-card/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)]">
           <div className="relative flex min-h-28 min-w-0 flex-col justify-between overflow-hidden border-b border-border p-3.5 sm:min-h-0 sm:border-r sm:border-b-0">
-            <dt className="relative flex items-center gap-1.5 text-[0.58rem] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+            <dt className="relative flex min-h-3.5 items-center gap-1.5 text-[0.58rem] leading-none font-semibold tracking-[0.11em] text-muted-foreground uppercase">
               <Gauge
                 className={cn(
-                  "size-3.5",
+                  "size-3.5 shrink-0 translate-y-px",
                   signalToneStyles[scoreSignalTone].value,
                 )}
                 aria-hidden="true"
               />
-              {rating.label}
+              <span className="leading-none">Sift Score</span>
             </dt>
             <dd className="relative mt-3">
               <div className="flex items-end gap-1.5">
