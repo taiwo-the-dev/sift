@@ -2,7 +2,7 @@ import { loadEnvConfig } from "@next/env";
 
 import { parseScoreRunConfig } from "@/features/scoring/config";
 import {
-  MINIMUM_SCORE_EVIDENCE_WEIGHT,
+  MINIMUM_RELIABILITY_CHECKS,
   scoreComponentDefinitions,
   SIFT_SCORE_VERSION,
 } from "@/features/scoring/formula";
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
     logger.info("score_calculation_smoke_complete", {
       batchLimit: config.batchLimit,
       formulaVersion: SIFT_SCORE_VERSION,
-      minimumEvidenceWeight: MINIMUM_SCORE_EVIDENCE_WEIGHT,
+      minimumReliabilityChecks: MINIMUM_RELIABILITY_CHECKS,
       totalFormulaWeight: scoreComponentDefinitions.reduce(
         (total, component) => total + component.weight,
         0,

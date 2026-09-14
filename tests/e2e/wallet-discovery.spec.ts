@@ -1,8 +1,14 @@
 import { expect, test } from "@playwright/test";
 
 test("the wallet chooser shows one option per announced wallet identity", async ({
+  isMobile,
   page,
 }) => {
+  test.skip(
+    isMobile,
+    "Injected browser-extension wallets are not offered by RainbowKit on mobile.",
+  );
+
   const duplicateKeyWarnings: string[] = [];
 
   page.on("console", (message) => {
@@ -53,6 +59,7 @@ test("the wallet chooser shows one option per announced wallet identity", async 
   });
 
   await page.goto("/");
+
   await page
     .getByRole("button", { name: "Connect Wallet", exact: true })
     .last()

@@ -50,7 +50,7 @@ const sections = [
     id: "ratings-data",
     title: "5. Ratings, health, and catalogue data",
     content: [
-      "Sift ratings are evidence-based product indicators, not guarantees of performance, safety, reliability, or future results. Missing evidence is not treated as positive evidence.",
+      "Sift Scores are evidence-based product indicators, not guarantees of performance, safety, reliability, or future results. Profile completeness is kept separate, and missing evidence is not treated as positive evidence.",
       "A health result only describes a specific service check at a recorded time. It does not prove that an agent is safe or that the service will remain available.",
       "Sift is not a financial adviser and does not provide investment, trading, legal, tax, or security advice. You remain responsible for your decisions and for independently checking important information.",
     ],

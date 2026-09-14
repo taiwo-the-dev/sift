@@ -123,7 +123,7 @@ export type DiscoveryEvidenceSources = Readonly<{
   ): Promise<readonly (
     Pick<
       TableRow<"agent_services">,
-      "agent_db_id" | "endpoint" | "service_type" | "version"
+      "agent_db_id" | "endpoint" | "metadata" | "service_type" | "version"
     > &
       Partial<
         Pick<
@@ -154,6 +154,7 @@ function mapServices(value: Json): readonly DiscoveryService[] {
     return [
       {
         endpoint: typeof entry.endpoint === "string" ? entry.endpoint : null,
+        metadata: entry.metadata ?? null,
         serviceType: entry.serviceType,
         version: typeof entry.version === "string" ? entry.version : null,
       },
@@ -354,7 +355,7 @@ export function createDiscoveryRepository(
     async listServices(ids) {
       const { data, error } = await client
         .from("agent_services")
-        .select("id,agent_db_id,endpoint,service_type,version,activation_method,availability_status,availability_last_success_at")
+        .select("id,agent_db_id,endpoint,metadata,service_type,version,activation_method,availability_status,availability_last_success_at")
         .in("agent_db_id", [...ids]);
 
       if (!error) {
@@ -366,7 +367,7 @@ export function createDiscoveryRepository(
       if (error.code === "42703" || error.code === "PGRST204") {
         const fallback = await client
           .from("agent_services")
-          .select("id,agent_db_id,endpoint,service_type,version")
+          .select("id,agent_db_id,endpoint,metadata,service_type,version")
           .in("agent_db_id", [...ids]);
         if (fallback.error) {
           throw new DatabaseOperationError(
@@ -425,6 +426,7 @@ export function createDiscoveryRepository(
           : "unchecked",
         endpoint: service.endpoint,
         id: service.id ?? null,
+        metadata: service.metadata,
         serviceType: service.service_type,
         version: service.version,
       });

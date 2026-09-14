@@ -137,7 +137,7 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
           (candidate) => candidate.value === band,
         );
         const label = option
-          ? `${option.label} rating (${option.rangeLabel})`
+          ? `${option.label} Sift Score (${option.rangeLabel})`
           : band;
 
         return (

@@ -21,7 +21,7 @@ const trustSignals = [
   },
   {
     description:
-      "Check available ratings and feedback without treating missing data as positive.",
+      "Check current Sift Scores and feedback without treating missing data as positive.",
     icon: BadgeCheck,
     title: "Reputation",
   },

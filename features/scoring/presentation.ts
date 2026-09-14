@@ -1,15 +1,23 @@
 import type {
   PersistedSiftScore,
   ScoreComponentKey,
+  ScoreComponents,
+  ScoringHealth,
+  ScoringReputation,
 } from "@/features/scoring/model";
-import { scoreComponentDefinitions } from "@/features/scoring/formula";
+import {
+  calculateSiftScore,
+  calculateScoreComponentPoints,
+  scoreComponentDefinitions,
+} from "@/features/scoring/formula";
+import type { Json } from "@/lib/db/database.types";
 import type { MetadataStatus } from "@/lib/db/validation";
 
-export type AgentRatingKind = "profile" | "provisional" | "verified";
+export type AgentRatingKind = "calculated" | "stale" | "verified";
 
 type AgentRatingService = Readonly<{
   endpoint: string | null;
-  metadata?: unknown;
+  metadata?: Json | null;
   serviceType: string;
   version: string | null;
 }>;
@@ -17,12 +25,14 @@ type AgentRatingService = Readonly<{
 export type AgentRatingInput = Readonly<{
   active: boolean | null;
   description: string | null;
+  health?: ScoringHealth | null;
   imageUrl: string | null;
   lastSyncedAt?: string | null;
   metadataStatus: MetadataStatus;
   metadataVerifiedAt?: string | null;
   name: string | null;
   ownerAddress: string | null;
+  reputation?: ScoringReputation | null;
   score: PersistedSiftScore | null;
   services: readonly AgentRatingService[];
   x402Supported: boolean | null;
@@ -30,140 +40,108 @@ export type AgentRatingInput = Readonly<{
 
 export type AgentRatingPresentation = Readonly<{
   coverage: number;
+  components: ScoreComponents;
   detail: string;
   kind: AgentRatingKind;
-  label: "Profile Rating" | "Provisional Rating" | "Sift Score";
+  label: "Score needs updating" | "Sift Score";
+  profileCompleteness: number;
   value: number;
 }>;
-
-const independentComponentKeys = [
-  "reputation",
-  "reliability",
-  "availability",
-  "trackRecord",
-] as const satisfies readonly ScoreComponentKey[];
 
 function round(value: number, places: number): number {
   const factor = 10 ** places;
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
-function supportedComponentAverage(score: PersistedSiftScore): number | null {
-  const supported = scoreComponentDefinitions.filter(
-    (definition) => score.components[definition.key] !== null,
-  );
-  const supportedWeight = supported.reduce(
-    (total, definition) => total + definition.weight,
-    0,
-  );
-  if (supportedWeight === 0) return null;
-
-  const weightedTotal = supported.reduce(
-    (total, definition) =>
-      total + (score.components[definition.key] ?? 0) * definition.weight,
-    0,
-  );
-  return round(weightedTotal / supportedWeight, 2);
-}
-
-function profileComponent(input: AgentRatingInput): number {
-  if (input.metadataStatus !== "valid") return 0;
-
-  return (
-    (input.name?.trim() ? 25 : 0) +
-    (input.description?.trim() ? 30 : 0) +
-    (input.imageUrl?.trim() ? 10 : 0) +
-    (input.ownerAddress ? 10 : 0) +
-    (input.active !== null ? 5 : 0) +
-    (input.x402Supported !== null ? 5 : 0) +
-    (input.metadataVerifiedAt || input.lastSyncedAt ? 15 : 0)
-  );
-}
-
-function serviceComponent(input: AgentRatingInput): number {
-  if (input.metadataStatus !== "valid" || input.services.length === 0) {
-    return 0;
-  }
-
-  const uniqueTypes = new Set(
-    input.services.map((service) => service.serviceType.trim().toLowerCase()),
-  ).size;
-  const hasEndpoint = input.services.some((service) => service.endpoint);
-  const hasVersion = input.services.some((service) => service.version);
-  const hasStructuredMetadata = input.services.some(
-    (service) => service.metadata !== null && service.metadata !== undefined,
-  );
-
-  return Math.min(
-    100,
-    40 +
-      (uniqueTypes >= 2 ? 20 : 0) +
-      (uniqueTypes >= 3 ? 10 : 0) +
-      (hasEndpoint ? 15 : 0) +
-      (hasVersion ? 10 : 0) +
-      (hasStructuredMetadata ? 5 : 0),
-  );
-}
-
-function profileRating(input: AgentRatingInput): number {
-  // These are the same profile-quality (5%) and service-information (15%)
-  // components used by the Sift Score, normalized within their combined 20%.
+function scoreFromComponents(components: ScoreComponents): number {
   return round(
-    (profileComponent(input) * 5 + serviceComponent(input) * 15) / 20,
+    scoreComponentDefinitions.reduce(
+      (total, definition) =>
+        total +
+        (calculateScoreComponentPoints(
+          components[definition.key],
+          definition.weight,
+        ) ?? 0),
+      0,
+    ),
     2,
   );
 }
 
 /**
- * Present the best honest rating available for an agent. Only a persisted,
- * publishable score is called a Sift Score. Limited independent observations
- * are provisional, while declarations alone produce a Profile Rating.
+ * Present the direct sum of the six earned component-point values. Missing or
+ * expired evidence contributes zero points and is disclosed through coverage
+ * and the criteria breakdown instead of hiding the numeric result.
  */
 export function getAgentRating(
   input: AgentRatingInput,
+  asOf: Date = new Date(),
 ): AgentRatingPresentation {
-  if (input.score?.score !== null && input.score?.score !== undefined) {
+  const scoreUsesDirectSumFormula = input.score?.version.startsWith(
+    "sift-evidence-v2.",
+  ) ?? false;
+
+  if (scoreUsesDirectSumFormula && input.score) {
+    const stale = isScoreStale(input.score.calculatedAt, asOf);
+    const value = scoreFromComponents(input.score.components);
+    const profileCompleteness = round(
+      ((input.score.components.metadata ?? 0) +
+        (input.score.components.capability ?? 0)) /
+        2,
+      2,
+    );
+
     return {
       coverage: input.score.confidence,
-      detail: formatScoreConfidence(input.score.confidence),
-      kind: "verified",
-      label: "Sift Score",
-      value: input.score.score,
+      components: input.score.components,
+      detail: stale
+        ? `${formatScoreConfidence(input.score.confidence)} · last known assessment`
+        : formatScoreConfidence(input.score.confidence),
+      kind: stale ? "stale" : "verified",
+      label: stale ? "Score needs updating" : "Sift Score",
+      profileCompleteness,
+      value,
     };
   }
 
-  const hasIndependentEvidence = input.score
-    ? independentComponentKeys.some(
-        (key) => input.score?.components[key] !== null,
-      )
-    : false;
-  const provisionalValue = input.score
-    ? supportedComponentAverage(input.score)
-    : null;
-
-  if (hasIndependentEvidence && provisionalValue !== null && input.score) {
-    return {
-      coverage: input.score.confidence,
-      detail: `${formatScoreConfidence(input.score.confidence)} · more evidence needed`,
-      kind: "provisional",
-      label: "Provisional Rating",
-      value: provisionalValue,
-    };
-  }
-
-  const hasVerifiedProfile = input.metadataStatus === "valid";
-  const profileCoverage = hasVerifiedProfile
-    ? (5 + (input.services.length > 0 ? 15 : 0)) / 100
-    : 0;
+  const assessment = calculateSiftScore(
+    {
+      active: input.active,
+      description: input.description,
+      health: input.health ?? null,
+      imageUrl: input.imageUrl,
+      metadataStatus: input.metadataStatus,
+      metadataVerifiedAt:
+        input.metadataVerifiedAt ??
+        (input.metadataStatus === "valid" ? input.lastSyncedAt ?? null : null),
+      name: input.name,
+      ownerAddress: input.ownerAddress,
+      reputation: input.reputation ?? null,
+      services: input.services.map((service) => ({
+        endpoint: service.endpoint,
+        metadata: service.metadata ?? null,
+        serviceType: service.serviceType,
+        version: service.version,
+      })),
+      x402Supported: input.x402Supported,
+    },
+    asOf.toISOString(),
+  );
+  const profileCompleteness = round(
+    ((assessment.components.metadata ?? 0) +
+      (assessment.components.capability ?? 0)) /
+      2,
+    2,
+  );
 
   return {
-    coverage: profileCoverage,
-    detail: hasVerifiedProfile
-      ? "Based on published profile and service information"
-      : "No verified profile information",
-    kind: "profile",
-    label: "Profile Rating",
-    value: profileRating(input),
+    coverage: assessment.confidence,
+    components: assessment.components,
+    detail: `${formatScoreConfidence(assessment.confidence)} · calculated from available evidence`,
+    kind: "calculated",
+    label: "Sift Score",
+    profileCompleteness,
+    value: assessment.score ?? 0,
   };
 }
 
@@ -225,10 +203,16 @@ export function isScoreStale(
 }
 
 export function scoreComponentRows(score: PersistedSiftScore) {
+  return scoreComponentRowsFromComponents(score.components);
+}
+
+export function scoreComponentRowsFromComponents(components: ScoreComponents) {
   return scoreComponentDefinitions.map((definition) => {
-    const value = score.components[definition.key];
-    const contribution =
-      value === null ? null : (value * definition.weight) / 100;
+    const value = components[definition.key];
+    const contribution = calculateScoreComponentPoints(
+      value,
+      definition.weight,
+    );
 
     return {
       ...definition,

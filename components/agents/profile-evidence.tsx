@@ -44,7 +44,7 @@ export function ProfileEvidence({ profile }: ProfileEvidenceProps) {
       id="evidence"
       eyebrow="03 · Trust"
       title="Health and reputation"
-      description="See the agent's rating, evidence coverage, health checks, and reputation."
+      description="See the agent's Sift Score status, evidence coverage, health checks, and reputation."
     >
       <CategoryEvidencePanel profile={profile} />
 

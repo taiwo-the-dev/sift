@@ -40,6 +40,11 @@ export type ScoringService = Readonly<{
   version: string | null;
 }>;
 
+export type ScoringHealth = Omit<HealthSnapshot, "endpointHash"> &
+  Readonly<{
+    endpointHash?: string | null;
+  }>;
+
 export type ScoringReputation = Readonly<{
   failedJobs: number | null;
   feedbackCount: number | null;
@@ -49,11 +54,10 @@ export type ScoringReputation = Readonly<{
   successfulJobs: number | null;
 }>;
 
-export type SiftScoreInput = Readonly<{
+export type SiftScoreEvidenceInput = Readonly<{
   active: boolean | null;
-  agentDbId: string;
   description: string | null;
-  health: HealthSnapshot | null;
+  health: ScoringHealth | null;
   imageUrl: string | null;
   metadataStatus: MetadataStatus;
   metadataVerifiedAt: string | null;
@@ -63,6 +67,11 @@ export type SiftScoreInput = Readonly<{
   services: readonly ScoringService[];
   x402Supported: boolean | null;
 }>;
+
+export type SiftScoreInput = SiftScoreEvidenceInput &
+  Readonly<{
+    agentDbId: string;
+  }>;
 
 export type PersistedSiftScore = Readonly<{
   calculatedAt: string;

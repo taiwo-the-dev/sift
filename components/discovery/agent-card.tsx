@@ -16,6 +16,7 @@ import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
+import { ScoreCriteriaTooltip } from "@/components/scoring/score-criteria-tooltip";
 import { buildAgentProfileHref } from "@/features/agents/route";
 import {
   formatActivationMethod,
@@ -37,7 +38,6 @@ import {
 import {
   describeScoreTier,
   getAgentRating,
-  isScoreStale,
   type ScoreTier,
 } from "@/features/scoring/presentation";
 import { cn } from "@/lib/utils";
@@ -197,19 +197,11 @@ export function AgentCard({
   const healthPresentation = getHealthPresentation(agent.health, agent.services);
   const healthTierTone = healthStateTone[healthPresentation.state];
   const rating = getAgentRating(agent);
-  const scoreIsStale =
-    rating.kind !== "profile" && agent.score
-      ? isScoreStale(agent.score.calculatedAt)
-      : false;
   const scoreTier = describeScoreTier(rating.value);
   const scoreSignalTone = scoreTierTone[scoreTier.tier];
-  const ratingEvidenceDetail =
-    rating.kind === "verified"
-      ? rating.detail
-      : `${rating.kind === "provisional" ? "Provisional" : "Profile-only estimate"} · ${rating.detail}`;
-  const scoreDetail = scoreIsStale
-    ? `${ratingEvidenceDetail} · refresh needed`
-    : ratingEvidenceDetail;
+  const scoreDetail = rating.kind === "stale"
+    ? `Update needed · ${rating.detail}`
+    : rating.detail;
 
   return (
     <article className="sift-card-reveal group flex h-full min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_22px_50px_rgba(0,0,0,0.26)] motion-reduce:transform-none">
@@ -274,6 +266,7 @@ export function AgentCard({
                 aria-hidden="true"
               />
               <span className="leading-none">Sift Score</span>
+              <ScoreCriteriaTooltip components={rating.components} />
             </dt>
             <dd className="relative mt-3">
               <div className="flex items-end gap-1.5">
@@ -291,9 +284,9 @@ export function AgentCard({
               </div>
               <p
                 className="mt-2 truncate text-[0.65rem] text-muted-foreground"
-                title={`${scoreTier.label} · ${scoreDetail}`}
+                title={`${rating.label} · ${scoreDetail}`}
               >
-                {scoreTier.label} · {scoreDetail}
+                {`${scoreTier.label} · ${scoreDetail}`}
               </p>
             </dd>
           </div>

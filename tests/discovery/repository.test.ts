@@ -472,7 +472,12 @@ describe("discovery repository integration boundary", () => {
     );
     assert.deepEqual(result.agents[0]?.categories, ["grid-trading"]);
     assert.deepEqual(result.agents[0]?.services, [
-      { endpoint: null, serviceType: "A2A", version: "1.0" },
+      {
+        endpoint: null,
+        metadata: null,
+        serviceType: "A2A",
+        version: "1.0",
+      },
     ]);
     assert.equal(result.agents[1]?.name, null);
   });

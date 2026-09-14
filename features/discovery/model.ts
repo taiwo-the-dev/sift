@@ -1,4 +1,5 @@
 import type { MetadataStatus } from "@/lib/db/validation";
+import type { Json } from "@/lib/db/database.types";
 import type {
   HealthSnapshot,
   HealthStatus,
@@ -70,8 +71,8 @@ export const discoverySortOptions = [
   { label: "Best match", value: "relevance" },
   { label: "Newest first", value: "recent" },
   { label: "Oldest first", value: "oldest" },
-  { label: "Highest Sift rating", value: "score-desc" },
-  { label: "Lowest Sift rating", value: "score-asc" },
+  { label: "Highest Sift Score", value: "score-desc" },
+  { label: "Lowest Sift Score", value: "score-asc" },
   { label: "Available agents first", value: "available-first" },
   { label: "Recently checked first", value: "health-recent" },
   { label: "Most services", value: "services-desc" },
@@ -139,6 +140,7 @@ export type DiscoveryService = Readonly<{
   availabilityStatus?: ActivationAvailabilityStatus;
   endpoint: string | null;
   id?: string | null;
+  metadata?: Json | null;
   serviceType: string;
   version: string | null;
 }>;

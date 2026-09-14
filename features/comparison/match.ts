@@ -8,6 +8,7 @@ import {
   extractDiscoverySearchTerms,
   inferDiscoveryCategory,
 } from "@/features/discovery/query";
+import { SIFT_SCORE_VERSION } from "@/features/scoring/formula";
 import { isScoreStale } from "@/features/scoring/presentation";
 
 type CandidateEvidence = Readonly<{
@@ -70,7 +71,8 @@ function canUseScoreAsTieBreaker(candidate: CandidateEvidence): boolean {
   return Boolean(
     score &&
       score.score !== null &&
-      score.confidence >= 0.5 &&
+      score.version === SIFT_SCORE_VERSION &&
+      score.confidence >= 0.6 &&
       !isScoreStale(score.calculatedAt),
   );
 }

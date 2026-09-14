@@ -16,7 +16,7 @@ export function CategorySection() {
               What workflow should an <span className="text-brand">agent automate?</span>
             </h2>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-              Browse agents by task, then compare their services, health, and ratings.
+              Browse agents by task, then compare their services, health, and Sift Scores.
             </p>
           </div>
           <Link

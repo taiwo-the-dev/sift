@@ -1,14 +1,16 @@
 import { CircleHelp, Gauge, History } from "lucide-react";
 
 import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
+import { ScoreCriteriaTooltip } from "@/components/scoring/score-criteria-tooltip";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
+import { SIFT_SCORE_VERSION } from "@/features/scoring/formula";
 import type { PersistedSiftScore } from "@/features/scoring/model";
 import {
   describeScoreConfidence,
   getAgentRating,
   isScoreStale,
-  scoreComponentRows,
+  scoreComponentRowsFromComponents,
 } from "@/features/scoring/presentation";
 
 interface ScoreExplanationProps {
@@ -32,37 +34,12 @@ interface ScoreExplanationProps {
 
 export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
   const rating = getAgentRating({ ...profile, score });
-
-  if (!score) {
-    const missingEvidence = [
-      profile.metadataStatus !== "valid" ? "a verified profile" : null,
-      profile.services.length === 0 ? "service details" : null,
-      profile.health === null ? "a completed health check" : null,
-      profile.reputation === null ? "reputation or task history" : null,
-    ].filter((value): value is string => value !== null);
-
-    return (
-      <article className="rounded-xl border border-dashed border-border bg-card px-5 py-7 sm:px-6">
-        <CircleHelp className="size-5 text-muted-foreground" aria-hidden="true" />
-        <h3 className="mt-4 text-lg font-semibold text-foreground">
-          {rating.label} · <AnimatedRatingValue value={rating.value} />/100
-        </h3>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          This rating measures the verified profile and service information the
-          agent has published. It does not claim that the service performs well.
-        </p>
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">
-          {missingEvidence.length > 0
-            ? `Still needed: ${missingEvidence.join(", ")}.`
-            : "More independent evidence is needed before this becomes a verified Sift Score."}
-        </p>
-      </article>
-    );
-  }
-
-  const rows = scoreComponentRows(score);
+  const rows = scoreComponentRowsFromComponents(rating.components);
   const missingRows = rows.filter((row) => row.value === null);
-  const stale = isScoreStale(score.calculatedAt);
+  const stale = score ? isScoreStale(score.calculatedAt) : false;
+  const assessmentVersion = score?.version.startsWith("sift-evidence-v2.")
+    ? score.version
+    : SIFT_SCORE_VERSION;
 
   return (
     <article className="overflow-hidden rounded-xl border border-border bg-card">
@@ -71,31 +48,38 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
           <Gauge className="size-5" aria-hidden="true" />
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {rating.label} · {score.version}
-          </p>
+          <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span>{rating.label} · {assessmentVersion}</span>
+            <ScoreCriteriaTooltip
+              components={rating.components}
+              className="text-muted-foreground"
+            />
+          </div>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <p className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
               <AnimatedRatingValue value={rating.value} />/100
             </p>
             <span className="text-sm font-medium text-brand">
-              {rating.kind === "verified"
-                ? describeScoreConfidence(score.confidence)
-                : rating.kind === "provisional"
-                  ? "Provisional evidence"
-                  : "Published details only"}
+              {rating.kind === "stale"
+                ? "Update required"
+                : describeScoreConfidence(rating.coverage)}
             </span>
           </div>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {rating.detail}. Missing data is never treated as positive evidence.
+            {rating.detail}. The six earned point values add directly to this
+            score.
           </p>
         </div>
         <div className="text-xs text-muted-foreground sm:text-right">
           <p className="inline-flex items-center gap-1.5 sm:justify-end">
             <History className="size-3.5" aria-hidden="true" />
-            {stale ? "Update needed" : "Up to date"}
+            {stale || rating.kind === "stale" ? "Update needed" : "Up to date"}
           </p>
-          <p className="mt-1">{formatProfileTimestamp(score.calculatedAt)}</p>
+          <p className="mt-1">
+            {score
+              ? formatProfileTimestamp(score.calculatedAt)
+              : "Calculated for this view"}
+          </p>
         </div>
       </div>
 
@@ -119,8 +103,8 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
                   </div>
                   <span className="shrink-0 font-mono text-xs text-foreground">
                     {row.value === null
-                      ? "Unavailable"
-                      : `${row.value}/100 · ${row.weight}% weight`}
+                      ? `0/${row.weight} points · no evidence`
+                      : `${row.contribution}/${row.weight} points · ${row.value}% result`}
                   </span>
                 </div>
                 {row.value !== null ? (
@@ -150,19 +134,31 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
               <div>
                 <dt>Health check</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {formatProfileTimestamp(score.sourceFreshness.healthAt)}
+                  {formatProfileTimestamp(
+                    score?.sourceFreshness.healthAt ??
+                      profile.health?.lastCheckedAt ??
+                      null,
+                  )}
                 </dd>
               </div>
               <div>
                 <dt>Profile verified</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {formatProfileTimestamp(score.sourceFreshness.metadataAt)}
+                  {formatProfileTimestamp(
+                    score?.sourceFreshness.metadataAt ??
+                      profile.metadataVerifiedAt ??
+                      profile.lastSyncedAt,
+                  )}
                 </dd>
               </div>
               <div>
                 <dt>Reputation checked</dt>
                 <dd className="mt-1 font-medium text-foreground">
-                  {formatProfileTimestamp(score.sourceFreshness.reputationAt)}
+                  {formatProfileTimestamp(
+                    score?.sourceFreshness.reputationAt ??
+                      profile.reputation?.sourceObservedAt ??
+                      null,
+                  )}
                 </dd>
               </div>
             </dl>
@@ -174,9 +170,10 @@ export function ScoreExplanation({ profile, score }: ScoreExplanationProps) {
               {missingRows.length > 0
                 ? `${missingRows.map((row) => row.label).join(", ")} ${
                     missingRows.length === 1 ? "is" : "are"
-                  } not included because the data is missing or outdated.`
+                  } earning no points because the data is missing or outdated.`
                 : "All six scoring factors have current data."}
-              {" "}This rating supports comparison; it does not certify agent
+              {" "}Evidence coverage distinguishes missing evidence from poor
+              results. This score supports comparison; it does not certify agent
               safety, performance, or suitability.
             </p>
           </div>

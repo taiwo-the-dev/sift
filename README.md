@@ -13,9 +13,10 @@ Sift is live at <https://sift-ten-swart.vercel.app> and the BSC Mainnet
 catalogue was current at confirmed head `121126225` when checked on 2026-09-10.
 All four hackathon categories pass the hosted coverage report with 12 curated
 mainnet agents and 12 current, source-labelled 8004scan cross-checks. The former
-score-candidate database timeout is resolved. Every agent now receives a clearly
-labelled Profile, Provisional, or verified Sift rating; health and verified
-scores remain unavailable when their required real evidence is missing.
+score-candidate database timeout is resolved. Every agent now receives a numeric
+Sift Score made from the six criteria it actually meets. Missing or expired
+evidence earns zero points and remains visible in the score breakdown and data
+coverage rather than being replaced with invented values.
 
 The automated mainnet judge path passes on desktop and mobile, and the public
 release smoke test passes. M16/M17 are still in progress because hosted migration
@@ -48,9 +49,9 @@ public experience.
   Chain through resumable, idempotent block processing.
 - Professional agent profiles with ownership, service, source, freshness,
   health, reputation, and activity evidence.
-- A versioned, reproducible Sift Score that is withheld when current evidence is
-  insufficient rather than manufactured, with clearly labelled Profile and
-  Provisional ratings for agents that have less evidence.
+- A versioned, reproducible Sift Score that adds the six earned criterion values,
+  shows missing evidence as zero points, and keeps evidence coverage visible so a
+  low-evidence score is not mistaken for a complete assessment.
 - URL-backed side-by-side comparison that keeps missing evidence distinct from
   poor evidence.
 - User-controlled BSC Mainnet and BSC Testnet wallet connection with fail-closed

@@ -28,7 +28,7 @@ function score(
     metadata_component: 80,
     reliability_component: 90,
     reputation_component: null,
-    score_version: "sift-evidence-v1.0.0",
+    score_version: "sift-evidence-v2.2.0",
     sift_score: siftScore,
     source_freshness: {
       healthAt: "2026-08-22T11:00:00.000Z",

@@ -14,6 +14,7 @@ import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
+import { ScoreCriteriaTooltip } from "@/components/scoring/score-criteria-tooltip";
 import { buttonVariants } from "@/components/ui/button";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import { buildExplorerAddressHref } from "@/features/agents/links";
@@ -45,7 +46,7 @@ interface ProfileHeaderProps {
 interface EvidenceStatProps {
   detail: string;
   icon: ReactNode;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }
 
@@ -62,7 +63,7 @@ function EvidenceStat({ detail, icon, label, value }: EvidenceStatProps) {
         <span className="grid size-4 shrink-0 place-items-center [&>svg]:block">
           {icon}
         </span>
-        <span className="leading-none">{label}</span>
+        <span className="inline-flex items-center gap-1 leading-none">{label}</span>
       </dt>
       <dd className="mt-3 truncate text-sm font-semibold capitalize text-foreground">
         {value}
@@ -103,10 +104,9 @@ export function ProfileHeader({
   const taskReady = agentCanBeUsed && taskServices.length > 0;
   const externalReady = agentCanBeUsed && externalServices.length > 0;
   const canUseAgent = taskReady || externalReady;
-  const ratingDetail =
-    rating.kind === "verified"
-      ? rating.detail
-      : `${rating.kind === "provisional" ? "Provisional" : "Profile-only estimate"} · ${rating.detail}`;
+  const ratingDetail = rating.kind === "stale"
+    ? `Update needed · ${rating.detail}`
+    : rating.detail;
 
   return (
     <header className="relative overflow-hidden border-b border-border bg-card">
@@ -215,7 +215,12 @@ export function ProfileHeader({
                 aria-hidden="true"
               />
             }
-            label="Sift Score"
+            label={
+              <>
+                Sift Score
+                <ScoreCriteriaTooltip components={rating.components} />
+              </>
+            }
             value={
               <>
                 <AnimatedRatingValue value={rating.value} />/100

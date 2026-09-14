@@ -46,9 +46,11 @@ minimum interval. Environment overrides are documented in `.env.example` and
 have hard maximums.
 
 The server-only queue starts from an indexed subset of valid agents declaring a
-potentially supported, query-free HTTPS service. It considers the curated
-category shortlist first, then selects never-checked or least-recently-checked
-agents to prevent starvation. The checker independently validates each
+potentially supported, query-free HTTPS service. Agents with one or two recent,
+conclusive observations are prioritised when their next check is due so they
+can earn the reliability criterion after three checks. The queue then considers the
+curated category shortlist and never-checked or least-recently-checked agents
+to preserve broad coverage. The checker independently validates each
 declaration; unsupported, invalid, or unsafe targets remain `Unknown` and
 receive no request.
 
@@ -65,53 +67,59 @@ An eligible probe:
 
 The `agent_health` row preserves last success, latest outcome, response time when measured, a bounded consecutive failure count, and bounded successes/checks for the current endpoint fingerprint. A changed endpoint resets endpoint-specific counts. Historical counts compact at 1,000 observations rather than growing without limit.
 
-## Sift Score v1
+## Sift Score v2.2
 
-Formula version: `sift-evidence-v1.0.0`.
+Formula version: `sift-evidence-v2.2.0`.
 
-| Component | Weight | Normalization | Freshness |
+| Component | Maximum points | Normalization | Freshness |
 | --- | ---: | --- | --- |
-| Reputation | 25 | A named source's explicitly normalized value from 0–100 | 180 days |
-| Observed reliability | 20 | Successful bounded probes / bounded probes × 100; available after 3 checks | 24 hours |
+| Reputation | 15 | A named source's explicitly normalized value from 0–100 | 180 days |
+| Observed reliability | 25 | Successful bounded probes / bounded probes × 100; available after 3 checks | 24 hours |
 | Current reachability | 20 | Online 100, Degraded 40, Offline 0, Unknown unavailable | 24 hours |
-| Declared capability evidence | 15 | 40 for a valid service declaration; +20 for 2 types, +10 for 3 types, +15 for an endpoint, +10 for a version, +5 for structured service metadata; capped at 100 | Valid metadata verified within 30 days |
-| Supported track record | 15 | Successful jobs / supported completed jobs × 100 | Named source observed within 180 days |
-| Metadata quality | 5 | Name 25, description 30, image 10, owner 10, active declaration 5, x402 declaration 5, successful verification timestamp 15 | Valid metadata verified within 30 days |
+| Declared service information | 10 | 40 for a valid service declaration; +20 for 2 types, +10 for 3 types, +15 for an endpoint, +10 for a version, +5 for structured service metadata; capped at 100 | Valid metadata verified within 30 days |
+| Supported track record | 20 | Successful jobs / supported completed jobs × 100 | Named source observed within 180 days |
+| Profile integrity | 10 | Name 25, description 30, image 10, owner 10, active declaration 5, x402 declaration 5, successful verification timestamp 15 | Valid metadata verified within 30 days |
 
 Capability and metadata components measure completeness of current declarations. They do not verify performance. Reputation and job evidence are excluded unless `agent_reputation.source` and `source_observed_at` are both present. M6 does not populate those fields because the audited catalogue has no supported reputation source.
 
-Each available component is multiplied by its weight. The published score is:
+Each available component earns points up to its stated maximum. The published
+score is the direct sum of those six earned values:
 
 ```text
-sum(component value × component weight) / sum(available component weights)
+sum(round(component result × maximum points / 100, 2))
 ```
 
-Component values and the final result are rounded to two decimal places. Missing components are omitted, never replaced by a neutral or positive value. Confidence is the available supported weight divided by 100 and is rounded to four decimal places.
+Component points and the final result are rounded to two decimal places. Missing
+or expired evidence earns no points; it is labelled unavailable rather than as
+a failed result. The score is never rescaled to hide that missing evidence.
+Evidence coverage is the available supported point-weight divided by 100 and is
+rounded to four decimal places.
 
-A score is withheld unless at least 40% of total formula weight is supported and at least one independent signal is available from reputation, observed reliability, current reachability, or supported track record. A single fresh health observation plus complete declarations can therefore produce a low-confidence score; declarations alone cannot.
+The direct sum is always shown, including when the total is zero. This is not a
+fabricated rating: only real, current evidence earns points. A criterion without
+qualifying evidence contributes zero and the separate evidence-coverage value
+makes that absence explicit. Reliability still requires at least three current
+checks; one observation can contribute availability points but not reliability
+points.
 
-Every assessment, including a withheld `null` result, is persisted with its component values, confidence, formula version, calculation time, source freshness, and an evidence snapshot. Identical inputs and assessment time produce identical output.
+Every stored assessment preserves its component values, confidence, formula
+version, calculation time, source freshness, and an evidence snapshot. Identical
+inputs and assessment time produce identical output.
 
 ### Rating levels in the product
 
-Every indexed agent receives the strongest honest rating Sift can support:
+Every indexed agent receives one honest score state:
 
-- **Sift Score** — the persisted assessment meets the 40% evidence threshold
-  and includes at least one independent signal.
-- **Provisional Rating** — some independent health, reputation, reliability, or
-  task evidence exists, but total evidence is still below the publication bar.
-- **Profile Rating** — only verified published profile and service information
-  is available. This measures declaration completeness, not performance.
+- **Sift Score** — the direct sum of the points earned across the six criteria.
+  The tooltip shows exactly which criteria had qualifying evidence.
+- **Score needs updating** — a stored v2 score exists, but its assessment is older
+  than 24 hours. The last known value may be shown with that warning, but it is
+  excluded from current Featured placement.
 
-The Profile Rating reuses the formula's profile-quality and service-information
-components, normalized within their combined 20% weight. An invalid or missing
-profile therefore receives a Profile Rating of zero rather than an invented
-performance value. Provisional ratings use the weighted average of the
-available persisted components and always show their evidence coverage.
-
-Only a published Sift Score may influence score-based Featured placement or
-break a supported comparison tie. Provisional and Profile ratings are display
-guidance and never substitute for verified performance evidence.
+Only a current persisted Sift Score may influence score-based filtering,
+Featured placement, or a supported comparison tie. Retired formula assessments
+stay in the canonical score table until they are recalculated from current
+evidence, but they do not appear as current scores in discovery.
 
 ## Recalculation
 
@@ -131,8 +139,9 @@ The server-only recalculation queue selects a record when it has current
 independent health or reputation evidence and no assessment, the formula
 version changed, an agent/service/health/reputation row changed after
 calculation, or a previously used source crossed its freshness boundary.
-Metadata-only catalogue rows do not occupy every batch because declarations
-alone cannot produce a publishable score. Upserts use `agent_db_id` as the
+Metadata-only catalogue rows do not occupy every batch because the UI can
+calculate their declaration points directly from the evidence already loaded.
+Upserts use `agent_db_id` as the
 conflict key, so replaying the same assessment replaces the same row rather
 than creating duplicates.
 
@@ -145,6 +154,22 @@ combined a five-way outer join with a per-row correlated aggregate over
 `agent_services` and a computed multi-timestamp sort key, so Postgres had to
 sort the whole catalogue before `limit` applied and the hosted run timed out.
 The contract, weights, and formula version are unchanged.
+
+`20260914103000_prioritize_sift_score_v2_evidence.sql` further prevents the
+retired v1 backlog from occupying the bounded score queue. A retired assessment
+is recalculated only after the agent has current independent health,
+reputation, or task-history evidence. The same migration prioritises due second
+and third conclusive health observations without increasing the batch size or
+weakening the network-safety rules.
+
+`20260914120000_sum_sift_score_component_points.sql` advances the current
+formula to v2.1 and keeps v2.0 values out of discovery until their real evidence
+is recalculated. It does not delete canonical evidence or manufacture a score.
+
+`20260914130000_show_direct_sift_score_for_all_evidence.sql` advances the
+stored formula marker to v2.2 after removing the display publication gate.
+Missing evidence still earns zero, and the bounded queue remains responsible
+for persisting refreshed assessments.
 
 To drain all currently actionable score work after the migration is deployed,
 run the bounded, idempotent backfill:
@@ -163,7 +188,14 @@ upserts are idempotent.
 
 ## UI and Featured rule
 
-Discover cards show a persisted score with confidence or stale status and a persisted health label with freshness. Profiles show calculation time, confidence/evidence coverage, every component, unavailable signals, health outcome/history, and a keyboard-accessible `Why this score?` disclosure. The score is explicitly described as decision support, not proof that an agent is safe, best, or suitable for every task.
+Discover cards always show the direct numeric total, using current page evidence
+when no v2 stored assessment exists, or a stale last-known state alongside
+health freshness. Profiles keep profile completeness separate from Sift Score,
+and show calculation time,
+confidence/evidence coverage, every component, unavailable signals, health
+outcome/history, and a keyboard-accessible `Why this score?` disclosure. The
+score is decision support, not proof that an agent is safe, best, or suitable
+for every task.
 
 Featured Agents uses no payment and no fallback data. An agent qualifies only when all of these are true:
 
@@ -176,7 +208,13 @@ Qualifying agents are ordered by score and then confidence. If none qualify, Fea
 
 ## Deployment order
 
-Deploy `20260822111500_add_metadata_verification_time.sql` first if it is not already present, then deploy `20260822130000_add_health_scoring_provenance.sql`. After the hosted migration succeeds:
+Deploy `20260822111500_add_metadata_verification_time.sql` first if it is not
+already present, then `20260822130000_add_health_scoring_provenance.sql`,
+`20260914100000_add_sift_score_v2.sql`, and
+`20260914103000_prioritize_sift_score_v2_evidence.sql`,
+`20260914120000_sum_sift_score_component_points.sql`, and
+`20260914130000_show_direct_sift_score_for_all_evidence.sql`. After the hosted migrations
+succeed:
 
 1. run `npm run check:smoke` and `npm run score:smoke`;
 2. manually dispatch the assessment workflow or run one small local batch;
@@ -189,7 +227,7 @@ Do not run assessment commands against a project that has not applied the M6 mig
 ## M14 shortlist coverage
 
 Category membership and its `0.65`/`1.0` classification confidence are not
-inputs to Sift Score v1. They describe how validated metadata was mapped, not
+inputs to Sift Score v2. They describe how validated metadata was mapped, not
 whether an agent performs well. M14 does not change score weights or the
 formula version.
 
@@ -197,6 +235,6 @@ The bounded health queue prioritizes validated M14 shortlist members only when
 they also satisfy the unchanged safe endpoint criteria. It then fairly checks
 the wider eligible A2A/health-service queue. A later score run
 recalculates records whose real source inputs changed. Missing health,
-reputation, or job evidence remains unavailable and may keep a score withheld.
+reputation, or job evidence earns zero points and lowers evidence coverage.
 The UI continues to show formula version, confidence, missing components,
 source freshness, and calculation time.

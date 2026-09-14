@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   calculateSiftScore,
-  MINIMUM_SCORE_EVIDENCE_WEIGHT,
+  MINIMUM_RELIABILITY_CHECKS,
   scoreComponentDefinitions,
   SIFT_SCORE_VERSION,
 } from "../../features/scoring/formula";
@@ -77,7 +77,7 @@ describe("Sift Score formula", () => {
 
     assert.deepEqual(first, second);
     assert.equal(first.version, SIFT_SCORE_VERSION);
-    assert.equal(first.score, 90);
+    assert.equal(first.score, 90.5);
     assert.equal(first.confidence, 1);
     assert.deepEqual(first.components, {
       availability: 100,
@@ -87,6 +87,19 @@ describe("Sift Score formula", () => {
       reputation: 80,
       trackRecord: 80,
     });
+    assert.deepEqual(
+      (first.evidenceSnapshot as {
+        earnedComponentPoints: Record<string, number | null>;
+      }).earnedComponentPoints,
+      {
+        availability: 20,
+        capability: 10,
+        metadata: 10,
+        reliability: 22.5,
+        reputation: 12,
+        trackRecord: 16,
+      },
+    );
   });
 
   it("keeps formula weights explicit and totaling 100", () => {
@@ -97,7 +110,7 @@ describe("Sift Score formula", () => {
       ),
       100,
     );
-    assert.equal(MINIMUM_SCORE_EVIDENCE_WEIGHT, 40);
+    assert.equal(MINIMUM_RELIABILITY_CHECKS, 3);
   });
 
   it("normalizes metadata completeness without inventing omitted fields", () => {
@@ -267,11 +280,11 @@ describe("Sift Score formula", () => {
       reputation: null,
       trackRecord: null,
     });
-    assert.equal(stale.score, null);
+    assert.equal(stale.score, 0);
     assert.equal(future.components.availability, null);
   });
 
-  it("reduces confidence for missing evidence and withholds unsupported scores", () => {
+  it("adds only the criteria with available evidence", () => {
     const declarationsOnly = calculateSiftScore(
       completeInput({ health: null, reputation: null }),
       asOf,
@@ -289,13 +302,31 @@ describe("Sift Score formula", () => {
     );
 
     assert.equal(declarationsOnly.confidence, 0.2);
-    assert.equal(declarationsOnly.score, null);
-    assert.match(declarationsOnly.limitations[0], /not enough reliable data/i);
+    assert.equal(declarationsOnly.score, 20);
     assert.equal(oneHealthObservation.confidence, 0.4);
-    assert.equal(oneHealthObservation.score, 100);
+    assert.equal(oneHealthObservation.score, 40);
+    assert.match(oneHealthObservation.limitations.join(" "), /reliability/i);
   });
 
-  it("reweights only supported components instead of treating missing as neutral", () => {
+  it("adds reliability points after three current checks", () => {
+    const assessment = calculateSiftScore(
+      completeInput({
+        health: {
+          ...completeInput().health!,
+          checkCount: 3,
+          status: "online",
+          successCount: 2,
+        },
+        reputation: null,
+      }),
+      asOf,
+    );
+
+    assert.equal(assessment.confidence, 0.65);
+    assert.equal(assessment.score, 56.67);
+  });
+
+  it("gives a failed observation zero availability points", () => {
     const assessment = calculateSiftScore(
       completeInput({
         health: {
@@ -310,7 +341,18 @@ describe("Sift Score formula", () => {
     );
 
     assert.equal(assessment.confidence, 0.4);
-    assert.equal(assessment.score, 50);
+    assert.equal(assessment.score, 20);
+  });
+
+  it("gives invalid profile criteria zero points without hiding other evidence", () => {
+    const assessment = calculateSiftScore(
+      completeInput({ metadataStatus: "invalid" }),
+      asOf,
+    );
+
+    assert.equal(assessment.confidence, 0.8);
+    assert.equal(assessment.score, 70.5);
+    assert.match(assessment.limitations.join(" "), /profile integrity/i);
   });
 
   it("rejects an invalid assessment timestamp", () => {

@@ -12,7 +12,7 @@ const candidate: SiftScoreInput = {
   agentDbId: "11111111-1111-4111-8111-111111111111",
   description: "Test-only runner fixture.",
   health: {
-    checkCount: 1,
+    checkCount: 3,
     checkedEndpoint: "https://agent.test-only.dev/health",
     endpointHash: "a".repeat(64),
     failureCount: 0,
@@ -22,7 +22,7 @@ const candidate: SiftScoreInput = {
     responseTimeMs: 10,
     serviceType: "health",
     status: "online",
-    successCount: 1,
+    successCount: 3,
   },
   imageUrl: null,
   metadataStatus: "valid",
@@ -71,7 +71,7 @@ describe("score calculation orchestration", () => {
     assert.deepEqual(batches[0], batches[1]);
   });
 
-  it("recalculates from changed source inputs and persists withheld results", async () => {
+  it("recalculates from changed source inputs and persists zero when none qualify", async () => {
     let current = candidate;
     const scores: (number | null)[] = [];
     const repository = {
@@ -98,7 +98,7 @@ describe("score calculation orchestration", () => {
       { logger, now: () => new Date(calculatedAt), repository },
     );
 
-    assert.deepEqual(scores, [81.25, null]);
-    assert.deepEqual(summary, { assessed: 1, published: 0, withheld: 1 });
+    assert.deepEqual(scores, [59, 0]);
+    assert.deepEqual(summary, { assessed: 1, published: 1, withheld: 0 });
   });
 });

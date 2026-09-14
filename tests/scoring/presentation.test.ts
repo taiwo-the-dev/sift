@@ -17,24 +17,38 @@ const score: PersistedSiftScore = {
     availability: 100,
     capability: 70,
     metadata: 85,
-    reliability: null,
+    reliability: 67,
     reputation: null,
     trackRecord: null,
   },
-  confidence: 0.4,
-  score: 82.5,
+  confidence: 0.65,
+  score: 52.25,
   sourceFreshness: {
     healthAt: "2026-08-22T11:00:00.000Z",
     metadataAt: "2026-08-22T10:00:00.000Z",
     reputationAt: null,
   },
-  version: "sift-evidence-v1.0.0",
+  version: "sift-evidence-v2.2.0",
 };
+
+const presentationAsOf = new Date("2026-08-22T12:00:00.000Z");
 
 describe("Sift Score presentation", () => {
   const ratingInput = {
     active: true,
     description: "A complete agent profile.",
+    health: {
+      checkCount: 3,
+      checkedEndpoint: "https://agent.example/a2a",
+      failureCount: 0,
+      lastCheckedAt: "2026-08-22T11:00:00.000Z",
+      lastSuccessAt: "2026-08-22T11:00:00.000Z",
+      outcome: "success" as const,
+      responseTimeMs: 50,
+      serviceType: "A2A",
+      status: "online" as const,
+      successCount: 3,
+    },
     imageUrl: "https://agent.example/avatar.png",
     lastSyncedAt: "2026-08-22T11:00:00.000Z",
     metadataStatus: "valid" as const,
@@ -99,19 +113,25 @@ describe("Sift Score presentation", () => {
     assert.equal(rows.length, 6);
     assert.equal(rows.find((row) => row.key === "availability")?.contribution, 20);
     assert.equal(rows.find((row) => row.key === "reputation")?.value, null);
+    assert.equal(
+      rows.reduce((total, row) => total + (row.contribution ?? 0), 0),
+      score.score,
+    );
   });
 
-  it("keeps a publishable assessment labelled as a Sift Score", () => {
-    assert.deepEqual(getAgentRating({ ...ratingInput, score }), {
-      coverage: 0.4,
-      detail: "40% data coverage",
-      kind: "verified",
-      label: "Sift Score",
-      value: 82.5,
-    });
+  it("keeps a stored direct-sum assessment labelled as a Sift Score", () => {
+    const result = getAgentRating({ ...ratingInput, score }, presentationAsOf);
+
+    assert.equal(result.coverage, 0.65);
+    assert.equal(result.detail, "65% data coverage");
+    assert.equal(result.kind, "verified");
+    assert.equal(result.label, "Sift Score");
+    assert.equal(result.profileCompleteness, 77.5);
+    assert.equal(result.value, 52.25);
+    assert.deepEqual(result.components, score.components);
   });
 
-  it("shows a provisional rating when limited independent evidence exists", () => {
+  it("shows the direct component sum even when the stored score was withheld", () => {
     const result = getAgentRating({
       ...ratingInput,
       score: {
@@ -127,33 +147,62 @@ describe("Sift Score presentation", () => {
         confidence: 0.2,
         score: null,
       },
-    });
+    }, presentationAsOf);
 
-    assert.equal(result.kind, "provisional");
-    assert.equal(result.label, "Provisional Rating");
-    assert.equal(result.value, 100);
+    assert.equal(result.kind, "verified");
+    assert.equal(result.label, "Sift Score");
+    assert.equal(result.value, 20);
     assert.equal(result.coverage, 0.2);
+    assert.equal(result.components.availability, 100);
   });
 
-  it("rates published profile details without calling them performance", () => {
-    const result = getAgentRating({ ...ratingInput, score: null });
+  it("calculates a numeric score for an agent without a stored assessment", () => {
+    const result = getAgentRating(
+      { ...ratingInput, score: null },
+      presentationAsOf,
+    );
 
-    assert.equal(result.kind, "profile");
-    assert.equal(result.label, "Profile Rating");
-    assert.equal(result.value, 77.5);
-    assert.equal(result.coverage, 0.2);
+    assert.equal(result.kind, "calculated");
+    assert.equal(result.label, "Sift Score");
+    assert.equal(result.value, 62);
+    assert.equal(result.profileCompleteness, 85);
+    assert.equal(result.coverage, 0.65);
+    assert.match(result.detail, /calculated from available evidence/i);
   });
 
-  it("uses a zero profile rating when no profile evidence is verified", () => {
+  it("uses zero profile completeness when no profile evidence is verified", () => {
     const result = getAgentRating({
       ...ratingInput,
       metadataStatus: "invalid",
       score: null,
-    });
+    }, presentationAsOf);
 
-    assert.equal(result.kind, "profile");
-    assert.equal(result.value, 0);
-    assert.equal(result.coverage, 0);
-    assert.equal(result.detail, "No verified profile information");
+    assert.equal(result.kind, "calculated");
+    assert.equal(result.value, 45);
+    assert.equal(result.profileCompleteness, 0);
+    assert.equal(result.coverage, 0.45);
+  });
+
+  it("recalculates a retired v1 assessment from current page evidence", () => {
+    const result = getAgentRating({
+      ...ratingInput,
+      score: { ...score, version: "sift-evidence-v1.0.0" },
+    }, presentationAsOf);
+
+    assert.equal(result.kind, "calculated");
+    assert.equal(result.value, 62);
+    assert.match(result.detail, /calculated from available evidence/i);
+  });
+
+  it("keeps a stale v2 value visible only as a last known assessment", () => {
+    const result = getAgentRating(
+      { ...ratingInput, score },
+      new Date("2026-08-23T12:00:00.001Z"),
+    );
+
+    assert.equal(result.kind, "stale");
+    assert.equal(result.label, "Score needs updating");
+    assert.equal(result.value, 52.25);
+    assert.match(result.detail, /last known assessment/i);
   });
 });

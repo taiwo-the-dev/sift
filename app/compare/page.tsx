@@ -74,7 +74,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               Evaluate agents against your task.
             </h1>
             <p className="mt-4 max-w-2xl text-pretty text-base leading-7 text-muted-foreground">
-              Review ratings, health, services, and reputation side by side.
+              Review Sift Scores, health, services, and reputation side by side.
               Add your task to highlight the strongest supported match.
             </p>
           </div>

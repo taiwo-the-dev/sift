@@ -23,7 +23,7 @@ function persistedScore(score: number): PersistedSiftScore {
       metadataAt: new Date().toISOString(),
       reputationAt: new Date().toISOString(),
     },
-    version: "test-only-score-version",
+    version: "sift-evidence-v2.2.0",
   };
 }
 
@@ -110,6 +110,26 @@ describe("contextual comparison", () => {
         categories: ["grid-trading"],
         description: "Grid trading automation.",
         score: null,
+      }),
+    ];
+
+    assert.equal(findContextualMatch(candidates, "grid trading"), null);
+  });
+
+  it("does not use a retired score formula to break a tie", () => {
+    const candidates = [
+      profile("1", {
+        categories: ["grid-trading"],
+        description: "Grid trading automation.",
+        score: {
+          ...persistedScore(91),
+          version: "sift-evidence-v1.0.0",
+        },
+      }),
+      profile("2", {
+        categories: ["grid-trading"],
+        description: "Grid trading automation.",
+        score: persistedScore(70),
       }),
     ];
 

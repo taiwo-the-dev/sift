@@ -307,7 +307,7 @@ function FilterOptions({ query }: FilterPanelProps) {
 
       <FilterSection
         icon={Gauge}
-        label="Rating"
+        label="Sift Score"
         layout="wide"
         count={
           query.scoreBands.length > 0 ? `${query.scoreBands.length} selected` : "Any"
@@ -337,7 +337,7 @@ function FilterOptions({ query }: FilterPanelProps) {
         })}
       </FilterSection>
       <p className="-mt-2.5 pl-1 text-[0.64rem] leading-5 text-muted-foreground/70">
-        Uses the rating shown on each agent card.
+        Uses stored current scores. Open the score tooltip to review its evidence coverage.
       </p>
 
       <FilterSection

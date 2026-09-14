@@ -4,23 +4,23 @@ import {
   type ScoreComponentKey,
   type ScoreComponents,
   type SiftScoreAssessment,
-  type SiftScoreInput,
+  type SiftScoreEvidenceInput,
 } from "@/features/scoring/model";
 
-export const SIFT_SCORE_VERSION = "sift-evidence-v1.0.0";
-export const MINIMUM_SCORE_EVIDENCE_WEIGHT = 40;
+export const SIFT_SCORE_VERSION = "sift-evidence-v2.2.0";
+export const MINIMUM_RELIABILITY_CHECKS = 3;
 
 export const scoreComponentDefinitions = [
   {
     key: "reputation",
     label: "Reputation",
-    weight: 25,
+    weight: 15,
     description: "Current reputation score from a named source.",
   },
   {
     key: "reliability",
     label: "Service reliability",
-    weight: 20,
+    weight: 25,
     description: "Successful service checks divided by total checks.",
   },
   {
@@ -32,19 +32,19 @@ export const scoreComponentDefinitions = [
   {
     key: "capability",
     label: "Service information",
-    weight: 15,
+    weight: 10,
     description: "Completeness of the agent's published service information.",
   },
   {
     key: "trackRecord",
     label: "Task history",
-    weight: 15,
+    weight: 20,
     description: "Reported successful tasks divided by completed tasks.",
   },
   {
     key: "metadata",
-    label: "Profile quality",
-    weight: 5,
+    label: "Profile integrity",
+    weight: 10,
     description: "Completeness of the agent's recently verified profile.",
   },
 ] as const satisfies readonly Readonly<{
@@ -61,6 +61,13 @@ const reputationFreshnessMs = 180 * 24 * 60 * 60 * 1_000;
 function round(value: number, places: number): number {
   const factor = 10 ** places;
   return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+export function calculateScoreComponentPoints(
+  value: number | null,
+  maximumPoints: number,
+): number | null {
+  return value === null ? null : round((value * maximumPoints) / 100, 2);
 }
 
 function isFresh(
@@ -80,7 +87,7 @@ function isFresh(
   );
 }
 
-function metadataComponent(input: SiftScoreInput): number | null {
+function metadataComponent(input: SiftScoreEvidenceInput): number | null {
   if (input.metadataStatus !== "valid") {
     return null;
   }
@@ -96,7 +103,7 @@ function metadataComponent(input: SiftScoreInput): number | null {
   );
 }
 
-function capabilityComponent(input: SiftScoreInput): number | null {
+function capabilityComponent(input: SiftScoreEvidenceInput): number | null {
   if (input.metadataStatus !== "valid" || input.services.length === 0) {
     return null;
   }
@@ -122,7 +129,7 @@ function capabilityComponent(input: SiftScoreInput): number | null {
 }
 
 function healthComponents(
-  input: SiftScoreInput,
+  input: SiftScoreEvidenceInput,
   asOfMs: number,
 ): Pick<ScoreComponents, "availability" | "reliability"> {
   const health = input.health;
@@ -140,7 +147,7 @@ function healthComponents(
           ? 0
           : null;
   const reliability =
-    health.checkCount >= 3
+    health.checkCount >= MINIMUM_RELIABILITY_CHECKS
       ? round((health.successCount / health.checkCount) * 100, 2)
       : null;
 
@@ -148,7 +155,7 @@ function healthComponents(
 }
 
 function reputationComponents(
-  input: SiftScoreInput,
+  input: SiftScoreEvidenceInput,
   asOfMs: number,
 ): Pick<ScoreComponents, "reputation" | "trackRecord"> {
   const reputation = input.reputation;
@@ -181,19 +188,32 @@ function reputationComponents(
 }
 
 function buildSnapshot(
-  input: SiftScoreInput,
+  input: SiftScoreEvidenceInput,
   components: ScoreComponents,
   evidenceWeight: number,
 ): Json {
   return {
     activeDeclared: input.active,
-    componentWeights: Object.fromEntries(
+    componentMaximumPoints: Object.fromEntries(
       scoreComponentDefinitions.map((component) => [
         component.key,
         component.weight,
       ]),
     ) as Readonly<Record<string, number>>,
+    earnedComponentPoints: Object.fromEntries(
+      scoreComponentDefinitions.map((component) => [
+        component.key,
+        calculateScoreComponentPoints(
+          components[component.key],
+          component.weight,
+        ),
+      ]),
+    ) as Readonly<Record<string, number | null>>,
     evidenceWeight,
+    calculationRules: {
+      missingEvidencePoints: 0,
+      minimumReliabilityChecks: MINIMUM_RELIABILITY_CHECKS,
+    },
     health:
       input.health === null
         ? null
@@ -226,13 +246,14 @@ function buildSnapshot(
       versionedServiceCount: input.services.filter((service) => service.version)
         .length,
     },
+    scoringMethod: "sum-earned-component-points",
     version: SIFT_SCORE_VERSION,
     x402Declared: input.x402Supported,
   };
 }
 
 export function calculateSiftScore(
-  input: SiftScoreInput,
+  input: SiftScoreEvidenceInput,
   asOf: string,
 ): SiftScoreAssessment {
   const asOfMs = Date.parse(asOf);
@@ -263,43 +284,30 @@ export function calculateSiftScore(
     (total, definition) => total + definition.weight,
     0,
   );
-  const hasIndependentEvidence = [
-    components.reputation,
-    components.reliability,
-    components.availability,
-    components.trackRecord,
-  ].some((component) => component !== null);
-  const weightedTotal = availableDefinitions.reduce(
+  const earnedPoints = availableDefinitions.reduce(
     (total, definition) =>
-      total + (components[definition.key] ?? 0) * definition.weight,
+      total +
+      (calculateScoreComponentPoints(
+        components[definition.key],
+        definition.weight,
+      ) ?? 0),
     0,
   );
-  const canPublishScore =
-    evidenceWeight >= MINIMUM_SCORE_EVIDENCE_WEIGHT && hasIndependentEvidence;
   const limitations = scoreComponentKeys
     .filter((key) => components[key] === null)
     .map((key) => {
       const definition = scoreComponentDefinitions.find(
         (candidate) => candidate.key === key,
       );
-      return `${definition?.label ?? key} is not included because the data is missing or out of date.`;
+      return `${definition?.label ?? key} contributes no points because the data is missing or out of date.`;
     });
-
-  if (!canPublishScore) {
-    limitations.unshift(
-      "There is not enough reliable data to publish a Sift Score.",
-    );
-  }
 
   return {
     components,
     confidence: round(evidenceWeight / 100, 4),
     evidenceSnapshot: buildSnapshot(input, components, evidenceWeight),
     limitations,
-    score:
-      canPublishScore && evidenceWeight > 0
-        ? round(weightedTotal / evidenceWeight, 2)
-        : null,
+    score: round(earnedPoints, 2),
     sourceFreshness: {
       healthAt: input.health?.lastCheckedAt ?? null,
       metadataAt: input.metadataVerifiedAt,

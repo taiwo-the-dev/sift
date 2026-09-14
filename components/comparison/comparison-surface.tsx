@@ -13,6 +13,7 @@ import { BookmarkToggle } from "@/components/bookmarks/bookmark-toggle";
 import { AgentAvatar } from "@/components/discovery/agent-avatar";
 import { AgentSelectionActions } from "@/components/comparison/comparison-actions";
 import { AnimatedRatingValue } from "@/components/scoring/animated-rating-value";
+import { ScoreCriteriaTooltip } from "@/components/scoring/score-criteria-tooltip";
 import { formatProfileTimestamp } from "@/features/agents/format";
 import type { AgentProfile } from "@/features/agents/model";
 import {
@@ -37,10 +38,9 @@ import {
   getHealthPresentation,
 } from "@/features/health/presentation";
 import {
-  describeScoreConfidence,
   getAgentRating,
   isScoreStale,
-  scoreComponentRows,
+  scoreComponentRowsFromComponents,
 } from "@/features/scoring/presentation";
 import type { SupportedBnbNetwork } from "@/lib/blockchain/chains";
 import { cn } from "@/lib/utils";
@@ -80,37 +80,24 @@ function ScoreValue({ agent }: Readonly<{ agent: AgentProfile }>) {
 
   return (
     <div>
-      <p className="text-lg font-semibold text-foreground">
+      <div className="flex items-center gap-1 text-lg font-semibold text-foreground">
         <AnimatedRatingValue value={rating.value} />/100
-      </p>
+        <ScoreCriteriaTooltip components={rating.components} />
+      </div>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        {rating.label} ·{" "}
-        {rating.kind === "verified" && score
-          ? `${describeScoreConfidence(score.confidence)} · ${rating.detail}`
-          : rating.detail}
+        {rating.label} · {rating.detail}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
         {score
           ? `${isScoreStale(score.calculatedAt) ? "Stale" : "Current"} · ${formatProfileTimestamp(score.calculatedAt)}`
-          : "Calculated from the current published profile"}
+          : "Calculated from the evidence shown on this page"}
       </p>
     </div>
   );
 }
 
 function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
-  if (!agent.score) {
-    const rating = getAgentRating(agent);
-    return (
-      <div className="text-sm leading-6">
-        <p className="font-semibold text-foreground">{rating.label}</p>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          {rating.detail}. This rating uses profile quality and published service
-          information only.
-        </p>
-      </div>
-    );
-  }
+  const rating = getAgentRating(agent);
 
   return (
     <details>
@@ -118,7 +105,7 @@ function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
         View six components
       </summary>
       <dl className="mt-3 grid gap-2 text-xs">
-        {scoreComponentRows(agent.score).map((row) => (
+        {scoreComponentRowsFromComponents(rating.components).map((row) => (
           <div key={row.key} className="flex justify-between gap-3">
             <dt className="text-muted-foreground">{row.label}</dt>
             <dd className="font-mono text-foreground">
@@ -131,19 +118,30 @@ function ScoreBreakdownValue({ agent }: Readonly<{ agent: AgentProfile }>) {
         <div>
           <dt>Health source</dt>
           <dd className="mt-0.5 text-foreground">
-            {formatProfileTimestamp(agent.score.sourceFreshness.healthAt)}
+            {formatProfileTimestamp(
+              agent.score?.sourceFreshness.healthAt ??
+                agent.health?.lastCheckedAt ??
+                null,
+            )}
           </dd>
         </div>
         <div className="mt-2">
           <dt>Profile source</dt>
           <dd className="mt-0.5 text-foreground">
-            {formatProfileTimestamp(agent.score.sourceFreshness.metadataAt)}
+            {formatProfileTimestamp(
+              agent.score?.sourceFreshness.metadataAt ??
+                agent.metadataVerifiedAt,
+            )}
           </dd>
         </div>
         <div className="mt-2">
           <dt>Reputation source</dt>
           <dd className="mt-0.5 text-foreground">
-            {formatProfileTimestamp(agent.score.sourceFreshness.reputationAt)}
+            {formatProfileTimestamp(
+              agent.score?.sourceFreshness.reputationAt ??
+                agent.reputation?.sourceObservedAt ??
+                null,
+            )}
           </dd>
         </div>
       </dl>
@@ -414,7 +412,7 @@ const comparisonSections: readonly ComparisonSection[] = [
     rows: [
       {
         description: "Rating, evidence level, and last update.",
-        label: "Agent rating",
+        label: "Sift Score",
         render: (agent) => <ScoreValue agent={agent} />,
       },
       {
@@ -442,7 +440,7 @@ const comparisonSections: readonly ComparisonSection[] = [
     label: "Evidence and activity",
     rows: [
       {
-        description: "How the available rating factors contribute.",
+        description: "How the available Sift Score evidence contributes.",
         label: "Rating evidence",
         render: (agent) => <ScoreBreakdownValue agent={agent} />,
       },
@@ -594,6 +592,7 @@ function AgentColumnHeader({
         <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-1 text-muted-foreground">
           <Gauge className="size-3 text-brand" aria-hidden="true" />
           <AnimatedRatingValue value={rating.value} />/100 · {rating.label}
+          <ScoreCriteriaTooltip components={rating.components} />
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -633,12 +633,17 @@ Every component of the score must be derived from real data or deterministic rul
 
 If insufficient information exists, reduce confidence instead of inventing a score.
 
-In the product, label the result according to its evidence level: **Sift Score**
-only when the publication threshold and an independent signal are satisfied,
-**Provisional Rating** when limited independent evidence exists, and **Profile
-Rating** when only published profile/service completeness can be measured.
-Always show the label and evidence coverage. Profile and Provisional ratings
-must not be treated as verified performance evidence.
+The six weighted criteria must earn explicit component points that add directly
+to the final score out of 100. Do not rescale partial evidence to a full 100-point
+range. Show evidence coverage separately, and label missing evidence rather than
+presenting it as a failed observation.
+
+In the product, always show the direct numeric **Sift Score** produced by the six
+criteria. Missing or expired evidence contributes zero points; it must also be
+identified in the criteria breakdown and reflected in a separate evidence
+coverage value. A stale stored value must be labelled **Score needs updating**.
+Never rescale partial evidence, substitute profile completeness, or present a
+retired formula result as verified performance evidence.
 
 Consider storing:
 
