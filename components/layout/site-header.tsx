@@ -20,24 +20,24 @@ function NetworkSelectorFallback({ mobile = false }: Readonly<{ mobile?: boolean
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
-        <Brand className="justify-self-start" />
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+        <Brand />
 
         <nav
-          className="hidden items-center justify-center gap-1 lg:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex"
           aria-label="Primary navigation"
         >
           {navigationItems.map((item) =>
             item.label === "Compare" ? (
               <ComparisonNavLink
                 key={item.label}
-                className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
               />
             ) : (
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors duration-200 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30"
               >
                 {item.label}
               </Link>
@@ -45,7 +45,7 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="hidden items-center justify-self-end gap-2 lg:flex">
+        <div className="ml-auto hidden items-center gap-2 xl:flex">
           <Suspense fallback={<NetworkSelectorFallback />}>
             <CatalogueNetworkSelectorData />
           </Suspense>

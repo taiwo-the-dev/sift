@@ -40,7 +40,7 @@ export function MobileNavigation({
   const pathname = usePathname();
 
   return (
-    <div className="ml-auto lg:hidden">
+    <div className="ml-auto xl:hidden">
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Trigger
           aria-label="Open navigation"
