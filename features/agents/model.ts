@@ -53,6 +53,13 @@ export type AgentReputationEvidence = Readonly<{
   updatedAt: string;
 }>;
 
+export type AgentTaskHistoryRecord = Readonly<{
+  blockNumber: number | null;
+  confirmedAt: string;
+  onchainJobId: string;
+  transactionHash: string;
+}>;
+
 export type AgentProfile = Readonly<{
   active: boolean | null;
   agentId: string;
@@ -78,5 +85,6 @@ export type AgentProfile = Readonly<{
   reputation: AgentReputationEvidence | null;
   score: PersistedSiftScore | null;
   services: readonly AgentProfileService[];
+  taskHistory: readonly AgentTaskHistoryRecord[];
   x402Supported: boolean | null;
 }>;

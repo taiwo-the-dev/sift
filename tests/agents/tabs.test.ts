@@ -9,6 +9,8 @@ import {
 describe("agent profile tabs", () => {
   it("accepts supported tabs and defaults invalid input to overview", () => {
     assert.equal(parseAgentProfileTab("services"), "services");
+    assert.equal(parseAgentProfileTab("tasks"), "tasks");
+    assert.equal(parseAgentProfileTab("activity"), "activity");
     assert.equal(parseAgentProfileTab(["trust", "metadata"]), "trust");
     assert.equal(parseAgentProfileTab("not-a-tab"), "overview");
     assert.equal(parseAgentProfileTab(undefined), "overview");

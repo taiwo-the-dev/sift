@@ -64,6 +64,8 @@ public experience.
 - One **Start task** entry point that uses a recently checked service method:
   protected ERC-8183 hiring, confirmed A2A messaging, read-only MCP tools, or an
   exact x402 quote.
+- A versioned, read-only public API for agent search, profiles, Sift Scores,
+  public task evidence, categories, and catalogue freshness.
 
 ## Architecture
 
@@ -77,6 +79,8 @@ flowchart LR
   assessment["Health + Sift Score + task-service checks\nGitHub Actions"] <--> db
   metadata --> assessment
   browser["Browser"] <--> app["Next.js\nVercel"]
+  integrator["External app"] --> api["Sift API v1\nread only"]
+  api --> app
   app <--> db
   browser <--> wallet["User-controlled\nwallet"]
   browser <--> altana["Altana passkey\n+ bounded session"]
@@ -188,6 +192,27 @@ fallbacks, checkpoints, provenance, freshness, and recovery.
 The category taxonomy, curation bar, 8004scan boundary, and exact hosted run
 order are documented in [M14 category evidence](docs/categories.md).
 
+## Public Sift API
+
+The read-only API is available under `/api/v1` and does not require an API key.
+It uses the same indexed catalogue and evidence rules as the Sift interface.
+
+```text
+GET /api/v1/agents
+GET /api/v1/agents/{chainId}/{agentId}
+GET /api/v1/agents/{chainId}/{agentId}/score
+GET /api/v1/agents/{chainId}/{agentId}/tasks
+GET /api/v1/categories
+GET /api/v1/status
+```
+
+Responses are versioned, public GET requests support CORS, and a best-effort
+fair-use limit of 60 requests per minute per visitor protects the free-tier
+infrastructure. The API never returns server credentials, internal database
+identifiers, wallet sessions, private mission text, or hiring budgets. See the
+[public API documentation](/docs) when running Sift, or open `/docs` on the
+deployed site.
+
 ## Validation
 
 ```bash
@@ -276,6 +301,7 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Hosted database](docs/database.md)
 - [Sift Indexer](docs/indexer.md)
 - [Sift Score](docs/scoring.md)
+- [Public API](/docs)
 - [M14 category evidence](docs/categories.md)
 - [Mainnet judge-path validation](docs/judge-path-validation.md)
 - [Submission package](docs/submission-package.md)

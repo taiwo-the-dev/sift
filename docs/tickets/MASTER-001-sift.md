@@ -31,6 +31,7 @@ Release Validation In Progress
 - M22 — Implemented Locally; Hosted Migration and Live Service Validation Pending
 - M23 — Implemented Locally; Hosted Migration and Human Wallet Validation Pending
 - M24 — In Progress
+- M25 — Implemented Locally; Deployment Validation Pending
 
 ## Release Scope Decision — 2026-09-11
 
@@ -69,6 +70,8 @@ Build a polished, production-ready-looking web application for the BNB Chain hac
 9. Configure a task/mission and permissions.
 10. Hire or activate an agent through the appropriate BNB Agent infrastructure.
 11. Monitor hired agents and job activity.
+12. Let developers integrate the public agent catalogue and evidence through a
+    documented, read-only Sift API.
 
 The application must feel like a real SaaS/Web3 startup product rather than a hackathon prototype.
 

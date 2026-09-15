@@ -64,6 +64,43 @@ const categoryEvidence: TableRow<"agent_category_evidence"> = {
   updated_at: "2026-08-22T08:50:02.000Z",
 };
 
+const task: TableRow<"jobs"> = {
+  agent_db_id: agent.id,
+  agent_id: agent.agent_id,
+  block_number: 126500000,
+  budget_base_units: "1000000000000000000",
+  chain_id: agent.chain_id,
+  commerce_address: "0x2222222222222222222222222222222222222222",
+  confirmed_at: "2026-08-22T09:00:00.000Z",
+  created_at: "2026-08-22T08:55:00.000Z",
+  current_step: null,
+  deliverables: "A verified monitoring report.",
+  expires_at: "2026-08-23T08:55:00.000Z",
+  failure_code: null,
+  failure_message: null,
+  id: "33333333-3333-4333-8333-333333333333",
+  idempotency_key: "44444444-4444-4444-8444-444444444444",
+  maximum_spend_base_units: "1000000000000000000",
+  mission: "Monitor the supplied lending position for liquidation risk.",
+  negotiation_hash: `0x${"2".repeat(64)}`,
+  onchain_description: "Verified test description",
+  onchain_job_id: "42",
+  payment_token_address: "0x3333333333333333333333333333333333333333",
+  payment_token_decimals: 18,
+  payment_token_symbol: "U",
+  policy_address: "0x4444444444444444444444444444444444444444",
+  provider_address: "0x5555555555555555555555555555555555555555",
+  quality_standards: "Return a timestamped and verifiable report.",
+  quote_expires_at: "2026-08-22T09:10:00.000Z",
+  registry_address: agent.registry_address,
+  resume_token_hash: "a".repeat(64),
+  router_address: "0x6666666666666666666666666666666666666666",
+  status: "confirmed",
+  transaction_hash: `0x${"3".repeat(64)}`,
+  updated_at: "2026-08-22T09:00:00.000Z",
+  wallet_address: "0x7777777777777777777777777777777777777777",
+};
+
 function sources(
   overrides: Partial<AgentProfileSources> = {},
 ): AgentProfileSources {
@@ -74,6 +111,7 @@ function sources(
     findScore: async () => null,
     listCategoryEvidence: async () => [categoryEvidence],
     listServices: async () => [service],
+    listTaskHistory: async () => [],
     ...overrides,
   };
 }
@@ -128,6 +166,27 @@ describe("agent profile repository composition", () => {
       `0x${"1".repeat(64)}`,
     );
     assert.equal("siftScore" in (profile ?? {}), false);
+  });
+
+  it("includes only public-safe fields for confirmed task history", async () => {
+    const repository = createAgentProfileRepository(
+      sources({
+        listTaskHistory: async () => [task],
+      }),
+    );
+
+    const profile = await repository.findByIdentity(56, "1887");
+
+    assert.deepEqual(profile?.taskHistory, [
+      {
+        blockNumber: 126500000,
+        confirmedAt: "2026-08-22T09:00:00.000Z",
+        onchainJobId: "42",
+        transactionHash: `0x${"3".repeat(64)}`,
+      },
+    ]);
+    assert.equal("mission" in (profile?.taskHistory[0] ?? {}), false);
+    assert.equal("walletAddress" in (profile?.taskHistory[0] ?? {}), false);
   });
 
   it("keeps optional evidence absent for a partial indexed identity", async () => {

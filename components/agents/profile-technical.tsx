@@ -102,7 +102,7 @@ export function ProfileTechnical({ profile }: ProfileTechnicalProps) {
   return (
     <ProfileSection
       id="technical"
-      eyebrow="05 · Technical"
+      eyebrow="06 · Technical"
       title="Registration and source details"
       description="Raw ERC-8004 identifiers, registry data, and source links."
     >

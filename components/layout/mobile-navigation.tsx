@@ -4,6 +4,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import {
   Bookmark,
   BriefcaseBusiness,
+  BookOpenText,
   Compass,
   Menu,
   X,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 const navigationIcons: Readonly<Record<string, LucideIcon>> = {
   "/dashboard": BriefcaseBusiness,
+  "/docs": BookOpenText,
   "/discover": Compass,
   "/saved": Bookmark,
 };

@@ -7,6 +7,7 @@ import { ProfileHeader } from "@/components/agents/profile-header";
 import { ProfileNavigation } from "@/components/agents/profile-navigation";
 import { ProfileOverview } from "@/components/agents/profile-overview";
 import { ProfileTechnical } from "@/components/agents/profile-technical";
+import { ProfileTasks } from "@/components/agents/profile-tasks";
 import type { AgentProfileIdentity } from "@/features/agents/route";
 import { getAgentProfile } from "@/features/agents/service";
 import type { AgentProfileTab } from "@/features/agents/tabs";
@@ -40,6 +41,7 @@ export async function AgentProfileContent({
           <ProfileCapabilities profile={profile} />
         ) : null}
         {activeTab === "trust" ? <ProfileEvidence profile={profile} /> : null}
+        {activeTab === "tasks" ? <ProfileTasks profile={profile} /> : null}
         {activeTab === "activity" ? <ProfileActivity profile={profile} /> : null}
         {activeTab === "metadata" ? <ProfileTechnical profile={profile} /> : null}
       </div>

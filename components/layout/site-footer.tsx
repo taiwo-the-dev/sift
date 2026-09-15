@@ -17,7 +17,7 @@ const footerGroups = [
     links: [
       { label: "How it works", href: "/#how-it-works" },
       { label: "Trust approach", href: "/#trust" },
-      { label: "Wallet safety", href: "/permissions" },
+      { label: "API documentation", href: "/docs" },
       { label: "Terms of use", href: "/terms" },
     ],
   },

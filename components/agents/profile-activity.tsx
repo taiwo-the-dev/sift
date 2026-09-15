@@ -19,9 +19,9 @@ export function ProfileActivity({ profile }: ProfileActivityProps) {
   return (
     <ProfileSection
       id="activity"
-      eyebrow="04 · Activity"
-      title="Registration history"
-      description="Registration and index history. This is separate from agent execution activity."
+      eyebrow="05 · Registry"
+      title="Registry history"
+      description="The agent's ERC-8004 registration and Sift profile update history."
     >
       <ol className="relative ml-4 border-l border-border">
         <li className="relative pb-8 pl-8">

@@ -114,6 +114,23 @@ async function verify(): Promise<void> {
   }
   pass("Production security headers are present");
 
+  const documentation = await request(origin, "/docs");
+  requireStatus(documentation, 200, "API documentation");
+  requireText(documentation, "Build with Sift agent data.", "API documentation");
+
+  const apiStatus = await request(origin, "/api/v1/status");
+  requireStatus(apiStatus, 200, "Public API status");
+  requireText(apiStatus, '"apiVersion":"v1"', "Public API status");
+  assert(
+    apiStatus.response.headers.get("access-control-allow-origin") === "*",
+    "Public API status does not allow read-only cross-origin access.",
+  );
+  pass("Public API CORS policy is present");
+
+  const apiCategories = await request(origin, "/api/v1/categories");
+  requireStatus(apiCategories, 200, "Public API categories");
+  requireText(apiCategories, '"yield-optimisation"', "Public API categories");
+
   const discover = await request(origin, "/discover");
   requireStatus(discover, 200, "Discovery page");
   requireText(discover, "ERC-8004 agents on BNB Chain", "Discovery page");
@@ -149,6 +166,19 @@ async function verify(): Promise<void> {
     "Agent profile is missing ERC-8004 or Sift Score information.",
   );
   pass("Agent profile shows ERC-8004 and Sift Score information");
+
+  const [, , profileChainId, profileAgentId] = profilePath.split("/");
+  assert(profileChainId && profileAgentId, "Could not parse API profile identity.");
+  const apiProfileBase = `/api/v1/agents/${profileChainId}/${profileAgentId}`;
+  for (const [path, label, expected] of [
+    [apiProfileBase, "Public API agent profile", `"agentId":"${profileAgentId}"`],
+    [`${apiProfileBase}/score`, "Public API Sift Score", '"criteria"'],
+    [`${apiProfileBase}/tasks`, "Public API task history", '"reportedTotals"'],
+  ] as const) {
+    const apiResult = await request(origin, path);
+    requireStatus(apiResult, 200, label);
+    requireText(apiResult, expected, label);
+  }
 
   const comparisonParameters = new URLSearchParams();
   for (const path of agentPaths.slice(0, 3)) {

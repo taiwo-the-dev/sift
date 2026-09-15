@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AgentProfile,
   AgentProfileService,
+  AgentTaskHistoryRecord,
   AgentReputationEvidence,
 } from "@/features/agents/model";
 import { getSupabaseServerClient } from "@/lib/db/client";
@@ -27,6 +28,14 @@ type AgentServiceRecord = TableRow<"agent_services">;
 type AgentScoreRecord = TableRow<"agent_scores">;
 type CategoryEvidenceRecord = TableRow<"agent_category_evidence">;
 type ExternalEvidenceRecord = TableRow<"agent_external_evidence">;
+type JobRecord = TableRow<"jobs">;
+type AgentTaskRecord = Pick<
+  JobRecord,
+  | "block_number"
+  | "confirmed_at"
+  | "onchain_job_id"
+  | "transaction_hash"
+>;
 
 export type AgentProfileSources = Readonly<{
   findAgent(chainId: number, agentId: string): Promise<AgentRecord | null>;
@@ -36,6 +45,7 @@ export type AgentProfileSources = Readonly<{
   findScore(agentDbId: string): Promise<AgentScoreRecord | null>;
   listCategoryEvidence?(agentDbId: string): Promise<readonly CategoryEvidenceRecord[]>;
   listServices(agentDbId: string): Promise<readonly AgentServiceRecord[]>;
+  listTaskHistory?(agentDbId: string): Promise<readonly AgentTaskRecord[]>;
 }>;
 
 export type AgentProfileRepository = Readonly<{
@@ -92,6 +102,23 @@ function mapServices(
     validationVersion: record.activation_validation_version ?? null,
     version: record.version,
   }));
+}
+
+function mapTaskHistory(
+  records: readonly AgentTaskRecord[],
+): readonly AgentTaskHistoryRecord[] {
+  return records.flatMap((record) =>
+    record.confirmed_at && record.onchain_job_id && record.transaction_hash
+      ? [
+          {
+            blockNumber: record.block_number,
+            confirmedAt: record.confirmed_at,
+            onchainJobId: record.onchain_job_id,
+            transactionHash: record.transaction_hash,
+          },
+        ]
+      : [],
+  );
 }
 
 function createSupabaseSources(
@@ -203,6 +230,26 @@ function createSupabaseSources(
 
       return data;
     },
+    async listTaskHistory(agentDbId) {
+      const { data, error } = await client
+        .from("jobs")
+        .select(
+          "block_number, confirmed_at, onchain_job_id, transaction_hash",
+        )
+        .eq("agent_db_id", agentDbId)
+        .eq("status", "confirmed")
+        .not("confirmed_at", "is", null)
+        .not("onchain_job_id", "is", null)
+        .not("transaction_hash", "is", null)
+        .order("confirmed_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        throw new DatabaseOperationError("list agent task history", error);
+      }
+
+      return data;
+    },
   };
 }
 
@@ -214,6 +261,7 @@ export function composeAgentProfile(
   scoreRecord: AgentScoreRecord | null,
   categoryEvidenceRecords: readonly CategoryEvidenceRecord[] = [],
   externalEvidenceRecord: ExternalEvidenceRecord | null = null,
+  taskRecords: readonly AgentTaskRecord[] = [],
 ): AgentProfile {
   const services = mapServices(serviceRecords);
   const categoryEvidence = categoryEvidenceRecords.map(mapCategoryEvidenceRecord);
@@ -249,6 +297,7 @@ export function composeAgentProfile(
     reputation: mapReputation(reputationRecord),
     score: scoreRecord ? mapScoreRecord(scoreRecord) : null,
     services,
+    taskHistory: mapTaskHistory(taskRecords),
     x402Supported: agent.x402_supported,
   };
 }
@@ -273,6 +322,7 @@ export function createAgentProfileRepository(
         scoreRecord,
         categoryEvidenceRecords,
         externalEvidenceRecord,
+        taskRecords,
       ] =
         await Promise.all([
           sources.listServices(agent.id),
@@ -281,6 +331,7 @@ export function createAgentProfileRepository(
           sources.findScore(agent.id),
           sources.listCategoryEvidence?.(agent.id) ?? Promise.resolve([]),
           sources.findExternalEvidence?.(agent.id) ?? Promise.resolve(null),
+          sources.listTaskHistory?.(agent.id) ?? Promise.resolve([]),
         ]);
       return composeAgentProfile(
         agent,
@@ -290,6 +341,7 @@ export function createAgentProfileRepository(
         scoreRecord,
         categoryEvidenceRecords,
         externalEvidenceRecord,
+        taskRecords,
       );
     },
   };

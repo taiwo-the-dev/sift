@@ -56,6 +56,7 @@ function profile(
     reputation: null,
     score: null,
     services: [],
+    taskHistory: [],
     x402Supported: null,
     ...overrides,
   };
