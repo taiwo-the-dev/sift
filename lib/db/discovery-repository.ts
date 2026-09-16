@@ -4,9 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   discoveryCategorySlugs,
-  type CategorySource,
   type DiscoveryAgent,
-  type DiscoveryCategory,
   type DiscoveryPageSize,
   type DiscoveryQuery,
   type DiscoveryResult,
@@ -20,6 +18,7 @@ import type {
   CategoryEvidence,
   CategoryFact,
 } from "@/features/categories/taxonomy";
+import { getAgentRating } from "@/features/scoring/presentation";
 import { getSupabaseServerClient } from "@/lib/db/client";
 import type { Database, Json, TableRow } from "@/lib/db/database.types";
 import { DatabaseOperationError } from "@/lib/db/errors";
@@ -30,22 +29,8 @@ import {
   type MetadataStatus,
 } from "@/lib/db/validation";
 
-type SearchAgentRow =
-  Database["public"]["Functions"]["search_agents_advanced"]["Returns"][number];
 type DiscoveryAgentKeyRow =
   Database["public"]["Functions"]["search_agent_discovery_keys"]["Returns"][number];
-
-const advancedDiscoverySorts = new Set<DiscoveryQuery["sort"]>([
-  "available-first",
-  "health-recent",
-  "name-asc",
-  "name-desc",
-  "oldest",
-  "profile-first",
-  "score-asc",
-  "score-desc",
-  "services-desc",
-]);
 
 type RecentAgentRow = Pick<
   TableRow<"agents">,
@@ -56,6 +41,7 @@ type RecentAgentRow = Pick<
   | "id"
   | "image_url"
   | "last_synced_at"
+  | "metadata_verified_at"
   | "metadata_status"
   | "name"
   | "owner_address"
@@ -92,6 +78,7 @@ const recentAgentSelect = `
   active,
   x402_supported,
   metadata_status,
+  metadata_verified_at,
   registered_block,
   registered_at,
   last_synced_at,
@@ -117,6 +104,9 @@ export type DiscoveryRepository = Readonly<{
 
 export type DiscoveryEvidenceSources = Readonly<{
   listHealth(ids: readonly string[]): Promise<readonly TableRow<"agent_health">[]>;
+  listReputation?(
+    ids: readonly string[],
+  ): Promise<readonly TableRow<"agent_reputation">[]>;
   listScores(ids: readonly string[]): Promise<readonly TableRow<"agent_scores">[]>;
   listServices(
     ids: readonly string[],
@@ -139,40 +129,6 @@ export type DiscoveryEvidenceSources = Readonly<{
 
 function isRecord(value: Json): value is Readonly<Record<string, Json | undefined>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function mapServices(value: Json): readonly DiscoveryService[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.flatMap((entry) => {
-    if (!isRecord(entry) || typeof entry.serviceType !== "string") {
-      return [];
-    }
-
-    return [
-      {
-        endpoint: typeof entry.endpoint === "string" ? entry.endpoint : null,
-        metadata: entry.metadata ?? null,
-        serviceType: entry.serviceType,
-        version: typeof entry.version === "string" ? entry.version : null,
-      },
-    ];
-  });
-}
-
-function mapCategorySource(value: string | null): CategorySource {
-  return value === "declared-metadata" || value === "deterministic-rule"
-    ? value
-    : null;
-}
-
-function mapCategories(values: readonly string[]): readonly DiscoveryCategory[] {
-  const supported = new Set<string>(discoveryCategorySlugs);
-  return values.filter((value): value is DiscoveryCategory =>
-    supported.has(value),
-  );
 }
 
 function mapMetadataStatus(value: string): MetadataStatus {
@@ -241,32 +197,6 @@ function mapCategoryEvidence(value: Json): readonly CategoryEvidence[] {
   });
 }
 
-function mapAgent(row: SearchAgentRow): DiscoveryAgent {
-  return {
-    active: row.active,
-    agentDbId: row.agent_db_id,
-    agentId: row.agent_id,
-    categories: mapCategories(row.resolved_categories),
-    categoryEvidence: mapCategoryEvidence(row.category_evidence),
-    categorySource: mapCategorySource(row.category_source),
-    chainId: row.chain_id,
-    description: row.description,
-    health: null,
-    imageUrl: row.image_url,
-    lastSyncedAt: row.last_synced_at,
-    metadataStatus: mapMetadataStatus(row.metadata_status),
-    name: row.name,
-    ownerAddress: row.owner_address,
-    registeredAt: row.registered_at,
-    registeredBlock: row.registered_block,
-    registryAddress: row.registry_address,
-    relevance: row.relevance,
-    score: null,
-    services: mapServices(row.services),
-    x402Supported: row.x402_supported,
-  };
-}
-
 function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
   const categoryEvidence = mapCategoryEvidence(
     row.agent_category_evidence.map((evidence) => ({
@@ -308,6 +238,7 @@ function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
     health: null,
     imageUrl: row.image_url,
     lastSyncedAt: row.last_synced_at,
+    metadataVerifiedAt: row.metadata_verified_at,
     metadataStatus: mapMetadataStatus(row.metadata_status),
     name: row.name,
     ownerAddress: row.owner_address,
@@ -315,6 +246,7 @@ function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
     registeredBlock: row.registered_block,
     registryAddress: row.registry_address,
     relevance: 0,
+    reputation: null,
     score: null,
     services: row.agent_services.map((service) => ({
       endpoint: null,
@@ -323,6 +255,39 @@ function mapRecentAgent(row: RecentAgentRow): DiscoveryAgent {
     })),
     x402Supported: row.x402_supported,
   };
+}
+
+export function orderDiscoveryAgentsByDisplayedScore(
+  agents: readonly DiscoveryAgent[],
+  sort: DiscoveryQuery["sort"],
+): DiscoveryAgent[] {
+  if (sort !== "score-asc" && sort !== "score-desc") {
+    return [...agents];
+  }
+
+  const direction = sort === "score-desc" ? -1 : 1;
+  const collator = new Intl.Collator("en", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  return agents
+    .map((agent, index) => ({
+      agent,
+      index,
+      score: getAgentRating(agent).value,
+    }))
+    .sort((left, right) => {
+      const scoreDifference = (left.score - right.score) * direction;
+      if (scoreDifference !== 0) return scoreDifference;
+
+      const nameDifference = collator.compare(
+        left.agent.name?.trim() || left.agent.agentId,
+        right.agent.name?.trim() || right.agent.agentId,
+      );
+      return nameDifference || left.index - right.index;
+    })
+    .map(({ agent }) => agent);
 }
 
 export function createDiscoveryRepository(
@@ -348,6 +313,18 @@ export function createDiscoveryRepository(
 
       if (error) {
         throw new DatabaseOperationError("list discovery scores", error);
+      }
+
+      return data;
+    },
+    async listReputation(ids) {
+      const { data, error } = await client
+        .from("agent_reputation")
+        .select("*")
+        .in("agent_db_id", [...ids]);
+
+      if (error) {
+        throw new DatabaseOperationError("list discovery reputation", error);
       }
 
       return data;
@@ -391,14 +368,15 @@ export function createDiscoveryRepository(
     agents: readonly DiscoveryAgent[],
   ): Promise<DiscoveryAgent[]> {
     const ids = agents.map((agent) => agent.agentDbId);
-    const [healthRecords, scoreRecords, serviceRecords] =
+    const [healthRecords, reputationRecords, scoreRecords, serviceRecords] =
       ids.length > 0
         ? await Promise.all([
             evidenceSources.listHealth(ids),
+            evidenceSources.listReputation?.(ids) ?? Promise.resolve([]),
             evidenceSources.listScores(ids),
             evidenceSources.listServices(ids),
           ])
-        : [[], [], []];
+        : [[], [], [], []];
     const healthById = new Map(
       healthRecords.map((record) => [
         record.agent_db_id,
@@ -409,6 +387,19 @@ export function createDiscoveryRepository(
       scoreRecords.map((record) => [
         record.agent_db_id,
         mapScoreRecord(record),
+      ]),
+    );
+    const reputationById = new Map(
+      reputationRecords.map((record) => [
+        record.agent_db_id,
+        {
+          failedJobs: record.failed_jobs,
+          feedbackCount: record.feedback_count,
+          reputationScore: record.reputation_score,
+          source: record.source,
+          sourceObservedAt: record.source_observed_at,
+          successfulJobs: record.successful_jobs,
+        },
       ]),
     );
     const servicesById = new Map<string, DiscoveryService[]>();
@@ -436,6 +427,7 @@ export function createDiscoveryRepository(
     return agents.map((agent) => ({
       ...agent,
       health: healthById.get(agent.agentDbId) ?? null,
+      reputation: reputationById.get(agent.agentDbId) ?? null,
       score: scoreById.get(agent.agentDbId) ?? null,
       services: servicesById.get(agent.agentDbId) ?? agent.services,
     }));
@@ -513,8 +505,10 @@ export function createDiscoveryRepository(
     });
     const firstKey = keys[0];
 
+    const hydratedAgents = await attachEvidence(orderedAgents);
+
     return {
-      agents: await attachEvidence(orderedAgents),
+      agents: orderDiscoveryAgentsByDisplayedScore(hydratedAgents, query.sort),
       hasNextPage: firstKey?.has_more ?? false,
       page: firstKey?.result_page ?? query.page,
       pageSize: query.pageSize,
@@ -537,70 +531,25 @@ export function createDiscoveryRepository(
       return searchRecentAgents(query);
     }
 
-    const useKeySearch =
-      advancedDiscoverySorts.has(query.sort) ||
-      query.registrationPeriod !== null ||
-      query.scoreBands.length > 0;
-
-    if (useKeySearch) {
-      const { data, error } = await client.rpc("search_agent_discovery_keys", {
-        p_categories: [...query.effectiveCategories],
-        p_chain_ids: [...query.networkChainIds],
-        p_health_statuses: [...query.healthStatuses],
-        p_metadata_statuses: [...query.metadataStatuses],
-        p_page: query.page,
-        p_page_size: query.pageSize,
-        p_ready_only: query.taskAvailability === "ready",
-        p_registration_period: query.registrationPeriod,
-        p_score_bands: [...query.scoreBands],
-        p_search_terms: [...query.searchTerms],
-        p_sort: query.sort,
-      });
-
-      if (error) {
-        throw new DatabaseOperationError("search filtered agents", error);
-      }
-
-      return loadDiscoveryKeyPage(query, data);
-    }
-
-    const functionName = query.taskAvailability === "ready"
-      ? "search_ready_agents"
-      : query.healthStatuses.length > 0
-        ? "search_agents_with_health"
-        : "search_agents";
-    const sharedParameters = {
+    const { data, error } = await client.rpc("search_agent_discovery_keys", {
       p_categories: [...query.effectiveCategories],
       p_chain_ids: [...query.networkChainIds],
+      p_health_statuses: [...query.healthStatuses],
       p_metadata_statuses: [...query.metadataStatuses],
       p_page: query.page,
       p_page_size: query.pageSize,
+      p_ready_only: query.taskAvailability === "ready",
+      p_registration_period: query.registrationPeriod,
+      p_score_bands: [...query.scoreBands],
       p_search_terms: [...query.searchTerms],
       p_sort: query.sort,
-    };
-    const { data, error } = functionName === "search_agents_with_health" ||
-        functionName === "search_ready_agents"
-      ? await client.rpc(functionName, {
-          ...sharedParameters,
-          p_health_statuses: [...query.healthStatuses],
-        })
-      : await client.rpc(functionName, sharedParameters);
+    });
 
     if (error) {
-      throw new DatabaseOperationError("search indexed agents", error);
+      throw new DatabaseOperationError("search filtered agents", error);
     }
 
-    const firstRow = data[0];
-    const page = firstRow?.result_page ?? query.page;
-    const agents = await attachEvidence(data.map(mapAgent));
-
-    return {
-      agents,
-      hasNextPage: firstRow?.has_more ?? false,
-      page,
-      pageSize: query.pageSize,
-      totalCount: null,
-    };
+    return loadDiscoveryKeyPage(query, data);
   }
 
   function search(query: DiscoveryQuery): Promise<DiscoveryResult> {

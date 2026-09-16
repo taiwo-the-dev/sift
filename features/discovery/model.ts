@@ -5,6 +5,7 @@ import type {
   HealthStatus,
 } from "@/features/health/model";
 import type { PersistedSiftScore } from "@/features/scoring/model";
+import type { ScoringReputation } from "@/features/scoring/model";
 import type {
   CategoryEvidence,
   CategoryEvidenceSource,
@@ -157,6 +158,7 @@ export type DiscoveryAgent = Readonly<{
   health: HealthSnapshot | null;
   imageUrl: string | null;
   lastSyncedAt: string | null;
+  metadataVerifiedAt?: string | null;
   metadataStatus: MetadataStatus;
   name: string | null;
   ownerAddress: string | null;
@@ -164,6 +166,7 @@ export type DiscoveryAgent = Readonly<{
   registeredBlock: number | null;
   registryAddress: string;
   relevance: number;
+  reputation?: ScoringReputation | null;
   score: PersistedSiftScore | null;
   services: readonly DiscoveryService[];
   x402Supported: boolean | null;

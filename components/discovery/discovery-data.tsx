@@ -64,7 +64,7 @@ export async function DiscoveryResults({ query }: DiscoveryDataProps) {
       ) : (
         <>
           <div className="mt-6">
-            <EmptyState />
+            <EmptyState query={query} />
           </div>
           {result.page > 1 ? (
             <Pagination

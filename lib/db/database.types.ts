@@ -156,76 +156,55 @@ export type Database = {
       };
       agent_discovery_documents: {
         Row: {
-          a2a_success_at: string | null;
           access_last_success_at: string | null;
           active: boolean | null;
           agent_db_id: string;
-          agent_id: string;
           categories: string[];
           chain_id: number;
-          display_rating: number;
-          erc8183_success_at: string | null;
           health_checked_at: string | null;
           health_status: string;
-          mcp_success_at: string | null;
           metadata_status: string;
-          normalized_name: string | null;
+          normalized_name: string;
           registered_at: string | null;
           registered_block: number | null;
-          registry_address: string;
           search_document: unknown;
           service_count: number;
-          sift_score: number | null;
+          sift_score: number;
           updated_at: string;
-          x402_success_at: string | null;
         };
         Insert: {
-          a2a_success_at?: string | null;
           access_last_success_at?: string | null;
           active?: boolean | null;
           agent_db_id: string;
-          agent_id: string;
           categories?: string[];
           chain_id: number;
-          display_rating: number;
-          erc8183_success_at?: string | null;
           health_checked_at?: string | null;
           health_status?: string;
-          mcp_success_at?: string | null;
           metadata_status: string;
-          normalized_name?: string | null;
+          normalized_name: string;
           registered_at?: string | null;
           registered_block?: number | null;
-          registry_address: string;
           search_document: unknown;
           service_count?: number;
-          sift_score?: number | null;
+          sift_score?: number;
           updated_at?: string;
-          x402_success_at?: string | null;
         };
         Update: {
-          a2a_success_at?: string | null;
           access_last_success_at?: string | null;
           active?: boolean | null;
           agent_db_id?: string;
-          agent_id?: string;
           categories?: string[];
           chain_id?: number;
-          display_rating?: number;
-          erc8183_success_at?: string | null;
           health_checked_at?: string | null;
           health_status?: string;
-          mcp_success_at?: string | null;
           metadata_status?: string;
-          normalized_name?: string | null;
+          normalized_name?: string;
           registered_at?: string | null;
           registered_block?: number | null;
-          registry_address?: string;
           search_document?: unknown;
           service_count?: number;
-          sift_score?: number | null;
+          sift_score?: number;
           updated_at?: string;
-          x402_success_at?: string | null;
         };
         Relationships: [
           {
@@ -1025,132 +1004,18 @@ export type Database = {
         };
         Returns: { agent_db_id: string }[];
       };
-      search_agents: {
-        Args: {
-          p_categories?: string[];
-          p_chain_ids?: number[];
-          p_metadata_statuses?: string[];
-          p_page?: number;
-          p_page_size?: number;
-          p_search_terms?: string[];
-          p_sort?: string;
-        };
+      compact_catalogue_storage_report: {
+        Args: Record<PropertyKey, never>;
         Returns: {
-          active: boolean | null;
-          agent_db_id: string;
-          agent_id: string;
-          category_evidence: Json;
-          category_source: string | null;
-          chain_id: number;
-          description: string | null;
-          has_more: boolean;
-          image_url: string | null;
-          last_synced_at: string | null;
-          metadata_status: string;
-          name: string | null;
-          owner_address: string | null;
-          registered_at: string | null;
-          registered_block: number | null;
-          registry_address: string;
-          relevance: number;
-          resolved_categories: string[];
-          result_page: number;
-          services: Json;
-          x402_supported: boolean | null;
+          data_bytes: number;
+          index_bytes: number;
+          relation_name: string;
+          total_bytes: number;
         }[];
       };
-      search_agents_with_health: {
-        Args: {
-          p_categories?: string[];
-          p_chain_ids?: number[];
-          p_health_statuses?: string[];
-          p_metadata_statuses?: string[];
-          p_page?: number;
-          p_page_size?: number;
-          p_search_terms?: string[];
-          p_sort?: string;
-        };
-        Returns: {
-          active: boolean | null;
-          agent_db_id: string;
-          agent_id: string;
-          category_evidence: Json;
-          category_source: string | null;
-          chain_id: number;
-          description: string | null;
-          has_more: boolean;
-          image_url: string | null;
-          last_synced_at: string | null;
-          metadata_status: string;
-          name: string | null;
-          owner_address: string | null;
-          registered_at: string | null;
-          registered_block: number | null;
-          registry_address: string;
-          relevance: number;
-          resolved_categories: string[];
-          result_page: number;
-          services: Json;
-          x402_supported: boolean | null;
-        }[];
-      };
-      search_agents_advanced: {
-        Args: {
-          p_categories?: string[];
-          p_chain_ids?: number[];
-          p_health_statuses?: string[];
-          p_metadata_statuses?: string[];
-          p_page?: number;
-          p_page_size?: number;
-          p_ready_only?: boolean;
-          p_registration_period?: string | null;
-          p_score_bands?: string[];
-          p_search_terms?: string[];
-          p_sort?: string;
-        };
-        Returns: {
-          active: boolean | null;
-          agent_db_id: string;
-          agent_id: string;
-          category_evidence: Json;
-          category_source: string | null;
-          chain_id: number;
-          description: string | null;
-          has_more: boolean;
-          image_url: string | null;
-          last_synced_at: string | null;
-          metadata_status: string;
-          name: string | null;
-          owner_address: string | null;
-          registered_at: string | null;
-          registered_block: number | null;
-          registry_address: string;
-          relevance: number;
-          resolved_categories: string[];
-          result_page: number;
-          services: Json;
-          x402_supported: boolean | null;
-        }[];
-      };
-      search_agent_rating_keys: {
-        Args: {
-          p_categories?: string[];
-          p_chain_ids?: number[];
-          p_health_statuses?: string[];
-          p_metadata_statuses?: string[];
-          p_page?: number;
-          p_page_size?: number;
-          p_ready_only?: boolean;
-          p_registration_period?: string | null;
-          p_score_bands?: string[];
-          p_search_terms?: string[];
-          p_sort?: string;
-        };
-        Returns: {
-          agent_db_id: string;
-          has_more: boolean;
-          result_page: number;
-        }[];
+      finalize_compact_catalogue_import: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       search_agent_discovery_keys: {
         Args: {
@@ -1170,41 +1035,6 @@ export type Database = {
           agent_db_id: string;
           has_more: boolean;
           result_page: number;
-        }[];
-      };
-      search_ready_agents: {
-        Args: {
-          p_categories?: string[];
-          p_chain_ids?: number[];
-          p_health_statuses?: string[];
-          p_metadata_statuses?: string[];
-          p_page?: number;
-          p_page_size?: number;
-          p_search_terms?: string[];
-          p_sort?: string;
-        };
-        Returns: {
-          active: boolean | null;
-          agent_db_id: string;
-          agent_id: string;
-          category_evidence: Json;
-          category_source: string | null;
-          chain_id: number;
-          description: string | null;
-          has_more: boolean;
-          image_url: string | null;
-          last_synced_at: string | null;
-          metadata_status: string;
-          name: string | null;
-          owner_address: string | null;
-          registered_at: string | null;
-          registered_block: number | null;
-          registry_address: string;
-          relevance: number;
-          resolved_categories: string[];
-          result_page: number;
-          services: Json;
-          x402_supported: boolean | null;
         }[];
       };
     };

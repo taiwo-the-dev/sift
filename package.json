@@ -44,6 +44,7 @@
     "db:migrations": "supabase migration list --linked",
     "db:push:dry-run": "supabase db push --linked --dry-run",
     "db:push": "supabase db push --linked",
+    "db:transfer:compact": "node --conditions=react-server --import tsx scripts/transfer-compact-database.ts",
     "db:types": "supabase gen types typescript --linked --schema public > lib/db/database.generated.ts"
   },
   "dependencies": {

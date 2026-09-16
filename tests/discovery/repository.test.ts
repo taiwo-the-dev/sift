@@ -3,12 +3,33 @@ import { describe, it } from "node:test";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database } from "../../lib/db/database.types";
+import type { Database, Json } from "../../lib/db/database.types";
 import { createDiscoveryRepository } from "../../lib/db/discovery-repository";
 import { parseDiscoverySearchParams } from "../../features/discovery/query";
 
-type SearchAgentRow =
-  Database["public"]["Functions"]["search_agents"]["Returns"][number];
+type SearchAgentRow = Readonly<{
+  active: boolean | null;
+  agent_db_id: string;
+  agent_id: string;
+  category_evidence: Json;
+  category_source: string | null;
+  chain_id: number;
+  description: string | null;
+  has_more: boolean;
+  image_url: string | null;
+  last_synced_at: string | null;
+  metadata_status: string;
+  name: string | null;
+  owner_address: string | null;
+  registered_at: string | null;
+  registered_block: number | null;
+  registry_address: string;
+  relevance: number;
+  resolved_categories: string[];
+  result_page: number;
+  services: Json;
+  x402_supported: boolean | null;
+}>;
 
 const fixtureRows: readonly SearchAgentRow[] = [
   {
@@ -74,6 +95,89 @@ const noEvidence = {
   listScores: async () => [],
   listServices: async () => [],
 };
+
+function agentDetails(rows: readonly SearchAgentRow[]) {
+  return rows.map((row) => ({
+    active: row.active,
+    agent_category_evidence: Array.isArray(row.category_evidence)
+      ? row.category_evidence.map((evidence) => ({
+          category:
+            typeof evidence === "object" &&
+            evidence !== null &&
+            !Array.isArray(evidence) &&
+            "category" in evidence
+              ? evidence.category
+              : null,
+          confidence: 0.65,
+          evidence: { matchedTerms: ["grid strategy"] },
+          facts: [],
+          observed_at: "2026-08-22T09:00:00.000Z",
+          rule_version: "sift-category-taxonomy-v1.0.0",
+          source: "deterministic-rule",
+        }))
+      : [],
+    agent_id: row.agent_id,
+    agent_services: Array.isArray(row.services)
+      ? row.services.flatMap((service) =>
+          typeof service === "object" &&
+          service !== null &&
+          !Array.isArray(service) &&
+          "serviceType" in service &&
+          typeof service.serviceType === "string"
+            ? [{
+                service_type: service.serviceType,
+                version:
+                  "version" in service && typeof service.version === "string"
+                    ? service.version
+                    : null,
+              }]
+            : [],
+        )
+      : [],
+    chain_id: row.chain_id,
+    description: row.description,
+    id: row.agent_db_id,
+    image_url: row.image_url,
+    last_synced_at: row.last_synced_at,
+    metadata_status: row.metadata_status,
+    metadata_verified_at: row.last_synced_at,
+    name: row.name,
+    owner_address: row.owner_address,
+    registered_at: row.registered_at,
+    registered_block: row.registered_block,
+    registry_address: row.registry_address,
+    x402_supported: row.x402_supported,
+  }));
+}
+
+function keyRows(rows: readonly SearchAgentRow[]) {
+  return rows.map((row) => ({
+    agent_db_id: row.agent_db_id,
+    has_more: row.has_more,
+    result_page: row.result_page,
+  }));
+}
+
+function hydrationSource(
+  calls: unknown[],
+  rows: readonly SearchAgentRow[],
+) {
+  return {
+    from(table: string) {
+      calls.push({ operation: "from", table });
+      return {
+        select() {
+          return {
+            async in(column: string, values: readonly string[]) {
+              calls.push({ column, operation: "in", values });
+              return { data: agentDetails(rows), error: null };
+            },
+          };
+        },
+      };
+    },
+  };
+}
 
 describe("discovery repository integration boundary", () => {
   it("uses a bounded indexed table path for the unfiltered recent catalogue", async () => {
@@ -164,9 +268,10 @@ describe("discovery repository integration boundary", () => {
   it("passes validated combined filters to the database function", async () => {
     const calls: unknown[] = [];
     const client = {
+      ...hydrationSource(calls, fixtureRows),
       async rpc(name: string, parameters: unknown) {
         calls.push({ name, parameters });
-        return { data: fixtureRows, error: null };
+        return { data: keyRows(fixtureRows), error: null };
       },
     } as unknown as SupabaseClient<Database>;
     const query = parseDiscoverySearchParams({
@@ -180,20 +285,22 @@ describe("discovery repository integration boundary", () => {
 
     const result = await createDiscoveryRepository(client, noEvidence).search(query);
 
-    assert.deepEqual(calls, [
-      {
-        name: "search_agents",
-        parameters: {
-          p_categories: ["grid-trading"],
-          p_chain_ids: [56],
-          p_metadata_statuses: ["valid", "invalid"],
-          p_page: 2,
-          p_page_size: 12,
-          p_search_terms: ["automate", "grid", "trading"],
-          p_sort: "recent",
-        },
+    assert.deepEqual(calls[0], {
+      name: "search_agent_discovery_keys",
+      parameters: {
+        p_categories: ["grid-trading"],
+        p_chain_ids: [56],
+        p_health_statuses: [],
+        p_metadata_statuses: ["valid", "invalid"],
+        p_page: 2,
+        p_page_size: 12,
+        p_ready_only: false,
+        p_registration_period: null,
+        p_score_bands: [],
+        p_search_terms: ["automate", "grid", "trading"],
+        p_sort: "recent",
       },
-    ]);
+    });
     assert.equal(result.hasNextPage, true);
     assert.equal(result.totalCount, null);
     assert.equal(result.page, 2);
@@ -202,9 +309,10 @@ describe("discovery repository integration boundary", () => {
   it("uses the health-aware database function when health is filtered", async () => {
     const calls: unknown[] = [];
     const client = {
+      ...hydrationSource(calls, fixtureRows),
       async rpc(name: string, parameters: unknown) {
         calls.push({ name, parameters });
-        return { data: fixtureRows, error: null };
+        return { data: keyRows(fixtureRows), error: null };
       },
     } as unknown as SupabaseClient<Database>;
     const query = parseDiscoverySearchParams({
@@ -214,21 +322,22 @@ describe("discovery repository integration boundary", () => {
 
     await createDiscoveryRepository(client, noEvidence).search(query);
 
-    assert.deepEqual(calls, [
-      {
-        name: "search_agents_with_health",
-        parameters: {
-          p_categories: [],
-          p_chain_ids: [56],
-          p_health_statuses: ["online", "unknown"],
-          p_metadata_statuses: ["valid"],
-          p_page: 1,
-          p_page_size: 12,
-          p_search_terms: [],
-          p_sort: "recent",
-        },
+    assert.deepEqual(calls[0], {
+      name: "search_agent_discovery_keys",
+      parameters: {
+        p_categories: [],
+        p_chain_ids: [56],
+        p_health_statuses: ["online", "unknown"],
+        p_metadata_statuses: ["valid"],
+        p_page: 1,
+        p_page_size: 12,
+        p_ready_only: false,
+        p_registration_period: null,
+        p_score_bands: [],
+        p_search_terms: [],
+        p_sort: "recent",
       },
-    ]);
+    });
   });
 
   it("uses bounded keys for registration and decision sorts", async () => {
@@ -412,13 +521,14 @@ describe("discovery repository integration boundary", () => {
       ],
     }));
     const client = {
+      ...hydrationSource(calls, firstBatch),
       async rpc(
         name: string,
         parameters: unknown,
       ) {
         calls.push({ name, parameters });
         return {
-          data: firstBatch,
+          data: keyRows(firstBatch),
           error: null,
         };
       },
@@ -434,21 +544,22 @@ describe("discovery repository integration boundary", () => {
       query,
     );
 
-    assert.deepEqual(calls, [
-      {
-        name: "search_ready_agents",
-        parameters: {
-          p_categories: [],
-          p_chain_ids: [56],
-          p_health_statuses: [],
-          p_metadata_statuses: [],
-          p_page: 1,
-          p_page_size: 12,
-          p_search_terms: ["protocol"],
-          p_sort: "relevance",
-        },
+    assert.deepEqual(calls[0], {
+      name: "search_agent_discovery_keys",
+      parameters: {
+        p_categories: [],
+        p_chain_ids: [56],
+        p_health_statuses: [],
+        p_metadata_statuses: [],
+        p_page: 1,
+        p_page_size: 12,
+        p_ready_only: true,
+        p_registration_period: null,
+        p_score_bands: [],
+        p_search_terms: ["protocol"],
+        p_sort: "relevance",
       },
-    ]);
+    });
     assert.equal(result.agents.length, 12);
     assert.equal(result.agents[0]?.agentId, "100");
     assert.equal(result.agents.at(-1)?.agentId, "111");
@@ -457,9 +568,11 @@ describe("discovery repository integration boundary", () => {
   });
 
   it("preserves stable database order and maps service/category fixtures", async () => {
+    const calls: unknown[] = [];
     const client = {
+      ...hydrationSource(calls, fixtureRows),
       async rpc() {
-        return { data: fixtureRows, error: null };
+        return { data: keyRows(fixtureRows), error: null };
       },
     } as unknown as SupabaseClient<Database>;
     const query = parseDiscoverySearchParams({ q: "grid" });
@@ -474,7 +587,6 @@ describe("discovery repository integration boundary", () => {
     assert.deepEqual(result.agents[0]?.services, [
       {
         endpoint: null,
-        metadata: null,
         serviceType: "A2A",
         version: "1.0",
       },
