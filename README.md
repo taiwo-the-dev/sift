@@ -9,14 +9,23 @@ transactions are real and source-backed; unavailable evidence stays `Unknown`.
 
 ## Release status
 
-Sift is live at <https://sift-ten-swart.vercel.app> and the BSC Mainnet
-catalogue was current at confirmed head `121126225` when checked on 2026-09-10.
-All four hackathon categories pass the hosted coverage report with 12 curated
-mainnet agents and 12 current, source-labelled 8004scan cross-checks. The former
-score-candidate database timeout is resolved. Every agent now receives a numeric
-Sift Score made from the six criteria it actually meets. Missing or expired
-evidence earns zero points and remains visible in the score breakdown and data
-coverage rather than being replaced with invented values.
+Sift is live at <https://bnb-sift.vercel.app>. The indexer has moved well past
+an initial curated set: the BSC Mainnet catalogue now holds the full, real
+ERC-8004 registration history (over 350,000 indexed identities and growing at
+roughly 5,000+ new registrations per day), with an isolated BSC Testnet
+catalogue indexed the same way. The catalogue's exact size and last-synced
+block are always visible live on the Discover page rather than restated here,
+since both change continuously.
+
+The catalogue outgrew the original Supabase free-tier project's storage
+budget as the real registration volume came in. It was moved to a
+purpose-built compact schema and a new Supabase project designed to hold the
+complete catalogue within the free tier's limits; see
+[the compact database move](docs/compact-database-move.md) for what changed
+and why. Every agent still receives a numeric Sift Score made from the six
+criteria it actually meets — missing or expired evidence earns zero points and
+remains visible in the score breakdown and data coverage rather than being
+replaced with invented values.
 
 The automated mainnet judge path passes on desktop and mobile, and the public
 release smoke test passes. M16/M17 are still in progress because hosted migration
@@ -159,7 +168,11 @@ npm run db:push:dry-run
 Only use `npm run db:push` as a reviewed manual fallback. Never reset the linked
 hosted database and never seed fabricated catalogue data. Full setup, RLS,
 deployment order, and type-generation guidance lives in
-[docs/database.md](docs/database.md).
+[docs/database.md](docs/database.md). The resumable, idempotent process for
+moving the catalogue to a new Supabase project without downtime or data loss
+is documented in [docs/compact-database-move.md](docs/compact-database-move.md)
+and implemented in `scripts/transfer-compact-database.ts`
+(`npm run db:transfer:compact`).
 
 ## Indexing and evidence updates
 
@@ -272,6 +285,12 @@ The full evidence-bound list is maintained in
   cap and explicit approval flow are implemented and reviewed.
 - Public/free RPCs and free-tier schedulers can rate-limit or delay freshness;
   stored checkpoints and evidence timestamps expose what Sift actually knows.
+- The catalogue is bound by Supabase's free-tier database size limit. Because
+  Sift indexes every real ERC-8004 registration rather than a curated subset,
+  and BSC Mainnet registrations continue at real volume, storage is an active
+  operational constraint, not a one-time concern; see
+  [the compact database move](docs/compact-database-move.md) for the current
+  approach.
 
 ## Roadmap to hackathon submission
 
@@ -299,6 +318,7 @@ approved ticket, evidence model, security review, and infrastructure approval.
 - [Deployment](docs/deployment.md)
 - [Demo](docs/demo.md)
 - [Hosted database](docs/database.md)
+- [Compact database move](docs/compact-database-move.md)
 - [Sift Indexer](docs/indexer.md)
 - [Sift Score](docs/scoring.md)
 - [Public API](/docs)
