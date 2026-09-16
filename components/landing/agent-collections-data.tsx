@@ -16,9 +16,9 @@ export async function AgentCollectionsData() {
   const repository = createDiscoveryRepository();
   try {
     // Prefer agents with a usable task service. This is a landing-page
-    // showcase, so if nothing qualifies (for example every declared service
-    // has been probed unavailable) fall back to verified profiles rather than
-    // rendering an empty carousel.
+    // showcase, so if too few qualify (for example most declared services
+    // have not been health-checked recently) top up with verified profiles
+    // rather than rendering a near-empty carousel.
     const readyResult = await repository.search(
       parseDiscoverySearchParams({
         availability: "ready",
@@ -28,7 +28,7 @@ export async function AgentCollectionsData() {
     );
     featuredAgents = readyResult.agents.slice(0, 10);
 
-    if (featuredAgents.length === 0) {
+    if (featuredAgents.length < 10) {
       const verifiedResult = await repository.search(
         parseDiscoverySearchParams({
           metadata: "valid",
@@ -36,7 +36,16 @@ export async function AgentCollectionsData() {
           size: "24",
         }),
       );
-      featuredAgents = verifiedResult.agents.slice(0, 10);
+      const seenAgentIds = new Set(
+        featuredAgents.map((agent) => agent.agentDbId),
+      );
+
+      for (const agent of verifiedResult.agents) {
+        if (featuredAgents.length >= 10) break;
+        if (seenAgentIds.has(agent.agentDbId)) continue;
+        featuredAgents = [...featuredAgents, agent];
+        seenAgentIds.add(agent.agentDbId);
+      }
     }
   } catch {
     catalogueAvailable = false;
