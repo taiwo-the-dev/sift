@@ -20,11 +20,13 @@ function NetworkSelectorFallback({ mobile = false }: Readonly<{ mobile?: boolean
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-        <Brand />
+      <div className="mx-auto grid h-16 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center">
+          <Brand />
+        </div>
 
         <nav
-          className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex"
+          className="hidden items-center justify-center gap-1 xl:flex"
           aria-label="Primary navigation"
         >
           {navigationItems.map((item) =>
@@ -45,20 +47,22 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-2 xl:flex">
-          <Suspense fallback={<NetworkSelectorFallback />}>
-            <CatalogueNetworkSelectorData />
-          </Suspense>
-          <WalletControl />
-        </div>
-
-        <MobileNavigation
-          networkControl={
-            <Suspense fallback={<NetworkSelectorFallback mobile />}>
-              <CatalogueNetworkSelectorData mobile />
+        <div className="flex items-center justify-end gap-2">
+          <div className="hidden items-center gap-2 xl:flex">
+            <Suspense fallback={<NetworkSelectorFallback />}>
+              <CatalogueNetworkSelectorData />
             </Suspense>
-          }
-        />
+            <WalletControl />
+          </div>
+
+          <MobileNavigation
+            networkControl={
+              <Suspense fallback={<NetworkSelectorFallback mobile />}>
+                <CatalogueNetworkSelectorData mobile />
+              </Suspense>
+            }
+          />
+        </div>
       </div>
     </header>
   );
