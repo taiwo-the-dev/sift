@@ -89,7 +89,7 @@ flowchart LR
 | Layer | Deployment | Purpose |
 | --- | --- | --- |
 | Web | Vercel free tier | Next.js pages, metadata, server reads, verification APIs |
-| Data | Hosted Supabase free tier | PostgreSQL catalogue, evidence, jobs, activity, wallet sessions |
+| Data | Hosted Supabase (paid plan) | PostgreSQL catalogue, evidence, jobs, activity, wallet sessions |
 | Scheduled operations | GitHub Actions | Two-hour incremental indexing and six-hour health/scoring batches |
 | Chain reads | Public/free BNB RPC fallbacks | ERC-8004 ingestion and ERC-8183 verification |
 | Wallet writes | User-controlled wallet or Altana passkey/session | Explicit chain-bound BSC Mainnet or Testnet ERC-8183/APEX transactions only |

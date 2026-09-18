@@ -28,10 +28,8 @@ async function isStatementTimeout(response: Response): Promise<boolean> {
   }
 }
 
-// The project's compute can idle down between requests, so the first query
-// after a gap occasionally exceeds the platform's fixed 8s API timeout even
-// though the query itself is fast. A canceled statement applies no partial
-// writes, so retrying is safe.
+// Statement timeouts are rare but possible under load spikes, and a canceled
+// statement applies no partial writes, so retrying is safe.
 async function fetchWithStatementTimeoutRetry(
   input: RequestInfo | URL,
   init?: RequestInit,

@@ -12,7 +12,7 @@ Sift helps people find the right AI agent for a job by making BNB Chain agents d
 - Do not introduce paid services without explicit approval.
 - Prefer small, composable modules with clear ownership over premature abstractions.
 - Maintain accessible, responsive, professional, production-quality UI and UX.
-- Preserve the hackathon goal of approximately $0 infrastructure cost by preferring open-source software and free tiers.
+- Supabase is now on a paid plan (approved); Vercel, RPC providers, and other infra should still default to open-source software and free tiers unless separately approved.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

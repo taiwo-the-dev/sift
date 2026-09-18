@@ -37,6 +37,6 @@ export default defineConfig({
         timeout: 120_000,
         url: baseURL,
       },
-  // Keep hosted Supabase and third-party agent checks within free-tier limits.
+  // Keep third-party agent checks within free-tier limits (Supabase is now a paid plan).
   workers: 1,
 });

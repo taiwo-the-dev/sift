@@ -27,7 +27,7 @@ In the hosted Supabase project:
 5. Enable **Deploy to production** only when merges to that branch should apply migrations automatically.
 6. Add the Supabase deployment check as a required GitHub check when branch protection is available.
 
-Automatic preview branching is optional and is not required for Sift's current free-tier workflow. Do not enable GitHub as a Supabase Auth provider; application authentication belongs to a later milestone.
+Automatic preview branching is optional and is not currently part of Sift's Supabase workflow. Do not enable GitHub as a Supabase Auth provider; application authentication belongs to a later milestone.
 
 ## Runtime environment
 
@@ -200,7 +200,7 @@ used to read the latest per-network agent synchronization time. The discovery
 status panel uses a clearly labelled PostgreSQL planned inventory estimate;
 exact agent rows, registry checkpoints, and category evidence are unchanged.
 This informational estimate prevents a full-table count from blocking each
-request on the hosted free tier.
+request on the hosted project.
 
 ## Indexed discovery projection
 

@@ -19,10 +19,10 @@ since both change continuously.
 
 The catalogue outgrew the original Supabase free-tier project's storage
 budget as the real registration volume came in. It was moved to a
-purpose-built compact schema and a new Supabase project designed to hold the
-complete catalogue within the free tier's limits; see
-[the compact database move](docs/compact-database-move.md) for what changed
-and why. Every agent still receives a numeric Sift Score made from the six
+purpose-built compact schema and a new Supabase project; Supabase is now on a
+paid plan, which removes the free-tier storage ceiling as an active
+constraint. See [the compact database move](docs/compact-database-move.md)
+for what changed and why. Every agent still receives a numeric Sift Score made from the six
 criteria it actually meets — missing or expired evidence earns zero points and
 remains visible in the score breakdown and data coverage rather than being
 replaced with invented values.
@@ -285,12 +285,12 @@ The full evidence-bound list is maintained in
   cap and explicit approval flow are implemented and reviewed.
 - Public/free RPCs and free-tier schedulers can rate-limit or delay freshness;
   stored checkpoints and evidence timestamps expose what Sift actually knows.
-- The catalogue is bound by Supabase's free-tier database size limit. Because
-  Sift indexes every real ERC-8004 registration rather than a curated subset,
-  and BSC Mainnet registrations continue at real volume, storage is an active
-  operational constraint, not a one-time concern; see
-  [the compact database move](docs/compact-database-move.md) for the current
-  approach.
+- Supabase is now on a paid plan, so database size is no longer bounded by the
+  free-tier limit. Because Sift indexes every real ERC-8004 registration
+  rather than a curated subset, and BSC Mainnet registrations continue at real
+  volume, storage remains worth monitoring; see
+  [the compact database move](docs/compact-database-move.md) for the schema
+  approach that keeps it efficient.
 
 ## Roadmap to hackathon submission
 
