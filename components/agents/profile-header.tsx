@@ -183,7 +183,7 @@ export function ProfileHeader({
                 className={cn(buttonVariants({ variant: "brand" }), "gap-2")}
               >
                 <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
-                Start task
+                Hire agent
               </Link>
             ) : null}
             <ComparisonToggle

@@ -184,16 +184,7 @@ export function AgentCard({
       ? `/hire/${agent.chainId}/${agent.agentId}`
       : `/start/${agent.chainId}/${agent.agentId}`
     : profileHref;
-  const actionLabel =
-    primaryTaskMethod === "erc8183"
-      ? "Hire agent"
-      : primaryTaskMethod === "a2a"
-        ? "Send task"
-        : primaryTaskMethod === "mcp"
-          ? "Run tool"
-          : primaryTaskMethod === "x402"
-            ? "View paid access"
-            : "View agent";
+  const actionLabel = primaryTaskMethod ? "Hire agent" : "View agent";
   const healthPresentation = getHealthPresentation(agent.health, agent.services);
   const healthTierTone = healthStateTone[healthPresentation.state];
   const rating = getAgentRating(agent);

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: "Choose a checked way to start work with this BNB Chain agent.",
     noIndex: true,
     path: `/start/${chainId}/${agentId}`,
-    title: "Start task",
+    title: "Hire agent",
   });
 }
 
