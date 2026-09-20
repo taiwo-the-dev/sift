@@ -22,8 +22,8 @@ budget as the real registration volume came in. It was moved to a
 purpose-built compact schema and a new Supabase project; Supabase is now on a
 paid plan, which removes the free-tier storage ceiling as an active
 constraint. See [the compact database move](docs/compact-database-move.md)
-for what changed and why. Every agent still receives a numeric Sift Score made from the six
-criteria it actually meets — missing or expired evidence earns zero points and
+for what changed and why. Every agent still receives a numeric Sift Score
+made from the six criteria it actually meets — missing or expired evidence earns zero points and
 remains visible in the score breakdown and data coverage rather than being
 replaced with invented values.
 
@@ -37,9 +37,10 @@ agent's chain. No successful mainnet transaction is claimed.
 
 ## Product preview
 
-The images below were captured from a local candidate using the hosted Supabase
-catalogue. They show real indexed records; use the live URL above for the current
-public experience.
+The images below are captured live from the public deployment at the URL
+above, so they show real indexed records and current catalogue state — not a
+staged demo. Catalogue size and last-synced block change continuously, so the
+live site may show larger numbers than the moment these were captured.
 
 ![Sift landing page](docs/screenshots/landing.png)
 
