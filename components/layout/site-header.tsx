@@ -20,7 +20,7 @@ function NetworkSelectorFallback({ mobile = false }: Readonly<{ mobile?: boolean
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto grid h-16 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8 xl:grid xl:grid-cols-[1fr_auto_1fr]">
         <div className="flex min-w-0 items-center">
           <Brand />
         </div>
@@ -47,7 +47,7 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="ml-auto flex items-center justify-end gap-2 xl:ml-0">
           <div className="hidden items-center gap-2 xl:flex">
             <Suspense fallback={<NetworkSelectorFallback />}>
               <CatalogueNetworkSelectorData />
