@@ -157,7 +157,7 @@ export function AgentCarousel({ children, live }: AgentCarouselProps) {
         aria-label="Featured agents"
         aria-roledescription="carousel"
         tabIndex={0}
-        className="-mx-4 mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 outline-none [scrollbar-width:none] focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
+        className="-mx-4 mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-4 pb-4 outline-none [scrollbar-width:none] focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
       >
         {children}
       </div>
