@@ -196,7 +196,7 @@ export default function DocumentationPage() {
               <h2 className="font-semibold text-foreground">No API key required</h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 Sift API v1 is currently a public, read-only interface. Requests
-                are rate-limited to protect the free catalogue infrastructure.
+                are rate-limited to protect the shared catalogue infrastructure.
               </p>
             </div>
           </div>

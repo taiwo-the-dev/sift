@@ -55,7 +55,7 @@ flowchart LR
   batches, records the observation source/time, and calculates a versioned Sift
   Score only when enough current evidence exists.
 - The same bounded workflow checks explicitly declared ERC-8183, A2A, MCP, and
-  x402 services. A current successful observation enables **Start task**;
+  x402 services. A current successful observation enables **Hire agent**;
   registration or an unchecked metadata label does not. Direct endpoints are
   resolved from stored service IDs, restricted to public HTTPS, size/time
   bounded, and rechecked immediately before an action.
