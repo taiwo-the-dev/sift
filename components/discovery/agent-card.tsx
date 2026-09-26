@@ -175,16 +175,9 @@ export function AgentCard({
         activationMethodPriority[left] - activationMethodPriority[right],
     );
   const taskReady = taskMethods.length > 0;
-  const primaryTaskMethod = taskMethods[0] ?? null;
   const taskMethodSummary = taskMethods
     .map((method) => formatActivationMethod(method))
     .join(" · ");
-  const actionHref = primaryTaskMethod
-    ? primaryTaskMethod === "erc8183"
-      ? `/hire/${agent.chainId}/${agent.agentId}`
-      : `/start/${agent.chainId}/${agent.agentId}`
-    : profileHref;
-  const actionLabel = primaryTaskMethod ? "Hire agent" : "View agent";
   const healthPresentation = getHealthPresentation(agent.health, agent.services);
   const healthTierTone = healthStateTone[healthPresentation.state];
   const rating = getAgentRating(agent);
@@ -329,13 +322,13 @@ export function AgentCard({
             goal={comparisonGoal}
             variant="icon"
           />
-          {actionHref ? (
+          {profileHref ? (
             <Link
-              href={actionHref}
+              href={profileHref}
               prefetch={false}
               className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-3 text-xs font-semibold text-brand-foreground outline-none transition-colors hover:bg-brand-hover focus-visible:ring-3 focus-visible:ring-ring/30"
             >
-              {actionLabel}
+              View agent
               <ArrowUpRight className="size-3.5 shrink-0" aria-hidden="true" />
             </Link>
           ) : null}

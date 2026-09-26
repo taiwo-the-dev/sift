@@ -158,11 +158,21 @@ test("comparison controls preserve a valid shareable selection", async ({
   await expectNoPageErrors(errors);
 });
 
-test("Available leads to a recently checked action route", async ({ page }) => {
+test("Available agents open their profile before hiring", async ({ page }) => {
   const errors = recordPageErrors(page);
   await page.goto("/discover?availability=ready");
 
   await expect(page.getByLabel("Remove Available filter")).toBeVisible();
+  const viewAgent = page.getByRole("link", { name: "View agent", exact: true }).first();
+  await expect(viewAgent).toBeVisible();
+  await expect(page.locator('a[href^="/hire/"], a[href^="/start/"]')).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Hire agent", exact: true })).toHaveCount(0);
+  const profileHref = await viewAgent.getAttribute("href");
+  expect(profileHref).toMatch(/^\/agents\/56\/\d+$/);
+  await viewAgent.click();
+  await expect(page).toHaveURL(profileHref!);
+  await expect(page.getByRole("navigation", { name: "Agent profile" })).toBeVisible();
+
   const action = page
     .getByRole("link", {
       name: /^(hire agent|send task|run tool|view paid access)$/i,
