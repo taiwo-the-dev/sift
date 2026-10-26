@@ -123,7 +123,7 @@ Use Node.js 22 or newer and npm 10 or 11. The hosted Supabase workflow does
 not require Docker or a local Supabase stack.
 
 ```bash
-git clone https://github.com/taiwo-the-dev/sift.git
+git clone https://github.com/mercor-tasker/sift.git
 cd sift
 npm ci
 cp .env.example .env.local
